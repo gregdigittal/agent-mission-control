@@ -2,6 +2,7 @@
 
 import { useUIStore } from "@/stores/ui-store";
 import { ACCENT_CYCLE } from "@/lib/constants";
+import { StaleSessionsDropdown } from "./stale-sessions-dropdown";
 
 export function SessionTabs() {
   const order = useUIStore((s) => s.order);
@@ -44,6 +45,7 @@ export function SessionTabs() {
           </button>
         );
       })}
+      <StaleSessionsDropdown />
     </div>
   );
 }
