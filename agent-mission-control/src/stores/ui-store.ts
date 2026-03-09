@@ -11,6 +11,11 @@ interface UIState {
   order: string[];
   active: string;
 
+  // Stale sessions
+  staleSessions: Record<string, Session>;
+  staleOrder: string[];
+  staleExpanded: boolean;
+
   // Layout
   screen: ScreenProfile;
   tiles: number;
@@ -24,6 +29,12 @@ interface UIState {
   upsertSession: (session: Session) => void;
   removeSession: (sid: string) => void;
   setActive: (sid: string) => void;
+
+  // Actions — stale sessions
+  setStaleSessions: (sessions: Session[]) => void;
+  toggleStaleExpanded: () => void;
+  demoteToStale: (sid: string) => void;
+  promoteFromStale: (sid: string) => void;
 
   // Actions — layout
   setScreen: (profile: ScreenProfile) => void;
@@ -46,6 +57,9 @@ export const useUIStore = create<UIState>((set, get) => ({
   sessions: {},
   order: [],
   active: "",
+  staleSessions: {},
+  staleOrder: [],
+  staleExpanded: false,
   screen: "desktop",
   tiles: 1,
   panes: [{ sid: "", view: "agents" }],
@@ -102,6 +116,71 @@ export const useUIStore = create<UIState>((set, get) => ({
   },
 
   setActive: (sid) => set({ active: sid }),
+
+  setStaleSessions: (sessions) => {
+    const map: Record<string, Session> = {};
+    const staleOrder: string[] = [];
+    sessions.forEach((s) => {
+      map[s.id] = s;
+      staleOrder.push(s.id);
+    });
+    set({ staleSessions: map, staleOrder });
+  },
+
+  toggleStaleExpanded: () => {
+    set({ staleExpanded: !get().staleExpanded });
+  },
+
+  demoteToStale: (sid) => {
+    const { sessions, order, active, panes, staleSessions, staleOrder } = get();
+    const session = sessions[sid];
+    if (!session) return;
+
+    // Remove from active
+    const newSessions = { ...sessions };
+    delete newSessions[sid];
+    const newOrder = order.filter((id) => id !== sid);
+    const newActive = active === sid ? (newOrder[0] || "") : active;
+
+    // Add to stale
+    const newStaleSessions = { ...staleSessions, [sid]: session };
+    const newStaleOrder = staleOrder.includes(sid) ? staleOrder : [...staleOrder, sid];
+
+    set({
+      sessions: newSessions,
+      order: newOrder,
+      active: newActive,
+      staleSessions: newStaleSessions,
+      staleOrder: newStaleOrder,
+      panes: panes.map((p) =>
+        p.sid === sid ? { ...p, sid: newActive } : p
+      ),
+    });
+  },
+
+  promoteFromStale: (sid) => {
+    const { sessions, order, active, staleSessions, staleOrder } = get();
+    const session = staleSessions[sid];
+    if (!session) return;
+
+    // Remove from stale
+    const newStaleSessions = { ...staleSessions };
+    delete newStaleSessions[sid];
+    const newStaleOrder = staleOrder.filter((id) => id !== sid);
+
+    // Add to active
+    const newSessions = { ...sessions, [sid]: session };
+    const newOrder = order.includes(sid) ? order : [...order, sid];
+    const newActive = active || sid;
+
+    set({
+      sessions: newSessions,
+      order: newOrder,
+      active: newActive,
+      staleSessions: newStaleSessions,
+      staleOrder: newStaleOrder,
+    });
+  },
 
   setScreen: (profile) => {
     const maxP = MAX_PANES[profile] || 3;
