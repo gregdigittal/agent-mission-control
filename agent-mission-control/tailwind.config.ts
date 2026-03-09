@@ -37,10 +37,10 @@ const config: Config = {
         sans: ["var(--font-geist-sans)", "sans-serif"],
       },
       fontSize: {
-        xxs: "10px",
-        xs: "11px",
-        sm: "12px",
-        base: "13px",
+        xxs: "var(--font-xxs, 10px)",
+        xs: "var(--font-xs, 11px)",
+        sm: "var(--font-sm, 12px)",
+        base: "var(--font-base, 13px)",
       },
       animation: {
         pulse: "pulse 2s infinite",
