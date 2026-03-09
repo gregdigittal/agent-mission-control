@@ -1,26 +1,52 @@
-@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { -webkit-font-smoothing: antialiased; }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: #06080c;
+  color: #edf0f7;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* Scanline overlay */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9999;
+  background: repeating-linear-gradient(
+    0deg, transparent, transparent 2px,
+    rgba(0,0,0,.03) 2px, rgba(0,0,0,.03) 4px
+  );
+}
+
+/* Custom scrollbars */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #242e42; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #2e3a52; }
+
+/* Screen density profiles */
+:root {
+  --density-pad: 16px;
+  --density-gap: 12px;
+  --pane-min: 420px;
+  --topbar-h: 48px;
+}
+.screen-laptop {
+  --density-pad: 12px;
+  --density-gap: 8px;
+  --pane-min: 360px;
+  --topbar-h: 40px;
+}
+.screen-ultrawide {
+  --density-pad: 20px;
+  --density-gap: 16px;
+  --pane-min: 480px;
+  --topbar-h: 52px;
 }
