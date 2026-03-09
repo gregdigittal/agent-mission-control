@@ -15,9 +15,14 @@ export function TopBar() {
         <span>MISSION CONTROL</span>
       </div>
       <SessionTabs />
-      <ScreenPicker />
-      <TilePicker />
-      <Clock />
+      <div className="flex items-center gap-[var(--density-gap)] ml-auto whitespace-nowrap">
+        <ScreenPicker />
+        <TilePicker />
+        <span className="flex items-center gap-1 font-mono text-xxs text-green font-semibold tracking-wider">
+          <span className="animate-pulse">&#8226;</span> LIVE
+        </span>
+        <Clock />
+      </div>
     </header>
   );
 }
