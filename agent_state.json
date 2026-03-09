@@ -1,0 +1,68 @@
+{
+  "project": "CE Africa Valuation Platform",
+  "currentStageIdx": 3,
+  "totalTasks": 24,
+  "completedTasks": 9,
+  "stages": [
+    { "name": "Planning", "desc": "Architecture & task breakdown", "status": "completed" },
+    { "name": "Scaffolding", "desc": "Project structure & config", "status": "completed" },
+    { "name": "Core Logic", "desc": "Business logic & models", "status": "completed" },
+    { "name": "API Layer", "desc": "REST endpoints & middleware", "status": "active" },
+    { "name": "Frontend", "desc": "React components & pages", "status": "pending" },
+    { "name": "Testing", "desc": "Unit & integration tests", "status": "pending" },
+    { "name": "Integration", "desc": "End-to-end wiring", "status": "pending" },
+    { "name": "Review", "desc": "Code review & polish", "status": "pending" }
+  ],
+  "agents": [
+    {
+      "id": "lead-1",
+      "name": "Architect",
+      "role": "Lead",
+      "type": "leader",
+      "status": "working",
+      "icon": "\ud83d\udc51",
+      "task": "Designing API authentication middleware",
+      "metrics": { "ctx": "62%", "cost": "$1.24", "msgs": 83 }
+    },
+    {
+      "id": "back-1",
+      "name": "Backend Dev",
+      "role": "Backend",
+      "type": "backend",
+      "status": "working",
+      "icon": "\u2699\ufe0f",
+      "task": "Implementing valuation CRUD endpoints",
+      "metrics": { "ctx": "45%", "cost": "$0.91", "msgs": 56 }
+    },
+    {
+      "id": "front-1",
+      "name": "Frontend Dev",
+      "role": "Frontend",
+      "type": "frontend",
+      "status": "thinking",
+      "icon": "\ud83c\udfa8",
+      "task": "Planning component hierarchy for dashboard",
+      "metrics": { "ctx": "28%", "cost": "$0.47", "msgs": 31 }
+    },
+    {
+      "id": "test-1",
+      "name": "QA Engineer",
+      "role": "Tester",
+      "type": "tester",
+      "status": "idle",
+      "icon": "\ud83e\uddea",
+      "task": "Waiting for API endpoints to test",
+      "metrics": { "ctx": "12%", "cost": "$0.18", "msgs": 14 }
+    }
+  ],
+  "events": [
+    { "agent": "Architect", "type": "task", "text": "Completed JWT auth service implementation", "timestamp": "14:32:18" },
+    { "agent": "Backend Dev", "type": "file", "text": "Created src/routes/valuations.ts", "timestamp": "14:31:45" },
+    { "agent": "Backend Dev", "type": "tool", "text": "Running npm test -- --filter=valuations", "timestamp": "14:31:02" },
+    { "agent": "Architect", "type": "thinking", "text": "Evaluating rate limiting strategies for API layer", "timestamp": "14:30:44" },
+    { "agent": "Frontend Dev", "type": "message", "text": "Requesting API contract from Backend Dev for dashboard endpoints", "timestamp": "14:29:33" },
+    { "agent": "Backend Dev", "type": "file", "text": "Modified src/middleware/auth.ts", "timestamp": "14:28:17" },
+    { "agent": "Architect", "type": "task", "text": "Assigned API rate limiting to Backend Dev", "timestamp": "14:27:50" },
+    { "agent": "QA Engineer", "type": "message", "text": "Test plan drafted for authentication endpoints", "timestamp": "14:26:12" }
+  ]
+}

@@ -1,0 +1,883 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Agent Mission Control</title>
+<link href="https://cdn.jsdelivr.net/npm/geist@1/dist/fonts/geist-sans/style.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/geist@1/dist/fonts/geist-mono/style.css" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-font-smoothing:antialiased}
+body{font-family:var(--sans);font-size:var(--font-base);color:var(--text-1);background:var(--bg-0);min-height:100vh;overflow-x:hidden}
+body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.03) 2px,rgba(0,0,0,.03) 4px)}
+
+:root{
+  --bg-0:#06080c;--bg-1:#0b0e14;--bg-2:#10141c;--bg-3:#161b26;--bg-4:#1c2232;--bg-5:#242b3d;
+  --border-1:#1a2030;--border-2:#242e42;--border-3:#2e3a52;
+  --text-1:#edf0f7;--text-2:#b0b8cc;--text-3:#6e7a94;--text-4:#3e4a64;
+  --cyan:#22d3ee;--green:#34d399;--amber:#fbbf24;--red:#f87171;--violet:#a78bfa;--blue:#60a5fa;--rose:#fb7185;
+  --mono:'Geist Mono',monospace;--sans:'Geist Sans',sans-serif;
+  --density-pad:16px;--density-gap:12px;--pane-min:420px;--topbar-h:48px;
+  --font-base:13px;--font-sm:12px;--font-xs:11px;--font-xxs:10px;
+  --card-pad:12px;--kb-col-w:280px;
+  --bb-stage-size:44px;--bb-ring-size:56px;--bb-stat-size:13px;
+}
+.screen-laptop{
+  --density-pad:12px;--density-gap:8px;--pane-min:360px;--topbar-h:40px;
+  --font-base:12px;--font-sm:11px;--font-xs:10px;--font-xxs:9px;
+  --card-pad:8px;--kb-col-w:240px;
+  --bb-stage-size:36px;--bb-ring-size:48px;--bb-stat-size:11px;
+}
+.screen-ultrawide{
+  --density-pad:20px;--density-gap:16px;--pane-min:480px;--topbar-h:52px;
+  --font-base:14px;--font-sm:13px;--font-xs:12px;--font-xxs:11px;
+  --card-pad:16px;--kb-col-w:320px;
+  --bb-stage-size:52px;--bb-ring-size:64px;--bb-stat-size:14px;
+}
+
+#topbar{height:var(--topbar-h);background:var(--bg-1);border-bottom:1px solid var(--border-1);display:flex;align-items:center;padding:0 var(--density-pad);gap:var(--density-gap);position:sticky;top:0;z-index:100}
+.brand{display:flex;align-items:center;gap:8px;font-family:var(--mono);font-weight:700;font-size:var(--font-sm);color:var(--cyan);letter-spacing:.05em;white-space:nowrap}
+.brand-icon{font-size:1.2em}
+#session-tabs{display:flex;gap:4px;flex:1;overflow-x:auto;min-width:0}
+.session-tab{padding:6px 14px;border-radius:6px;cursor:pointer;font-family:var(--mono);font-size:var(--font-xs);color:var(--text-3);background:transparent;border:1px solid transparent;white-space:nowrap;transition:all .15s;display:flex;align-items:center}
+.session-tab:hover{color:var(--text-2);background:var(--bg-3)}
+.session-tab.active{color:var(--cyan);background:var(--bg-3);border-color:var(--border-2);box-shadow:0 0 8px rgba(34,211,238,.1)}
+.session-tab .tab-close{display:none;margin-left:6px;font-size:10px;color:var(--text-4);cursor:pointer;padding:0 2px;border-radius:2px;line-height:1}
+.session-tab:hover .tab-close{display:inline-flex}
+.session-tab .tab-close:hover{color:var(--red);background:rgba(248,113,113,.15)}
+.add-session-btn{padding:6px 10px;border-radius:6px;cursor:pointer;font-family:var(--mono);font-size:var(--font-xs);color:var(--text-4);background:transparent;border:1px dashed var(--border-2);white-space:nowrap;transition:all .15s;display:flex;align-items:center;flex-shrink:0;position:relative}
+.add-session-btn:hover{color:var(--green);border-color:var(--green);background:rgba(52,211,153,.05)}
+.session-dropdown{position:fixed;min-width:300px;max-height:340px;overflow-y:auto;background:var(--bg-2);border:1px solid var(--border-2);border-radius:8px;box-shadow:0 8px 32px rgba(0,0,0,.5);z-index:200;padding:6px}
+.session-dropdown-item{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:6px;cursor:pointer;transition:all .12s;border:1px solid transparent}
+.session-dropdown-item:hover{background:var(--bg-3);border-color:var(--border-2)}
+.session-dropdown-item .sdi-icon{font-size:1.2em;flex-shrink:0}
+.session-dropdown-item .sdi-info{flex:1;min-width:0}
+.session-dropdown-item .sdi-name{font-family:var(--mono);font-size:var(--font-xs);font-weight:600;color:var(--text-1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.session-dropdown-item .sdi-meta{font-size:var(--font-xxs);color:var(--text-4);display:flex;gap:8px}
+.session-dropdown-item.disabled{opacity:.35;pointer-events:none}
+.session-dropdown-empty{padding:16px;text-align:center;font-size:var(--font-xs);color:var(--text-4)}
+.session-dropdown-loading{padding:16px;text-align:center;font-size:var(--font-xs);color:var(--text-3);display:flex;align-items:center;justify-content:center;gap:6px}
+.session-dropdown-header{padding:6px 12px 8px;font-family:var(--mono);font-size:var(--font-xxs);color:var(--text-3);text-transform:uppercase;letter-spacing:.08em;border-bottom:1px solid var(--border-1);margin-bottom:4px}
+.dropdown-backdrop{position:fixed;inset:0;z-index:199}
+.topbar-right{display:flex;align-items:center;gap:var(--density-gap);margin-left:auto;white-space:nowrap}
+.live-badge{display:flex;align-items:center;gap:4px;font-family:var(--mono);font-size:var(--font-xxs);color:var(--green);font-weight:600;letter-spacing:.05em}
+.live-dot{animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+#clock{font-family:var(--mono);font-size:var(--font-xs);color:var(--text-3)}
+.picker{display:flex;gap:2px}
+.picker-btn{padding:4px 8px;border-radius:4px;cursor:pointer;font-family:var(--mono);font-size:var(--font-xxs);color:var(--text-4);background:transparent;border:1px solid var(--border-1);transition:all .15s}
+.picker-btn:hover{color:var(--text-3);border-color:var(--border-2)}
+.picker-btn.active{color:var(--cyan);border-color:var(--cyan);background:rgba(34,211,238,.06)}
+
+#workspace{display:flex;height:calc(100vh - var(--topbar-h));overflow:hidden}
+.pane{flex:1;min-width:var(--pane-min);border-right:1px solid var(--border-1);display:flex;flex-direction:column;overflow:hidden}
+.pane:last-child{border-right:none}
+.pane-header{display:flex;align-items:center;justify-content:space-between;padding:8px var(--density-pad);background:var(--bg-1);border-bottom:1px solid var(--border-1);font-size:var(--font-xs);gap:8px}
+.pane-header select{background:var(--bg-3);color:var(--text-2);border:1px solid var(--border-2);border-radius:4px;padding:2px 6px;font-family:var(--mono);font-size:var(--font-xxs);cursor:pointer;outline:none}
+.pane-header select:focus{border-color:var(--cyan)}
+.pane-body{flex:1;overflow-y:auto;padding:var(--density-pad)}
+
+.build-banner{display:flex;align-items:center;gap:var(--density-gap);padding:var(--card-pad);background:var(--bg-2);border:1px solid var(--border-1);border-radius:8px;margin-bottom:var(--density-gap)}
+.progress-ring{position:relative;width:var(--bb-ring-size);height:var(--bb-ring-size);flex-shrink:0}
+.progress-ring svg{width:100%;height:100%;transform:rotate(-90deg)}
+.ring-bg{fill:none;stroke:var(--border-2);stroke-width:4}
+.ring-fg{fill:none;stroke:var(--cyan);stroke-width:4;stroke-linecap:round;transition:stroke-dashoffset .5s}
+.progress-pct{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:var(--bb-stat-size);font-weight:700;color:var(--text-1)}
+.build-stats{display:flex;flex-direction:column;gap:2px}
+.build-project{font-family:var(--mono);font-size:var(--font-sm);font-weight:600;color:var(--text-1)}
+.build-detail{font-size:var(--font-xxs);color:var(--text-3)}
+
+.pipeline{display:flex;gap:4px;overflow-x:auto;padding-bottom:var(--density-gap);margin-bottom:var(--density-gap)}
+.stage-pill{display:flex;align-items:center;gap:4px;padding:4px 10px;border-radius:20px;font-family:var(--mono);font-size:var(--font-xxs);white-space:nowrap;background:var(--bg-3);color:var(--text-4);border:1px solid var(--border-1);transition:all .2s}
+.stage-pill.completed{color:var(--green);border-color:rgba(52,211,153,.2);background:rgba(52,211,153,.06)}
+.stage-pill.active{color:var(--cyan);border-color:rgba(34,211,238,.3);background:rgba(34,211,238,.08);box-shadow:0 0 8px rgba(34,211,238,.15)}
+.stage-dot{width:6px;height:6px;border-radius:50%;background:currentColor;flex-shrink:0}
+.stage-pill.active .stage-dot{animation:pulse 1.5s infinite}
+
+.agents-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:var(--density-gap);margin-bottom:var(--density-gap)}
+.agent-card{background:var(--bg-2);border:1px solid var(--border-1);border-radius:8px;padding:var(--card-pad);display:flex;flex-direction:column;gap:8px;transition:border-color .2s}
+.agent-card:hover{border-color:var(--border-2)}
+.agent-card.status-working{border-left:2px solid var(--cyan)}
+.agent-card.status-thinking{border-left:2px solid var(--violet)}
+.agent-card.status-idle{border-left:2px solid var(--text-4)}
+.agent-card.status-error{border-left:2px solid var(--red)}
+.agent-card.status-leader{border-left:2px solid var(--amber)}
+.agent-top{display:flex;align-items:center;gap:8px}
+.agent-icon{font-size:1.4em}
+.agent-info{flex:1;min-width:0}
+.agent-name{font-family:var(--mono);font-size:var(--font-sm);font-weight:600;color:var(--text-1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.agent-role{font-size:var(--font-xxs);color:var(--text-3)}
+.agent-status{font-family:var(--mono);font-size:var(--font-xxs);padding:2px 6px;border-radius:4px;display:inline-flex;align-items:center;gap:4px}
+.agent-status.working{color:var(--cyan);background:rgba(34,211,238,.1)}
+.agent-status.thinking{color:var(--violet);background:rgba(167,139,250,.1)}
+.agent-status.idle{color:var(--text-4);background:var(--bg-3)}
+.agent-status.error{color:var(--red);background:rgba(248,113,113,.1)}
+.agent-status.leader{color:var(--amber);background:rgba(251,191,36,.1)}
+.agent-task{font-size:var(--font-xs);color:var(--text-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.agent-metrics{display:flex;gap:8px;font-family:var(--mono);font-size:var(--font-xxs);color:var(--text-4)}
+.typing-dots span{animation:typingDot .8s infinite;opacity:.3}
+.typing-dots span:nth-child(2){animation-delay:.15s}
+.typing-dots span:nth-child(3){animation-delay:.3s}
+@keyframes typingDot{0%,100%{opacity:.3}50%{opacity:1}}
+
+.feed-section{margin-top:var(--density-gap)}
+.feed-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;font-family:var(--mono);font-size:var(--font-xs);color:var(--text-3)}
+.feed-filters{display:flex;gap:4px}
+.feed-filter-btn{padding:2px 8px;border-radius:4px;cursor:pointer;font-family:var(--mono);font-size:var(--font-xxs);color:var(--text-4);background:transparent;border:1px solid transparent;transition:all .15s}
+.feed-filter-btn:hover{color:var(--text-3)}
+.feed-filter-btn.active{color:var(--cyan);background:rgba(34,211,238,.06);border-color:var(--border-2)}
+.feed-list{display:flex;flex-direction:column;gap:2px;max-height:300px;overflow-y:auto}
+.feed-item{display:flex;gap:8px;padding:4px 8px;border-radius:4px;font-size:var(--font-xs);animation:feedIn .3s ease-out}
+@keyframes feedIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
+.feed-time{font-family:var(--mono);font-size:var(--font-xxs);color:var(--text-4);white-space:nowrap;min-width:55px}
+.feed-agent{font-family:var(--mono);font-size:var(--font-xxs);color:var(--cyan);white-space:nowrap;min-width:80px;overflow:hidden;text-overflow:ellipsis}
+.feed-text{color:var(--text-2);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.feed-type-tool .feed-text{color:var(--blue)}
+.feed-type-file .feed-text{color:var(--green)}
+.feed-type-error .feed-text{color:var(--red)}
+.feed-type-thinking .feed-text{color:var(--violet)}
+
+.kanban{display:flex;gap:var(--density-gap);overflow-x:auto;height:100%}
+.kanban-col{min-width:var(--kb-col-w);width:var(--kb-col-w);background:var(--bg-2);border:1px solid var(--border-1);border-radius:8px;display:flex;flex-direction:column;flex-shrink:0}
+.kanban-col-header{padding:10px var(--card-pad);border-bottom:1px solid var(--border-1);display:flex;align-items:center;justify-content:space-between;font-family:var(--mono);font-size:var(--font-xs);font-weight:600;color:var(--text-2)}
+.kanban-count{background:var(--bg-4);padding:1px 7px;border-radius:10px;font-size:var(--font-xxs);color:var(--text-3);font-weight:400}
+.kanban-cards{flex:1;padding:8px;display:flex;flex-direction:column;gap:6px;overflow-y:auto;min-height:40px}
+.kanban-cards.drag-over{background:rgba(34,211,238,.03);border-radius:4px}
+.kanban-card{background:var(--bg-3);border:1px solid var(--border-1);border-radius:6px;padding:var(--card-pad);cursor:grab;transition:all .15s;user-select:none}
+.kanban-card:hover{border-color:var(--border-2);transform:translateY(-1px)}
+.kanban-card.dragging{opacity:.5;cursor:grabbing}
+.kanban-card-title{font-size:var(--font-xs);font-weight:500;color:var(--text-1);margin-bottom:6px}
+.kanban-card-meta{display:flex;align-items:center;justify-content:space-between;font-size:var(--font-xxs)}
+.kanban-card-assignee{color:var(--text-3);font-family:var(--mono)}
+.kanban-card-priority{padding:1px 6px;border-radius:3px;font-family:var(--mono);font-weight:600}
+.priority-high{color:var(--red);background:rgba(248,113,113,.1)}
+.priority-medium{color:var(--amber);background:rgba(251,191,36,.1)}
+.priority-low{color:var(--green);background:rgba(52,211,153,.1)}
+.kanban-card.recommended{border-color:var(--violet);box-shadow:0 0 12px rgba(167,139,250,.1)}
+.recommend-badge{display:flex;align-items:center;gap:4px;margin-top:6px;padding:4px 8px;background:rgba(167,139,250,.08);border-radius:4px;font-size:var(--font-xxs);color:var(--violet)}
+.approval-btns{display:flex;gap:4px;margin-top:6px}
+.approval-btns button{flex:1;padding:4px 8px;border:1px solid var(--border-2);border-radius:4px;font-family:var(--mono);font-size:var(--font-xxs);cursor:pointer;transition:all .15s;background:var(--bg-4);color:var(--text-3);outline:none}
+.btn-approve:hover{background:rgba(52,211,153,.15);color:var(--green);border-color:var(--green)}
+.btn-reject:hover{background:rgba(248,113,113,.15);color:var(--red);border-color:var(--red)}
+.dep-badge{display:flex;align-items:center;gap:4px;margin-top:6px;padding:4px 8px;background:rgba(251,191,36,.08);border-radius:4px;font-size:var(--font-xxs);color:var(--amber)}
+.kanban-card.dependency{border-color:var(--amber);box-shadow:0 0 12px rgba(251,191,36,.1)}
+.kanban-card-deps{display:flex;flex-wrap:wrap;gap:3px;margin-top:4px}
+.dep-tag{font-size:var(--font-xxs);color:var(--text-3);background:var(--bg-3);border-radius:3px;padding:1px 5px}
+
+#filewatch-bar{display:none;position:fixed;bottom:0;left:0;right:0;height:36px;background:var(--bg-1);border-top:1px solid var(--border-1);padding:0 var(--density-pad);align-items:center;gap:var(--density-gap);font-family:var(--mono);font-size:var(--font-xxs);z-index:100}
+#filewatch-bar.visible{display:flex}
+.fw-label{color:var(--text-3)}
+.fw-input{background:var(--bg-3);color:var(--text-2);border:1px solid var(--border-2);border-radius:4px;padding:2px 8px;font-family:var(--mono);font-size:var(--font-xxs);width:200px;outline:none}
+.fw-input:focus{border-color:var(--cyan)}
+.fw-btn{padding:3px 10px;border-radius:4px;font-family:var(--mono);font-size:var(--font-xxs);cursor:pointer;border:1px solid;transition:all .15s;outline:none}
+.fw-btn-start{background:rgba(52,211,153,.1);color:var(--green);border-color:rgba(52,211,153,.3)}
+.fw-btn-start:hover{background:rgba(52,211,153,.2)}
+.fw-btn-stop{background:rgba(248,113,113,.1);color:var(--red);border-color:rgba(248,113,113,.3)}
+.fw-btn-stop:hover{background:rgba(248,113,113,.2)}
+.fw-status{color:var(--text-4)}
+
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border-2);border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:var(--border-3)}
+</style>
+</head>
+<body class="screen-desktop">
+<header id="topbar">
+  <div class="brand"><span class="brand-icon">&loz;</span><span class="brand-text">MISSION CONTROL</span></div>
+  <div id="session-tabs"></div>
+  <div class="topbar-right">
+    <div id="screen-picker" class="picker"></div>
+    <div id="tile-picker" class="picker"></div>
+    <span class="live-badge"><span class="live-dot">&bull;</span> LIVE</span>
+    <span id="clock"></span>
+  </div>
+</header>
+<main id="workspace"></main>
+<footer id="filewatch-bar">
+  <span class="fw-label">FILE WATCH</span>
+  <input id="fw-path" class="fw-input" value="agent_state.json">
+  <button id="fw-toggle" class="fw-btn fw-btn-start">START</button>
+  <span id="fw-status" class="fw-status">Idle</span>
+</footer>
+<script>
+/* ===== DOM Helpers (no innerHTML - safe methods only) ===== */
+function h(tag, p) {
+  var el = document.createElement(tag);
+  if (!p) return el;
+  if (p.cls) el.className = p.cls;
+  if (p.text !== undefined) el.textContent = p.text;
+  if (p.htmlFor) el.htmlFor = p.htmlFor;
+  if (p.id) el.id = p.id;
+  if (p.draggable) el.draggable = true;
+  if (p.style) Object.assign(el.style, p.style);
+  if (p.data) { for (var k in p.data) el.dataset[k] = p.data[k]; }
+  for (var k in p) { if (k.slice(0,2) === 'on') el.addEventListener(k.slice(2), p[k]); }
+  return el;
+}
+function txt(s) { return document.createTextNode(s); }
+function svgNS(tag, attrs) {
+  var el = document.createElementNS('http://www.w3.org/2000/svg', tag);
+  if (attrs) { for (var k in attrs) el.setAttribute(k, attrs[k]); }
+  return el;
+}
+function clear(el) { while (el.firstChild) el.removeChild(el.firstChild); }
+
+/* ===== Constants ===== */
+var STAGES = ['Planning','Scaffolding','Core Logic','API Layer','Frontend','Testing','Integration','Review'];
+var COLS = ['backlog','in-progress','review','done'];
+var COL_LABELS = {backlog:'Backlog','in-progress':'In Progress',review:'Review',done:'Done'};
+var ACCENT_CYCLE = ['var(--cyan)','var(--green)','var(--amber)','var(--violet)','var(--blue)','var(--rose)'];
+
+/* ===== State ===== */
+var S = {
+  sessions: {},
+  order: [],
+  active: null,
+  screen: 'desktop',
+  maxPanes: {laptop:2, desktop:3, ultrawide:4},
+  tiles: 2,
+  panes: [],
+  fw: {on:false, iv:null},
+  simIv: null,
+  feedFilter: 'all'
+};
+
+/* ===== Demo Data ===== */
+function mkCCRS() {
+  return {
+    id:'ccrs', name:'CCRS E-Signature', project:'CCRS E-Signature Module',
+    stageIdx:3, total:15, done:4,
+    stages: STAGES.map(function(s,i){return {name:s, status: i<3?'completed':i===3?'active':'pending'};}),
+    agents:[
+      {id:'orch',name:'Orchestrator',role:'Team Lead',type:'leader',status:'leader',icon:'\uD83C\uDFAF',task:'Coordinating API layer tasks',m:{ctx:'38%',cost:'$1.20',msgs:62}},
+      {id:'back',name:'Backend Arch',role:'Backend Developer',type:'backend',status:'working',icon:'\u2699\uFE0F',task:'Implementing signature verification endpoint',m:{ctx:'52%',cost:'$0.95',msgs:48}},
+      {id:'front',name:'Frontend Dev',role:'Frontend Developer',type:'frontend',status:'thinking',icon:'\uD83C\uDFA8',task:'Designing document preview component',m:{ctx:'29%',cost:'$0.67',msgs:31}},
+      {id:'test',name:'Test Engineer',role:'QA Engineer',type:'tester',status:'idle',icon:'\uD83E\uDDEA',task:'Waiting for API endpoints',m:{ctx:'15%',cost:'$0.32',msgs:18}},
+      {id:'rev',name:'Code Reviewer',role:'Senior Reviewer',type:'reviewer',status:'idle',icon:'\uD83D\uDC41\uFE0F',task:'Standby for review cycle',m:{ctx:'8%',cost:'$0.15',msgs:9}}
+    ],
+    tasks:[
+      {id:'t1',title:'Setup Laravel project',status:'done',assignee:'Backend Arch',priority:'high',deps:[]},
+      {id:'t2',title:'Configure Filament admin',status:'done',assignee:'Backend Arch',priority:'high',deps:['t1']},
+      {id:'t3',title:'Design DB schema',status:'done',assignee:'Orchestrator',priority:'high',deps:[]},
+      {id:'t4',title:'Create migration files',status:'done',assignee:'Backend Arch',priority:'medium',deps:['t3']},
+      {id:'t5',title:'Signature verification API',status:'in-progress',assignee:'Backend Arch',priority:'high',deps:['t4'],rec:true,recWhy:'Run php artisan make:controller SignatureController'},
+      {id:'t6',title:'Document upload endpoint',status:'in-progress',assignee:'Backend Arch',priority:'medium',deps:['t4']},
+      {id:'t7',title:'Auth middleware',status:'review',assignee:'Backend Arch',priority:'high',deps:['t1']},
+      {id:'t8',title:'Document preview UI',status:'backlog',assignee:'Frontend Dev',priority:'medium',deps:['t6']},
+      {id:'t9',title:'Signature pad component',status:'backlog',assignee:'Frontend Dev',priority:'high',deps:['t5']},
+      {id:'t10',title:'E-sign workflow page',status:'backlog',assignee:'Frontend Dev',priority:'medium',deps:['t5','t8','t9']},
+      {id:'t11',title:'API integration tests',status:'backlog',assignee:'Test Engineer',priority:'high',deps:['t5','t6']},
+      {id:'t12',title:'E2E signing flow test',status:'backlog',assignee:'Test Engineer',priority:'medium',deps:['t10','t11']},
+      {id:'t13',title:'PDF generation service',status:'backlog',assignee:'Backend Arch',priority:'low',deps:['t5']},
+      {id:'t14',title:'Email notification system',status:'backlog',assignee:'Backend Arch',priority:'low',deps:['t7']},
+      {id:'t15',title:'Audit trail logging',status:'backlog',assignee:'Backend Arch',priority:'medium',deps:['t7']}
+    ],
+    events:[]
+  };
+}
+function mkCEA() {
+  return {
+    id:'ceafrica', name:'CE Africa Valuation', project:'CE Africa Valuation Engine',
+    stageIdx:1, total:12, done:2,
+    stages: STAGES.map(function(s,i){return {name:s, status: i<1?'completed':i===1?'active':'pending'};}),
+    agents:[
+      {id:'lead',name:'Lead Agent',role:'Project Lead',type:'leader',status:'leader',icon:'\uD83C\uDFD7\uFE0F',task:'Scaffolding React project structure',m:{ctx:'44%',cost:'$0.88',msgs:35}},
+      {id:'api',name:'API Engineer',role:'Backend Developer',type:'backend',status:'working',icon:'\uD83D\uDD0C',task:'Setting up Supabase schema',m:{ctx:'31%',cost:'$0.55',msgs:22}},
+      {id:'ui',name:'UI Developer',role:'Frontend Developer',type:'frontend',status:'idle',icon:'\uD83D\uDC8E',task:'Waiting for component specs',m:{ctx:'12%',cost:'$0.28',msgs:14}},
+      {id:'qa',name:'QA Agent',role:'Test Engineer',type:'tester',status:'idle',icon:'\u2705',task:'Preparing test framework',m:{ctx:'7%',cost:'$0.12',msgs:6}}
+    ],
+    tasks:[
+      {id:'c1',title:'Initialize React project',status:'done',assignee:'Lead Agent',priority:'high',deps:[]},
+      {id:'c2',title:'Setup Supabase project',status:'done',assignee:'API Engineer',priority:'high',deps:[]},
+      {id:'c3',title:'Design data model',status:'in-progress',assignee:'Lead Agent',priority:'high',deps:[]},
+      {id:'c4',title:'Create Supabase tables',status:'in-progress',assignee:'API Engineer',priority:'high',deps:['c3'],rec:true,recWhy:'supabase db push --linked'},
+      {id:'c5',title:'Valuation calculator logic',status:'backlog',assignee:'API Engineer',priority:'high',deps:['c4']},
+      {id:'c6',title:'Dashboard layout',status:'backlog',assignee:'UI Developer',priority:'medium',deps:['c1']},
+      {id:'c7',title:'Input forms',status:'backlog',assignee:'UI Developer',priority:'medium',deps:['c3','c6']},
+      {id:'c8',title:'Results visualization',status:'backlog',assignee:'UI Developer',priority:'high',deps:['c5','c6']},
+      {id:'c9',title:'API edge functions',status:'backlog',assignee:'API Engineer',priority:'medium',deps:['c4','c5']},
+      {id:'c10',title:'Auth & permissions',status:'backlog',assignee:'Lead Agent',priority:'high',deps:['c4']},
+      {id:'c11',title:'Unit tests',status:'backlog',assignee:'QA Agent',priority:'medium',deps:['c5','c9']},
+      {id:'c12',title:'Integration tests',status:'backlog',assignee:'QA Agent',priority:'low',deps:['c9','c10']}
+    ],
+    events:[]
+  };
+}
+
+/* ===== Custom Session Factory ===== */
+var customCount = 0;
+function mkCustom(name) {
+  customCount++;
+  var sid = 'custom-' + customCount + '-' + Date.now();
+  return {
+    id: sid, name: name, project: name,
+    stageIdx: 0, total: 0, done: 0,
+    stages: STAGES.map(function(s){ return {name:s, status:'pending'}; }),
+    agents: [
+      {id:sid+'-lead',name:'Lead Agent',role:'Project Lead',type:'leader',status:'leader',icon:'\uD83D\uDC51',task:'Monitoring project progress',m:{ctx:'0%',cost:'$0.00',msgs:0}}
+    ],
+    tasks: [],
+    events: [{agent:'Lead Agent',type:'message',text:'Session added to Mission Control',timestamp:ts()}]
+  };
+}
+
+/* ===== Session Dropdown ===== */
+var dropdownOpen = false;
+function addSession(e) {
+  if (e) e.stopPropagation();
+  if (dropdownOpen) { closeDropdown(); return; }
+  dropdownOpen = true;
+  /* Backdrop to close on outside click */
+  var backdrop = h('div',{cls:'dropdown-backdrop',onclick:closeDropdown});
+  document.body.appendChild(backdrop);
+  /* Dropdown container — appended to body to escape topbar stacking context */
+  var dd = h('div',{cls:'session-dropdown',id:'session-dropdown'});
+  dd.addEventListener('click', function(ev){ ev.stopPropagation(); });
+  dd.appendChild(h('div',{cls:'session-dropdown-header',text:'Claude Code Sessions'}));
+  dd.appendChild(h('div',{cls:'session-dropdown-loading',text:'Scanning projects\u2026'}));
+  /* Position relative to Add button using getBoundingClientRect */
+  var addBtn = document.querySelector('.add-session-btn');
+  if (addBtn) {
+    var rect = addBtn.getBoundingClientRect();
+    dd.style.top = (rect.bottom + 6) + 'px';
+    dd.style.right = (window.innerWidth - rect.right) + 'px';
+  }
+  document.body.appendChild(dd);
+  /* Fetch available sessions */
+  fetch('available_sessions.json').then(function(r){
+    if(!r.ok) throw new Error('Run discover_sessions.sh first');
+    return r.json();
+  }).then(function(list){
+    clear(dd);
+    dd.appendChild(h('div',{cls:'session-dropdown-header',text:'Claude Code Sessions'}));
+    /* Filter out already-added sessions and non-project entries */
+    var available = list.filter(function(s){
+      if (s.name === 'Development Projects') return false;
+      return true;
+    });
+    if (!available.length) {
+      dd.appendChild(h('div',{cls:'session-dropdown-empty',text:'No sessions found. Run discover_sessions.sh'}));
+      return;
+    }
+    /* Sort by last active date, newest first */
+    available.sort(function(a,b){
+      return (b.lastActive||'').localeCompare(a.lastActive||'');
+    });
+    available.forEach(function(s){
+      var alreadyAdded = false;
+      S.order.forEach(function(sid){ if(S.sessions[sid] && S.sessions[sid].name === s.name) alreadyAdded = true; });
+      var item = h('div',{cls:'session-dropdown-item'+(alreadyAdded?' disabled':'')});
+      item.appendChild(h('span',{cls:'sdi-icon',text:'\uD83D\uDCC2'}));
+      var info = h('div',{cls:'sdi-info'});
+      info.appendChild(h('div',{cls:'sdi-name',text:s.name}));
+      var meta = h('div',{cls:'sdi-meta'});
+      meta.appendChild(h('span',{text:s.conversations+' conversations'}));
+      if (s.lastActive) {
+        var d = new Date(s.lastActive);
+        var ago = timeSince(d);
+        meta.appendChild(h('span',{text:ago}));
+      }
+      if (alreadyAdded) meta.appendChild(h('span',{text:'\u2713 added',style:{color:'var(--green)'}}));
+      info.appendChild(meta);
+      item.appendChild(info);
+      if (!alreadyAdded) {
+        item.addEventListener('click', function(){ selectSession(s); });
+      }
+      dd.appendChild(item);
+    });
+  }).catch(function(err){
+    clear(dd);
+    dd.appendChild(h('div',{cls:'session-dropdown-header',text:'Claude Code Sessions'}));
+    dd.appendChild(h('div',{cls:'session-dropdown-empty',text:'Could not load sessions. Run ./discover_sessions.sh'}));
+  });
+}
+function timeSince(date) {
+  var secs = Math.floor((new Date() - date) / 1000);
+  if (secs < 60) return 'just now';
+  var mins = Math.floor(secs / 60);
+  if (mins < 60) return mins + 'm ago';
+  var hrs = Math.floor(mins / 60);
+  if (hrs < 24) return hrs + 'h ago';
+  var days = Math.floor(hrs / 24);
+  if (days < 30) return days + 'd ago';
+  return Math.floor(days / 30) + 'mo ago';
+}
+function selectSession(s) {
+  closeDropdown();
+  var sess = mkCustom(s.name);
+  S.sessions[sess.id] = sess;
+  S.order.push(sess.id);
+  S.active = sess.id;
+  fixPanes();
+  S.panes.forEach(function(p, i){ if(i===0) p.sid = sess.id; });
+  render();
+}
+function closeDropdown() {
+  dropdownOpen = false;
+  var dd = document.getElementById('session-dropdown');
+  if (dd && dd.parentNode) dd.parentNode.removeChild(dd);
+  var bd = document.querySelector('.dropdown-backdrop');
+  if (bd) bd.parentNode.removeChild(bd);
+}
+function removeSession(sid) {
+  if (S.order.length <= 1) return;
+  delete S.sessions[sid];
+  S.order = S.order.filter(function(id){ return id !== sid; });
+  if (S.active === sid) S.active = S.order[0];
+  S.panes.forEach(function(p){ if(p.sid===sid) p.sid = S.active; });
+  render();
+}
+
+/* ===== Event Pools ===== */
+var POOLS = {
+  ccrs:[
+    {agent:'Backend Arch',type:'tool',text:'Running artisan make:controller SignatureController'},
+    {agent:'Backend Arch',type:'file',text:'Modified app/Http/Controllers/SignatureController.php'},
+    {agent:'Backend Arch',type:'tool',text:'Executing php artisan migrate'},
+    {agent:'Frontend Dev',type:'thinking',text:'Analyzing document preview requirements...'},
+    {agent:'Frontend Dev',type:'file',text:'Created resources/js/Components/DocumentPreview.vue'},
+    {agent:'Test Engineer',type:'message',text:'Waiting for signature API to be testable'},
+    {agent:'Orchestrator',type:'task',text:'Moved "Auth middleware" to Review column'},
+    {agent:'Code Reviewer',type:'message',text:'Ready to review authentication module'},
+    {agent:'Backend Arch',type:'tool',text:'Running phpunit --filter=SignatureTest'},
+    {agent:'Frontend Dev',type:'tool',text:'npm run build -- analyzing bundle size'},
+    {agent:'Orchestrator',type:'thinking',text:'Evaluating critical path dependencies...'},
+    {agent:'Backend Arch',type:'file',text:'Updated routes/api.php with signature routes'},
+    {agent:'Test Engineer',type:'tool',text:'Generating test fixtures for signature data'},
+    {agent:'Frontend Dev',type:'file',text:'Modified resources/css/signature.css'},
+    {agent:'Backend Arch',type:'error',text:'Type error in SignatureService::verify()'},
+    {agent:'Backend Arch',type:'file',text:'Fixed app/Services/SignatureService.php'}
+  ],
+  ceafrica:[
+    {agent:'Lead Agent',type:'tool',text:'npx create-react-app ce-valuation --template typescript'},
+    {agent:'API Engineer',type:'tool',text:'supabase db push --linked'},
+    {agent:'API Engineer',type:'file',text:'Created supabase/migrations/001_create_valuations.sql'},
+    {agent:'Lead Agent',type:'thinking',text:'Designing component architecture...'},
+    {agent:'UI Developer',type:'message',text:'Awaiting design system specifications'},
+    {agent:'API Engineer',type:'file',text:'Modified supabase/functions/calculate/index.ts'},
+    {agent:'Lead Agent',type:'task',text:'Assigned "Dashboard layout" to UI Developer'},
+    {agent:'QA Agent',type:'tool',text:'Configuring Jest + React Testing Library'},
+    {agent:'API Engineer',type:'thinking',text:'Optimizing valuation query performance...'},
+    {agent:'Lead Agent',type:'file',text:'Updated src/types/valuation.ts'},
+    {agent:'API Engineer',type:'error',text:'RLS policy blocking insert on valuations table'},
+    {agent:'API Engineer',type:'file',text:'Fixed supabase/migrations/002_fix_rls.sql'}
+  ]
+};
+
+/* ===== Timestamp ===== */
+function ts() { return new Date().toTimeString().slice(0,8); }
+
+/* ===== Rendering ===== */
+function renderTabs() {
+  if (dropdownOpen) return;
+  var c = document.getElementById('session-tabs'); clear(c);
+  S.order.forEach(function(sid, i) {
+    var sess = S.sessions[sid];
+    var tab = h('div', {cls:'session-tab'+(sid===S.active?' active':''), onclick:function(){S.active=sid;fixPanes();render();}});
+    var dot = h('span', {text:'\u25CF ', style:{color:ACCENT_CYCLE[i%ACCENT_CYCLE.length],fontSize:'0.7em'}});
+    tab.appendChild(dot);
+    tab.appendChild(txt(sess.name));
+    if (S.order.length > 1) {
+      var close = h('span', {cls:'tab-close', text:'\u00D7', onclick:function(e){
+        e.stopPropagation();
+        removeSession(sid);
+      }});
+      tab.appendChild(close);
+    }
+    c.appendChild(tab);
+  });
+  c.appendChild(h('div', {cls:'add-session-btn', text:'+ Add', onclick:addSession}));
+}
+
+function renderScreenPicker() {
+  var c = document.getElementById('screen-picker'); clear(c);
+  [{k:'laptop',l:'14"'},{k:'desktop',l:'27"'},{k:'ultrawide',l:'49"'}].forEach(function(p){
+    c.appendChild(h('div', {cls:'picker-btn'+(S.screen===p.k?' active':''), text:p.l, onclick:function(){
+      S.screen=p.k; document.body.className='screen-'+p.k;
+      var mx=S.maxPanes[p.k]; if(S.tiles>mx)S.tiles=mx; S.panes=S.panes.slice(0,S.tiles); render();
+    }}));
+  });
+}
+
+function renderTilePicker() {
+  var c = document.getElementById('tile-picker'); clear(c);
+  var mx = S.maxPanes[S.screen];
+  for (var i=1;i<=mx;i++) {
+    (function(n){
+      c.appendChild(h('div',{cls:'picker-btn'+(S.tiles===n?' active':''),text:'|'.repeat(n),onclick:function(){
+        S.tiles=n; while(S.panes.length<n)S.panes.push({sid:S.active,view:'agents'}); S.panes=S.panes.slice(0,n); render();
+      }}));
+    })(i);
+  }
+}
+
+function renderWorkspace() {
+  var ws = document.getElementById('workspace'); clear(ws);
+  S.panes.forEach(function(pane, idx) {
+    var p = h('div',{cls:'pane'});
+    var hdr = h('div',{cls:'pane-header'});
+    /* Session selector */
+    var sSel = h('select',{onchange:function(e){S.panes[idx].sid=e.target.value;render();}});
+    S.order.forEach(function(sid){
+      var o=h('option',{text:S.sessions[sid].name}); o.value=sid; if(sid===pane.sid)o.selected=true; sSel.appendChild(o);
+    });
+    /* View selector */
+    var vSel = h('select',{onchange:function(e){S.panes[idx].view=e.target.value;render();}});
+    [{v:'agents',l:'Agent View'},{v:'kanban',l:'Kanban Board'}].forEach(function(x){
+      var o=h('option',{text:x.l}); o.value=x.v; if(x.v===pane.view)o.selected=true; vSel.appendChild(o);
+    });
+    hdr.appendChild(sSel); hdr.appendChild(vSel);
+    p.appendChild(hdr);
+    var body = h('div',{cls:'pane-body'});
+    var sess = S.sessions[pane.sid];
+    if (sess) { if (pane.view==='agents') renderAgentView(body,sess); else renderKanban(body,sess); }
+    p.appendChild(body);
+    ws.appendChild(p);
+  });
+}
+
+/* ----- Agent View ----- */
+function renderAgentView(container, sess) {
+  /* Build Banner */
+  var pct = sess.total>0 ? Math.round((sess.done/sess.total)*100) : 0;
+  var banner = h('div',{cls:'build-banner'});
+  var ring = h('div',{cls:'progress-ring'});
+  var r=22, circ=2*Math.PI*r, off=circ-(pct/100)*circ;
+  var sv = svgNS('svg',{viewBox:'0 0 56 56'});
+  sv.appendChild(svgNS('circle',{cx:'28',cy:'28',r:String(r),'class':'ring-bg'}));
+  sv.appendChild(svgNS('circle',{cx:'28',cy:'28',r:String(r),'class':'ring-fg','stroke-dasharray':String(circ),'stroke-dashoffset':String(off)}));
+  ring.appendChild(sv);
+  ring.appendChild(h('div',{cls:'progress-pct',text:pct+'%'}));
+  banner.appendChild(ring);
+  var stats = h('div',{cls:'build-stats'});
+  stats.appendChild(h('div',{cls:'build-project',text:sess.project}));
+  stats.appendChild(h('div',{cls:'build-detail',text:'Stage '+(sess.stageIdx+1)+'/'+STAGES.length+' \u2022 '+sess.done+'/'+sess.total+' tasks'}));
+  banner.appendChild(stats);
+  container.appendChild(banner);
+
+  /* Pipeline */
+  var pipe = h('div',{cls:'pipeline'});
+  sess.stages.forEach(function(st){
+    var pill=h('div',{cls:'stage-pill '+st.status});
+    pill.appendChild(h('span',{cls:'stage-dot'}));
+    pill.appendChild(txt(' '+st.name));
+    pipe.appendChild(pill);
+  });
+  container.appendChild(pipe);
+
+  /* Agent Cards */
+  var grid = h('div',{cls:'agents-grid'});
+  sess.agents.forEach(function(ag){
+    var card = h('div',{cls:'agent-card status-'+ag.status});
+    var top = h('div',{cls:'agent-top'});
+    top.appendChild(h('span',{cls:'agent-icon',text:ag.icon}));
+    var info = h('div',{cls:'agent-info'});
+    info.appendChild(h('div',{cls:'agent-name',text:ag.name}));
+    info.appendChild(h('div',{cls:'agent-role',text:ag.role}));
+    top.appendChild(info);
+    var stEl = h('span',{cls:'agent-status '+ag.status});
+    stEl.appendChild(txt(ag.status));
+    if (ag.status==='working'||ag.status==='thinking') {
+      var dots=h('span',{cls:'typing-dots'});
+      dots.appendChild(h('span',{text:'.'}));dots.appendChild(h('span',{text:'.'}));dots.appendChild(h('span',{text:'.'}));
+      stEl.appendChild(dots);
+    }
+    top.appendChild(stEl);
+    card.appendChild(top);
+    card.appendChild(h('div',{cls:'agent-task',text:ag.task}));
+    var met=h('div',{cls:'agent-metrics'});
+    met.appendChild(h('span',{text:'CTX '+ag.m.ctx}));
+    met.appendChild(h('span',{text:ag.m.cost}));
+    met.appendChild(h('span',{text:ag.m.msgs+' msgs'}));
+    card.appendChild(met);
+    grid.appendChild(card);
+  });
+  container.appendChild(grid);
+
+  /* Feed */
+  renderFeed(container, sess);
+}
+
+/* ----- Feed ----- */
+function renderFeed(container, sess) {
+  var sec = h('div',{cls:'feed-section'});
+  var hdr = h('div',{cls:'feed-header'});
+  hdr.appendChild(h('span',{text:'ACTIVITY'}));
+  var flt = h('div',{cls:'feed-filters'});
+  ['all','tool','file','task','message','error'].forEach(function(f){
+    flt.appendChild(h('div',{cls:'feed-filter-btn'+(S.feedFilter===f?' active':''),text:f.toUpperCase(),onclick:function(){S.feedFilter=f;render();}}));
+  });
+  hdr.appendChild(flt);
+  sec.appendChild(hdr);
+  var list = h('div',{cls:'feed-list'});
+  var evts = S.feedFilter==='all' ? sess.events : sess.events.filter(function(e){return e.type===S.feedFilter;});
+  evts.slice(-30).reverse().forEach(function(ev){
+    var item = h('div',{cls:'feed-item feed-type-'+ev.type});
+    item.appendChild(h('span',{cls:'feed-time',text:ev.timestamp||''}));
+    item.appendChild(h('span',{cls:'feed-agent',text:ev.agent}));
+    item.appendChild(h('span',{cls:'feed-text',text:ev.text}));
+    list.appendChild(item);
+  });
+  sec.appendChild(list);
+  container.appendChild(sec);
+}
+
+/* ----- Kanban ----- */
+function renderKanban(container, sess) {
+  var kb = h('div',{cls:'kanban'});
+  COLS.forEach(function(col){
+    var colEl = h('div',{cls:'kanban-col'});
+    var tasks = sess.tasks.filter(function(t){return t.status===col;});
+    var hdr = h('div',{cls:'kanban-col-header'});
+    hdr.appendChild(h('span',{text:COL_LABELS[col]}));
+    hdr.appendChild(h('span',{cls:'kanban-count',text:String(tasks.length)}));
+    colEl.appendChild(hdr);
+    var area = h('div',{cls:'kanban-cards',data:{status:col}});
+    area.addEventListener('dragover',function(e){e.preventDefault();this.classList.add('drag-over');});
+    area.addEventListener('dragleave',function(){this.classList.remove('drag-over');});
+    area.addEventListener('drop',function(e){
+      e.preventDefault(); this.classList.remove('drag-over');
+      var tid=e.dataTransfer.getData('text/plain'), sesId=e.dataTransfer.getData('session');
+      var s=S.sessions[sesId]; if(!s)return;
+      var t=null; for(var i=0;i<s.tasks.length;i++){if(s.tasks[i].id===tid){t=s.tasks[i];break;}}
+      if(!t)return;
+      var old=t.status; t.status=col;
+      if(col==='done'&&old!=='done')s.done++;
+      if(old==='done'&&col!=='done')s.done--;
+      /* Auto-pull dependencies when moving to in-progress */
+      if(col==='in-progress'&&old==='backlog') pullDependencies(s,t);
+      syncAgentStatus(s);
+      s.events.push({agent:'You',type:'task',text:'Moved "'+t.title+'" to '+COL_LABELS[col],timestamp:ts()});
+      render();
+    });
+    tasks.forEach(function(task){
+      var isDep = task.depOf;
+      var card = h('div',{cls:'kanban-card'+(task.rec?' recommended':'')+(isDep?' dependency':''),draggable:true,data:{taskId:task.id}});
+      card.addEventListener('dragstart',function(e){e.dataTransfer.setData('text/plain',task.id);e.dataTransfer.setData('session',sess.id);card.classList.add('dragging');});
+      card.addEventListener('dragend',function(){card.classList.remove('dragging');});
+      card.appendChild(h('div',{cls:'kanban-card-title',text:task.title}));
+      var meta = h('div',{cls:'kanban-card-meta'});
+      meta.appendChild(h('span',{cls:'kanban-card-assignee',text:task.assignee}));
+      var pc = task.priority==='high'?'priority-high':task.priority==='medium'?'priority-medium':'priority-low';
+      meta.appendChild(h('span',{cls:'kanban-card-priority '+pc,text:task.priority.toUpperCase()}));
+      card.appendChild(meta);
+      /* Show dependency tags */
+      if (task.deps && task.deps.length) {
+        var depTags = h('div',{cls:'kanban-card-deps'});
+        task.deps.forEach(function(depId){
+          var depTask = sess.tasks.filter(function(t2){return t2.id===depId;})[0];
+          if(depTask) depTags.appendChild(h('span',{cls:'dep-tag',text:'\u2190 '+depTask.title}));
+        });
+        card.appendChild(depTags);
+      }
+      /* Dependency pull badge */
+      if (isDep && !task.rec) {
+        card.appendChild(h('div',{cls:'dep-badge',text:'\uD83D\uDD17 Required for: '+isDep}));
+        var btns = h('div',{cls:'approval-btns'});
+        btns.appendChild(h('button',{cls:'btn-approve',text:'\u2713 Allow',onclick:function(e){
+          e.stopPropagation(); task.depOf=null;
+          task.status='in-progress';
+          syncAgentStatus(sess);
+          sess.events.push({agent:'You',type:'task',text:'Allowed: '+task.title+' \u2192 In Progress (dependency)',timestamp:ts()});
+          render();
+        }}));
+        btns.appendChild(h('button',{cls:'btn-reject',text:'\u2717 Deny',onclick:function(e){
+          e.stopPropagation();task.depOf=null;
+          sess.events.push({agent:'You',type:'task',text:'Denied dependency pull: '+task.title,timestamp:ts()});
+          render();
+        }}));
+        card.appendChild(btns);
+      }
+      /* Claude permission request */
+      if (task.rec) {
+        card.appendChild(h('div',{cls:'recommend-badge',text:'\u26A1 Permission: '+task.recWhy}));
+        var btns2 = h('div',{cls:'approval-btns'});
+        btns2.appendChild(h('button',{cls:'btn-approve',text:'\u2713 Allow',onclick:function(e){
+          e.stopPropagation(); task.rec=false;
+          var ci=COLS.indexOf(task.status);
+          if(ci<COLS.length-1){
+            if(task.status==='done')sess.done--;
+            task.status=COLS[ci+1];
+            if(task.status==='done')sess.done++;
+          }
+          syncAgentStatus(sess);
+          sess.events.push({agent:'You',type:'task',text:'Allowed: '+task.title+' \u2192 '+COL_LABELS[task.status],timestamp:ts()});
+          render();
+        }}));
+        btns2.appendChild(h('button',{cls:'btn-reject',text:'\u2717 Deny',onclick:function(e){
+          e.stopPropagation();task.rec=false;
+          sess.events.push({agent:'You',type:'task',text:'Denied: '+task.title,timestamp:ts()});
+          render();
+        }}));
+        card.appendChild(btns2);
+      }
+      area.appendChild(card);
+    });
+    colEl.appendChild(area);
+    kb.appendChild(colEl);
+  });
+  container.appendChild(kb);
+}
+
+/* ===== Dependency Pull (Sprint Planning) ===== */
+function pullDependencies(sess, movedTask) {
+  /* Find all tasks that the moved task depends on which are still in backlog */
+  if (!movedTask.deps || !movedTask.deps.length) return;
+  var pulled = [];
+  movedTask.deps.forEach(function(depId) {
+    var dep = null;
+    for (var i=0;i<sess.tasks.length;i++){if(sess.tasks[i].id===depId){dep=sess.tasks[i];break;}}
+    if (!dep || dep.status !== 'backlog') return;
+    /* Mark as dependency pull for user approval */
+    dep.depOf = movedTask.title;
+    pulled.push(dep);
+  });
+  /* Also find tasks that depend on the same parent dependencies (transitive) */
+  if (pulled.length) {
+    pulled.forEach(function(dep) {
+      /* Recursively check if the pulled dep also has unresolved deps */
+      if (dep.deps && dep.deps.length) {
+        dep.deps.forEach(function(subDepId) {
+          var subDep = null;
+          for (var i=0;i<sess.tasks.length;i++){if(sess.tasks[i].id===subDepId){subDep=sess.tasks[i];break;}}
+          if (subDep && subDep.status === 'backlog' && !subDep.depOf) {
+            subDep.depOf = dep.title;
+          }
+        });
+      }
+    });
+    /* Log the dependency analysis */
+    var names = pulled.map(function(p){return '"'+p.title+'"';}).join(', ');
+    sess.events.push({agent:'Orchestrator',type:'thinking',text:'Dependency analysis: '+names+' needed for "'+movedTask.title+'"',timestamp:ts()});
+  }
+}
+
+/* ===== Sync Agent Status from Tasks ===== */
+function syncAgentStatus(sess) {
+  sess.agents.forEach(function(ag) {
+    if (ag.type === 'leader') return;
+    var myTasks = sess.tasks.filter(function(t) { return t.assignee === ag.name; });
+    if (!myTasks.length) { ag.status = 'idle'; return; }
+    var hasInProgress = myTasks.some(function(t) { return t.status === 'in-progress'; });
+    var hasReview = myTasks.some(function(t) { return t.status === 'review'; });
+    var allDone = myTasks.every(function(t) { return t.status === 'done'; });
+    if (hasInProgress) { ag.status = 'working'; ag.task = myTasks.filter(function(t){return t.status==='in-progress';})[0].title; }
+    else if (hasReview) { ag.status = 'thinking'; ag.task = 'Reviewing: ' + myTasks.filter(function(t){return t.status==='review';})[0].title; }
+    else if (allDone) { ag.status = 'idle'; ag.task = 'All tasks completed'; }
+    else { ag.status = 'idle'; ag.task = 'Waiting for tasks to start'; }
+  });
+}
+
+/* ===== Simulation ===== */
+function simTick() {
+  S.order.forEach(function(sid){
+    var sess=S.sessions[sid], pool=POOLS[sid]; if(!pool||!pool.length)return;
+    /* Generate events */
+    var n=Math.random()>0.6?2:1;
+    for(var i=0;i<n;i++){
+      var ev=pool[Math.floor(Math.random()*pool.length)];
+      sess.events.push({agent:ev.agent,type:ev.type,text:ev.text,timestamp:ts()});
+      if(sess.events.length>60)sess.events.shift();
+    }
+    /* Auto-advance tasks — skip tasks awaiting approval (rec:true) or dependency pull (depOf) */
+    if(Math.random()>0.7){
+      var mv=sess.tasks.filter(function(t){return t.status!=='done' && !t.rec && !t.depOf;});
+      if(mv.length){
+        var t=mv[Math.floor(Math.random()*mv.length)];
+        var ci=COLS.indexOf(t.status);
+        if(ci<COLS.length-1){t.status=COLS[ci+1];if(t.status==='done')sess.done++;}
+      }
+    }
+    /* Occasionally request permission for a task (Claude Code style) */
+    if(Math.random()>0.92){
+      var ur=sess.tasks.filter(function(t){return !t.rec&&!t.depOf&&t.status!=='done'&&t.status!=='backlog';});
+      if(ur.length){
+        var t2=ur[Math.floor(Math.random()*ur.length)];
+        t2.rec=true;
+        /* Generate Claude Code-style permission requests based on task type */
+        var perms=[
+          'Execute: npm run build','Run database migration','Write to '+t2.title.toLowerCase().replace(/ /g,'_')+'.php',
+          'Modify routes/api.php','Execute test suite','Read environment config','Install composer package',
+          'Run artisan command','Deploy to staging','Update .env configuration'
+        ];
+        t2.recWhy=perms[Math.floor(Math.random()*perms.length)];
+      }
+    }
+    /* Update metrics for active agents */
+    sess.agents.forEach(function(ag){
+      if(ag.status==='working'||ag.status==='thinking'){
+        ag.m.msgs=parseInt(ag.m.msgs)+Math.floor(Math.random()*3);
+        ag.m.cost='$'+(parseFloat(ag.m.cost.replace('$',''))+Math.random()*0.05).toFixed(2);
+        ag.m.ctx=Math.min(99,parseInt(ag.m.ctx)+Math.floor(Math.random()*2))+'%';
+      }
+    });
+    /* Sync agent status from task status */
+    syncAgentStatus(sess);
+  });
+  render();
+}
+
+/* ===== File Watch ===== */
+function toggleFW() {
+  var path=document.getElementById('fw-path').value, stEl=document.getElementById('fw-status'), btn=document.getElementById('fw-toggle');
+  if(S.fw.on){
+    clearInterval(S.fw.iv);S.fw.on=false;
+    btn.textContent='START';btn.className='fw-btn fw-btn-start';stEl.textContent='Idle';return;
+  }
+  S.fw.on=true;btn.textContent='STOP';btn.className='fw-btn fw-btn-stop';stEl.textContent='Watching...';
+  function poll(){
+    fetch(path).then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.json();}).then(function(data){
+      applyFW(data);stEl.textContent='Updated '+ts();
+    }).catch(function(e){stEl.textContent='Error: '+e.message;});
+  }
+  poll(); S.fw.iv=setInterval(poll,3000);
+}
+function applyFW(d) {
+  var sid='filewatch';
+  if(!S.sessions[sid]){
+    S.sessions[sid]={id:sid,name:d.project||'File Watch',project:d.project||'File Watch',stageIdx:0,total:0,done:0,stages:[],agents:[],tasks:[],events:[]};
+    S.order.push(sid);S.active=sid;fixPanes();
+  }
+  var s=S.sessions[sid];
+  s.name=d.project||s.name;s.project=d.project||s.project;s.stageIdx=d.currentStageIdx||0;s.total=d.totalTasks||0;s.done=d.completedTasks||0;
+  if(d.stages)s.stages=d.stages;
+  if(d.agents)s.agents=d.agents.map(function(a){return {id:a.id,name:a.name,role:a.role,type:a.type||'backend',status:a.status||'idle',icon:a.icon||'\u2699\uFE0F',task:a.task||'',m:a.metrics||{ctx:'0%',cost:'$0',msgs:0}};});
+  if(d.events){d.events.forEach(function(ev){
+    s.events.push({agent:ev.agent||'',type:ev.type||'message',text:(ev.text||'').replace(/<[^>]*>/g,''),timestamp:ev.timestamp||ts()});
+  });while(s.events.length>60)s.events.shift();}
+  render();
+}
+
+/* ===== Clock ===== */
+function updateClock(){document.getElementById('clock').textContent=new Date().toLocaleTimeString('en-US',{hour12:false});}
+
+/* ===== Helpers ===== */
+function fixPanes(){S.panes=S.panes.map(function(p){return {sid:p.sid||S.active,view:p.view||'agents'};});}
+
+/* ===== Main Render ===== */
+function render(){renderTabs();renderScreenPicker();renderTilePicker();renderWorkspace();}
+
+/* ===== Init ===== */
+(function init(){
+  S.sessions.ccrs=mkCCRS();S.sessions.ceafrica=mkCEA();
+  S.order=['ccrs','ceafrica'];S.active='ccrs';
+  S.panes=[{sid:'ccrs',view:'agents'},{sid:'ccrs',view:'kanban'}];
+  document.getElementById('fw-toggle').addEventListener('click',toggleFW);
+  document.addEventListener('keydown',function(e){
+    if(e.key==='f'&&!e.ctrlKey&&!e.metaKey&&e.target.tagName!=='INPUT')
+      document.getElementById('filewatch-bar').classList.toggle('visible');
+  });
+  /* Seed events & sync initial agent statuses */
+  S.order.forEach(function(sid){
+    var pool=POOLS[sid];if(!pool)return;
+    for(var i=0;i<8;i++){var ev=pool[Math.floor(Math.random()*pool.length)];S.sessions[sid].events.push({agent:ev.agent,type:ev.type,text:ev.text,timestamp:ts()});}
+    syncAgentStatus(S.sessions[sid]);
+  });
+  render();updateClock();setInterval(updateClock,1000);
+  S.simIv=setInterval(simTick,3200);
+})();
+</script>
+</body>
+</html>

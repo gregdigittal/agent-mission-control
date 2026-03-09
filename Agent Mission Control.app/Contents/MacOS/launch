@@ -1,0 +1,96 @@
+#!/bin/bash
+
+# Agent Mission Control — macOS Launcher
+# Starts a local HTTP server and opens the dashboard
+
+LOG="/tmp/agent-mission-control.log"
+echo "$(date): Launch started" > "$LOG"
+
+# ── Resolve the project directory ──
+# macOS App Translocation moves unsigned apps to a random /private/var path,
+# which breaks relative path resolution from $0. We use the real, stable path.
+PROJECT_DIR="/Users/gregmorris/Development Projects/Claud_visualization"
+
+# Fallback: try resolving from bundle location (works if not translocated)
+if [ ! -f "$PROJECT_DIR/index.html" ]; then
+    SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+    PROJECT_DIR="$(cd "$SCRIPT_DIR/../../.." && pwd)"
+fi
+
+# Final check
+if [ ! -f "$PROJECT_DIR/index.html" ]; then
+    osascript -e 'display dialog "Agent Mission Control: Could not find index.html.\nExpected at:\n'"$PROJECT_DIR"'" buttons {"OK"} default button "OK" with icon stop with title "Agent Mission Control"'
+    echo "$(date): FATAL — index.html not found at $PROJECT_DIR" >> "$LOG"
+    exit 1
+fi
+
+echo "$(date): Project dir = $PROJECT_DIR" >> "$LOG"
+
+PORT=8090
+PID_FILE="/tmp/agent-mission-control.pid"
+
+# ── Kill any previous instance ──
+if [ -f "$PID_FILE" ]; then
+    OLD_PID=$(cat "$PID_FILE")
+    if kill -0 "$OLD_PID" 2>/dev/null; then
+        echo "$(date): Killing previous server PID $OLD_PID" >> "$LOG"
+        kill "$OLD_PID" 2>/dev/null
+        sleep 0.5
+    fi
+    rm -f "$PID_FILE"
+fi
+
+# ── Find a free port ──
+for P in 8090 8091 8092 8093 8094 8095; do
+    if ! lsof -i :"$P" >/dev/null 2>&1; then
+        PORT=$P
+        break
+    fi
+done
+
+URL="http://localhost:$PORT/index.html"
+echo "$(date): Using port $PORT" >> "$LOG"
+
+# ── Start the HTTP server ──
+cd "$PROJECT_DIR"
+/usr/bin/python3 -m http.server "$PORT" >> "$LOG" 2>&1 &
+SERVER_PID=$!
+echo "$SERVER_PID" > "$PID_FILE"
+echo "$(date): Server started PID=$SERVER_PID" >> "$LOG"
+
+# ── Wait for the server to be ready ──
+for i in 1 2 3 4 5 6 7 8; do
+    if curl -s "http://localhost:$PORT" >/dev/null 2>&1; then
+        echo "$(date): Server ready after attempt $i" >> "$LOG"
+        break
+    fi
+    sleep 0.3
+done
+
+# Verify server is actually running
+if ! kill -0 "$SERVER_PID" 2>/dev/null; then
+    osascript -e 'display dialog "Agent Mission Control: Server failed to start.\nCheck /tmp/agent-mission-control.log" buttons {"OK"} default button "OK" with icon stop with title "Agent Mission Control"'
+    echo "$(date): FATAL — server died immediately" >> "$LOG"
+    exit 1
+fi
+
+# ── Open browser ──
+echo "$(date): Opening $URL" >> "$LOG"
+if [ -d "/Applications/Google Chrome.app" ]; then
+    open -na "Google Chrome" --args --app="$URL" --window-size=1440,900
+elif [ -d "/Applications/Brave Browser.app" ]; then
+    open -na "Brave Browser" --args --app="$URL" --window-size=1440,900
+else
+    open "$URL"
+fi
+
+# ── Keep alive and clean up ──
+cleanup() {
+    echo "$(date): Cleanup — killing server PID $SERVER_PID" >> "$LOG"
+    kill "$SERVER_PID" 2>/dev/null
+    rm -f "$PID_FILE"
+    exit 0
+}
+trap cleanup EXIT INT TERM
+
+wait "$SERVER_PID"
