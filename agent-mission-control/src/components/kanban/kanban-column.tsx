@@ -36,7 +36,7 @@ export function KanbanColumn({ status, tasks, sessionId, agents }: KanbanColumnP
       className={`flex-shrink-0 w-[var(--kb-col-w,280px)] flex flex-col rounded-lg border transition-colors ${
         dragOver
           ? "border-cyan/50 bg-cyan/5"
-          : "border-border-1 bg-bg-1"
+          : "border-border-1 bg-bg-2"
       }`}
       onDragOver={(e) => {
         e.preventDefault();
