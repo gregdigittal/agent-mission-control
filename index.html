@@ -368,14 +368,16 @@ function closeDropdown() {
   if (dd && dd.parentNode) dd.parentNode.removeChild(dd);
 }
 function removeSession(sid) {
-  if (S.order.length <= 1) return;
+  /* Allow removing filewatch even if it's the last session */
+  if (S.order.length <= 1 && sid !== 'filewatch') return;
   delete S.sessions[sid];
   S.order = S.order.filter(function(id){ return id !== sid; });
-  if (S.active === sid) S.active = S.order[0];
+  if (S.active === sid) S.active = S.order[0] || '';
   S.panes.forEach(function(p){ if(p.sid===sid) p.sid = S.active; });
-  /* If removing the filewatch session, stop polling and mark removed */
-  if (sid === 'filewatch' && S.fw.on) {
-    clearInterval(S.fw.iv); S.fw.on = false; S.fw.removed = true;
+  /* If removing the filewatch session, always stop polling and mark removed */
+  if (sid === 'filewatch') {
+    if (S.fw.on) { clearInterval(S.fw.iv); S.fw.on = false; }
+    S.fw.removed = true;
     var btn = document.getElementById('fw-toggle');
     var stEl = document.getElementById('fw-status');
     if (btn) { btn.textContent = 'START'; btn.className = 'fw-btn fw-btn-start'; }
@@ -397,7 +399,7 @@ function renderTabs() {
     var dot = h('span', {text:'\u25CF ', style:{color:ACCENT_CYCLE[i%ACCENT_CYCLE.length],fontSize:'0.7em'}});
     tab.appendChild(dot);
     tab.appendChild(txt(sess.name));
-    if (S.order.length > 1) {
+    if (S.order.length > 1 || sid === 'filewatch') {
       var close = h('span', {cls:'tab-close', text:'\u00D7', onclick:function(e){
         e.stopPropagation();
         removeSession(sid);
@@ -735,8 +737,15 @@ function syncAgentStatus(sess) {
 function toggleFW() {
   var path=document.getElementById('fw-path').value, stEl=document.getElementById('fw-status'), btn=document.getElementById('fw-toggle');
   if(S.fw.on){
-    clearInterval(S.fw.iv);S.fw.on=false;
-    btn.textContent='START';btn.className='fw-btn fw-btn-start';stEl.textContent='Idle';return;
+    clearInterval(S.fw.iv);S.fw.on=false;S.fw.removed=true;
+    /* Remove the filewatch session so the tab disappears */
+    if(S.sessions['filewatch']){
+      delete S.sessions['filewatch'];
+      S.order=S.order.filter(function(id){return id!=='filewatch';});
+      if(S.active==='filewatch')S.active=S.order[0]||'';
+      S.panes.forEach(function(p){if(p.sid==='filewatch')p.sid=S.active;});
+    }
+    btn.textContent='START';btn.className='fw-btn fw-btn-start';stEl.textContent='Idle';render();return;
   }
   S.fw.on=true;S.fw.removed=false;btn.textContent='STOP';btn.className='fw-btn fw-btn-stop';stEl.textContent='Watching...';
   function poll(){
