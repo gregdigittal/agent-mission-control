@@ -4,7 +4,7 @@
 import { useEffect, useRef, useCallback } from "react";
 import { supabase } from "./client";
 import { useUIStore } from "@/stores/ui-store";
-import { SESSION_STALE_MS, SESSION_POLL_MS } from "@/lib/constants";
+import { SESSION_STALE_MS, SESSION_POLL_MS, STALE_SESSIONS_LIMIT } from "@/lib/constants";
 import type { Session } from "@/lib/types";
 
 /** Only fetch sessions updated within the staleness window */
@@ -26,6 +26,9 @@ export function useSessionSync() {
   const setSessions = useUIStore((s) => s.setSessions);
   const upsertSession = useUIStore((s) => s.upsertSession);
   const removeSession = useUIStore((s) => s.removeSession);
+  const setStaleSessions = useUIStore((s) => s.setStaleSessions);
+  const demoteToStale = useUIStore((s) => s.demoteToStale);
+  const promoteFromStale = useUIStore((s) => s.promoteFromStale);
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
 
   const fetchActive = useCallback(async () => {
@@ -40,9 +43,23 @@ export function useSessionSync() {
     }
   }, [setSessions]);
 
+  const fetchStale = useCallback(async () => {
+    const { data, error } = await supabase
+      .from("sessions")
+      .select("*")
+      .lt("updated_at", staleCutoff())
+      .order("updated_at", { ascending: false })
+      .limit(STALE_SESSIONS_LIMIT);
+
+    if (!error && data) {
+      setStaleSessions(data as Session[]);
+    }
+  }, [setStaleSessions]);
+
   useEffect(() => {
-    // Initial fetch — only active sessions
+    // Initial fetch — active then stale sessions
     fetchActive();
+    fetchStale();
 
     // Realtime subscription — add new/updated, ignore stale
     const channel = supabase
@@ -54,6 +71,11 @@ export function useSessionSync() {
           if (payload.eventType === "INSERT" || payload.eventType === "UPDATE") {
             const session = payload.new as Session;
             if (isActive(session)) {
+              // If this session is currently in stale list, promote it first
+              const { staleSessions } = useUIStore.getState();
+              if (staleSessions[session.id]) {
+                promoteFromStale(session.id);
+              }
               upsertSession(session);
             }
           }
@@ -63,13 +85,13 @@ export function useSessionSync() {
 
     channelRef.current = channel;
 
-    // Periodic prune: remove sessions that have gone stale
+    // Periodic prune: demote sessions that have gone stale
     const pruneInterval = setInterval(() => {
       const { sessions, order } = useUIStore.getState();
       for (const sid of order) {
         const s = sessions[sid];
         if (s && !isActive(s)) {
-          removeSession(sid);
+          demoteToStale(sid);
         }
       }
     }, SESSION_POLL_MS);
@@ -78,5 +100,5 @@ export function useSessionSync() {
       channel.unsubscribe();
       clearInterval(pruneInterval);
     };
-  }, [fetchActive, upsertSession, removeSession]);
+  }, [fetchActive, fetchStale, upsertSession, removeSession, demoteToStale, promoteFromStale]);
 }
