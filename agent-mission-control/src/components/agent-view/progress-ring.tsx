@@ -15,7 +15,7 @@ export function ProgressRing({ percent, size = 56 }: ProgressRingProps) {
         cy={size / 2}
         r={r}
         fill="none"
-        stroke="#1a2030"
+        stroke="var(--border-2, #1a2030)"
         strokeWidth={3}
       />
       <circle
@@ -23,7 +23,7 @@ export function ProgressRing({ percent, size = 56 }: ProgressRingProps) {
         cy={size / 2}
         r={r}
         fill="none"
-        stroke="#22d3ee"
+        stroke="var(--cyan, #22d3ee)"
         strokeWidth={3}
         strokeDasharray={circ}
         strokeDashoffset={offset}
@@ -35,7 +35,7 @@ export function ProgressRing({ percent, size = 56 }: ProgressRingProps) {
         y={size / 2}
         textAnchor="middle"
         dominantBaseline="central"
-        fill="#edf0f7"
+        fill="var(--text-1, #edf0f7)"
         fontSize="12"
         fontFamily="var(--font-geist-mono)"
         className="rotate-90 origin-center"
