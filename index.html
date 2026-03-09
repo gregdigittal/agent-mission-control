@@ -59,7 +59,6 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;b
 .session-dropdown-empty{padding:16px;text-align:center;font-size:var(--font-xs);color:var(--text-4)}
 .session-dropdown-loading{padding:16px;text-align:center;font-size:var(--font-xs);color:var(--text-3);display:flex;align-items:center;justify-content:center;gap:6px}
 .session-dropdown-header{padding:6px 12px 8px;font-family:var(--mono);font-size:var(--font-xxs);color:var(--text-3);text-transform:uppercase;letter-spacing:.08em;border-bottom:1px solid var(--border-1);margin-bottom:4px}
-.dropdown-backdrop{position:fixed;inset:0;z-index:199}
 .topbar-right{display:flex;align-items:center;gap:var(--density-gap);margin-left:auto;white-space:nowrap}
 .live-badge{display:flex;align-items:center;gap:4px;font-family:var(--mono);font-size:var(--font-xxs);color:var(--green);font-weight:600;letter-spacing:.05em}
 .live-dot{animation:pulse 2s infinite}
@@ -164,6 +163,13 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;b
 .kanban-card.dependency{border-color:var(--amber);box-shadow:0 0 12px rgba(251,191,36,.1)}
 .kanban-card-deps{display:flex;flex-wrap:wrap;gap:3px;margin-top:4px}
 .dep-tag{font-size:var(--font-xxs);color:var(--text-3);background:var(--bg-3);border-radius:3px;padding:1px 5px}
+.active-agent-ind{display:flex;align-items:center;gap:5px;margin-top:6px;padding:4px 8px;background:rgba(34,211,238,.06);border-radius:4px;font-size:var(--font-xxs);color:var(--cyan)}
+.active-agent-ind .ag-dot{width:6px;height:6px;border-radius:50%;background:var(--cyan);animation:pulse-dot 1.5s ease-in-out infinite;flex-shrink:0}
+.active-agent-ind .ag-dot.status-thinking{background:var(--violet)}.active-agent-ind .ag-dot.status-idle{background:var(--text-4);animation:none}
+.kanban-card.agent-active{border-left:2px solid var(--cyan)}
+.transition-badge{display:flex;align-items:center;gap:4px;margin-top:6px;padding:4px 8px;background:rgba(96,165,250,.08);border-radius:4px;font-size:var(--font-xxs);color:var(--blue)}
+.kanban-card.transition{border-color:var(--blue);box-shadow:0 0 12px rgba(96,165,250,.1)}
+@keyframes pulse-dot{0%,100%{opacity:1}50%{opacity:.3}}
 
 #filewatch-bar{display:none;position:fixed;bottom:0;left:0;right:0;height:36px;background:var(--bg-1);border-top:1px solid var(--border-1);padding:0 var(--density-pad);align-items:center;gap:var(--density-gap);font-family:var(--mono);font-size:var(--font-xxs);z-index:100}
 #filewatch-bar.visible{display:flex}
@@ -239,72 +245,10 @@ var S = {
   maxPanes: {laptop:2, desktop:3, ultrawide:4},
   tiles: 2,
   panes: [],
-  fw: {on:false, iv:null},
+  fw: {on:false, iv:null, removed:false},
   simIv: null,
   feedFilter: 'all'
 };
-
-/* ===== Demo Data ===== */
-function mkCCRS() {
-  return {
-    id:'ccrs', name:'CCRS E-Signature', project:'CCRS E-Signature Module',
-    stageIdx:3, total:15, done:4,
-    stages: STAGES.map(function(s,i){return {name:s, status: i<3?'completed':i===3?'active':'pending'};}),
-    agents:[
-      {id:'orch',name:'Orchestrator',role:'Team Lead',type:'leader',status:'leader',icon:'\uD83C\uDFAF',task:'Coordinating API layer tasks',m:{ctx:'38%',cost:'$1.20',msgs:62}},
-      {id:'back',name:'Backend Arch',role:'Backend Developer',type:'backend',status:'working',icon:'\u2699\uFE0F',task:'Implementing signature verification endpoint',m:{ctx:'52%',cost:'$0.95',msgs:48}},
-      {id:'front',name:'Frontend Dev',role:'Frontend Developer',type:'frontend',status:'thinking',icon:'\uD83C\uDFA8',task:'Designing document preview component',m:{ctx:'29%',cost:'$0.67',msgs:31}},
-      {id:'test',name:'Test Engineer',role:'QA Engineer',type:'tester',status:'idle',icon:'\uD83E\uDDEA',task:'Waiting for API endpoints',m:{ctx:'15%',cost:'$0.32',msgs:18}},
-      {id:'rev',name:'Code Reviewer',role:'Senior Reviewer',type:'reviewer',status:'idle',icon:'\uD83D\uDC41\uFE0F',task:'Standby for review cycle',m:{ctx:'8%',cost:'$0.15',msgs:9}}
-    ],
-    tasks:[
-      {id:'t1',title:'Setup Laravel project',status:'done',assignee:'Backend Arch',priority:'high',deps:[]},
-      {id:'t2',title:'Configure Filament admin',status:'done',assignee:'Backend Arch',priority:'high',deps:['t1']},
-      {id:'t3',title:'Design DB schema',status:'done',assignee:'Orchestrator',priority:'high',deps:[]},
-      {id:'t4',title:'Create migration files',status:'done',assignee:'Backend Arch',priority:'medium',deps:['t3']},
-      {id:'t5',title:'Signature verification API',status:'in-progress',assignee:'Backend Arch',priority:'high',deps:['t4'],rec:true,recWhy:'Run php artisan make:controller SignatureController'},
-      {id:'t6',title:'Document upload endpoint',status:'in-progress',assignee:'Backend Arch',priority:'medium',deps:['t4']},
-      {id:'t7',title:'Auth middleware',status:'review',assignee:'Backend Arch',priority:'high',deps:['t1']},
-      {id:'t8',title:'Document preview UI',status:'backlog',assignee:'Frontend Dev',priority:'medium',deps:['t6']},
-      {id:'t9',title:'Signature pad component',status:'backlog',assignee:'Frontend Dev',priority:'high',deps:['t5']},
-      {id:'t10',title:'E-sign workflow page',status:'backlog',assignee:'Frontend Dev',priority:'medium',deps:['t5','t8','t9']},
-      {id:'t11',title:'API integration tests',status:'backlog',assignee:'Test Engineer',priority:'high',deps:['t5','t6']},
-      {id:'t12',title:'E2E signing flow test',status:'backlog',assignee:'Test Engineer',priority:'medium',deps:['t10','t11']},
-      {id:'t13',title:'PDF generation service',status:'backlog',assignee:'Backend Arch',priority:'low',deps:['t5']},
-      {id:'t14',title:'Email notification system',status:'backlog',assignee:'Backend Arch',priority:'low',deps:['t7']},
-      {id:'t15',title:'Audit trail logging',status:'backlog',assignee:'Backend Arch',priority:'medium',deps:['t7']}
-    ],
-    events:[]
-  };
-}
-function mkCEA() {
-  return {
-    id:'ceafrica', name:'CE Africa Valuation', project:'CE Africa Valuation Engine',
-    stageIdx:1, total:12, done:2,
-    stages: STAGES.map(function(s,i){return {name:s, status: i<1?'completed':i===1?'active':'pending'};}),
-    agents:[
-      {id:'lead',name:'Lead Agent',role:'Project Lead',type:'leader',status:'leader',icon:'\uD83C\uDFD7\uFE0F',task:'Scaffolding React project structure',m:{ctx:'44%',cost:'$0.88',msgs:35}},
-      {id:'api',name:'API Engineer',role:'Backend Developer',type:'backend',status:'working',icon:'\uD83D\uDD0C',task:'Setting up Supabase schema',m:{ctx:'31%',cost:'$0.55',msgs:22}},
-      {id:'ui',name:'UI Developer',role:'Frontend Developer',type:'frontend',status:'idle',icon:'\uD83D\uDC8E',task:'Waiting for component specs',m:{ctx:'12%',cost:'$0.28',msgs:14}},
-      {id:'qa',name:'QA Agent',role:'Test Engineer',type:'tester',status:'idle',icon:'\u2705',task:'Preparing test framework',m:{ctx:'7%',cost:'$0.12',msgs:6}}
-    ],
-    tasks:[
-      {id:'c1',title:'Initialize React project',status:'done',assignee:'Lead Agent',priority:'high',deps:[]},
-      {id:'c2',title:'Setup Supabase project',status:'done',assignee:'API Engineer',priority:'high',deps:[]},
-      {id:'c3',title:'Design data model',status:'in-progress',assignee:'Lead Agent',priority:'high',deps:[]},
-      {id:'c4',title:'Create Supabase tables',status:'in-progress',assignee:'API Engineer',priority:'high',deps:['c3'],rec:true,recWhy:'supabase db push --linked'},
-      {id:'c5',title:'Valuation calculator logic',status:'backlog',assignee:'API Engineer',priority:'high',deps:['c4']},
-      {id:'c6',title:'Dashboard layout',status:'backlog',assignee:'UI Developer',priority:'medium',deps:['c1']},
-      {id:'c7',title:'Input forms',status:'backlog',assignee:'UI Developer',priority:'medium',deps:['c3','c6']},
-      {id:'c8',title:'Results visualization',status:'backlog',assignee:'UI Developer',priority:'high',deps:['c5','c6']},
-      {id:'c9',title:'API edge functions',status:'backlog',assignee:'API Engineer',priority:'medium',deps:['c4','c5']},
-      {id:'c10',title:'Auth & permissions',status:'backlog',assignee:'Lead Agent',priority:'high',deps:['c4']},
-      {id:'c11',title:'Unit tests',status:'backlog',assignee:'QA Agent',priority:'medium',deps:['c5','c9']},
-      {id:'c12',title:'Integration tests',status:'backlog',assignee:'QA Agent',priority:'low',deps:['c9','c10']}
-    ],
-    events:[]
-  };
-}
 
 /* ===== Custom Session Factory ===== */
 var customCount = 0;
@@ -325,16 +269,17 @@ function mkCustom(name) {
 
 /* ===== Session Dropdown ===== */
 var dropdownOpen = false;
+function _closeOnDocClick(ev) {
+  var dd = document.getElementById('session-dropdown');
+  if (dd && dd.contains(ev.target)) return;         /* click inside dropdown — ignore */
+  closeDropdown();
+}
 function addSession(e) {
-  if (e) e.stopPropagation();
+  if (e) { e.stopPropagation(); e.preventDefault(); }
   if (dropdownOpen) { closeDropdown(); return; }
   dropdownOpen = true;
-  /* Backdrop to close on outside click */
-  var backdrop = h('div',{cls:'dropdown-backdrop',onclick:closeDropdown});
-  document.body.appendChild(backdrop);
   /* Dropdown container — appended to body to escape topbar stacking context */
   var dd = h('div',{cls:'session-dropdown',id:'session-dropdown'});
-  dd.addEventListener('click', function(ev){ ev.stopPropagation(); });
   dd.appendChild(h('div',{cls:'session-dropdown-header',text:'Claude Code Sessions'}));
   dd.appendChild(h('div',{cls:'session-dropdown-loading',text:'Scanning projects\u2026'}));
   /* Position relative to Add button using getBoundingClientRect */
@@ -345,6 +290,8 @@ function addSession(e) {
     dd.style.right = (window.innerWidth - rect.right) + 'px';
   }
   document.body.appendChild(dd);
+  /* Register close listener on NEXT tick so current click doesn't trigger it */
+  setTimeout(function(){ document.addEventListener('click', _closeOnDocClick, true); }, 0);
   /* Fetch available sessions */
   fetch('available_sessions.json').then(function(r){
     if(!r.ok) throw new Error('Run discover_sessions.sh first');
@@ -416,10 +363,9 @@ function selectSession(s) {
 }
 function closeDropdown() {
   dropdownOpen = false;
+  document.removeEventListener('click', _closeOnDocClick, true);
   var dd = document.getElementById('session-dropdown');
   if (dd && dd.parentNode) dd.parentNode.removeChild(dd);
-  var bd = document.querySelector('.dropdown-backdrop');
-  if (bd) bd.parentNode.removeChild(bd);
 }
 function removeSession(sid) {
   if (S.order.length <= 1) return;
@@ -427,44 +373,16 @@ function removeSession(sid) {
   S.order = S.order.filter(function(id){ return id !== sid; });
   if (S.active === sid) S.active = S.order[0];
   S.panes.forEach(function(p){ if(p.sid===sid) p.sid = S.active; });
+  /* If removing the filewatch session, stop polling and mark removed */
+  if (sid === 'filewatch' && S.fw.on) {
+    clearInterval(S.fw.iv); S.fw.on = false; S.fw.removed = true;
+    var btn = document.getElementById('fw-toggle');
+    var stEl = document.getElementById('fw-status');
+    if (btn) { btn.textContent = 'START'; btn.className = 'fw-btn fw-btn-start'; }
+    if (stEl) stEl.textContent = 'Idle';
+  }
   render();
 }
-
-/* ===== Event Pools ===== */
-var POOLS = {
-  ccrs:[
-    {agent:'Backend Arch',type:'tool',text:'Running artisan make:controller SignatureController'},
-    {agent:'Backend Arch',type:'file',text:'Modified app/Http/Controllers/SignatureController.php'},
-    {agent:'Backend Arch',type:'tool',text:'Executing php artisan migrate'},
-    {agent:'Frontend Dev',type:'thinking',text:'Analyzing document preview requirements...'},
-    {agent:'Frontend Dev',type:'file',text:'Created resources/js/Components/DocumentPreview.vue'},
-    {agent:'Test Engineer',type:'message',text:'Waiting for signature API to be testable'},
-    {agent:'Orchestrator',type:'task',text:'Moved "Auth middleware" to Review column'},
-    {agent:'Code Reviewer',type:'message',text:'Ready to review authentication module'},
-    {agent:'Backend Arch',type:'tool',text:'Running phpunit --filter=SignatureTest'},
-    {agent:'Frontend Dev',type:'tool',text:'npm run build -- analyzing bundle size'},
-    {agent:'Orchestrator',type:'thinking',text:'Evaluating critical path dependencies...'},
-    {agent:'Backend Arch',type:'file',text:'Updated routes/api.php with signature routes'},
-    {agent:'Test Engineer',type:'tool',text:'Generating test fixtures for signature data'},
-    {agent:'Frontend Dev',type:'file',text:'Modified resources/css/signature.css'},
-    {agent:'Backend Arch',type:'error',text:'Type error in SignatureService::verify()'},
-    {agent:'Backend Arch',type:'file',text:'Fixed app/Services/SignatureService.php'}
-  ],
-  ceafrica:[
-    {agent:'Lead Agent',type:'tool',text:'npx create-react-app ce-valuation --template typescript'},
-    {agent:'API Engineer',type:'tool',text:'supabase db push --linked'},
-    {agent:'API Engineer',type:'file',text:'Created supabase/migrations/001_create_valuations.sql'},
-    {agent:'Lead Agent',type:'thinking',text:'Designing component architecture...'},
-    {agent:'UI Developer',type:'message',text:'Awaiting design system specifications'},
-    {agent:'API Engineer',type:'file',text:'Modified supabase/functions/calculate/index.ts'},
-    {agent:'Lead Agent',type:'task',text:'Assigned "Dashboard layout" to UI Developer'},
-    {agent:'QA Agent',type:'tool',text:'Configuring Jest + React Testing Library'},
-    {agent:'API Engineer',type:'thinking',text:'Optimizing valuation query performance...'},
-    {agent:'Lead Agent',type:'file',text:'Updated src/types/valuation.ts'},
-    {agent:'API Engineer',type:'error',text:'RLS policy blocking insert on valuations table'},
-    {agent:'API Engineer',type:'file',text:'Fixed supabase/migrations/002_fix_rls.sql'}
-  ]
-};
 
 /* ===== Timestamp ===== */
 function ts() { return new Date().toTimeString().slice(0,8); }
@@ -586,7 +504,10 @@ function renderAgentView(container, sess) {
     }
     top.appendChild(stEl);
     card.appendChild(top);
-    card.appendChild(h('div',{cls:'agent-task',text:ag.task}));
+    /* Resolve task title from linked Kanban card via taskId */
+    var taskText=ag.task;
+    if(ag.taskId){var lnk=null;for(var ti=0;ti<sess.tasks.length;ti++){if(sess.tasks[ti].id===ag.taskId){lnk=sess.tasks[ti];break;}}if(lnk)taskText=lnk.title;}
+    card.appendChild(h('div',{cls:'agent-task',text:taskText}));
     var met=h('div',{cls:'agent-metrics'});
     met.appendChild(h('span',{text:'CTX '+ag.m.ctx}));
     met.appendChild(h('span',{text:ag.m.cost}));
@@ -654,7 +575,11 @@ function renderKanban(container, sess) {
     });
     tasks.forEach(function(task){
       var isDep = task.depOf;
-      var card = h('div',{cls:'kanban-card'+(task.rec?' recommended':'')+(isDep?' dependency':''),draggable:true,data:{taskId:task.id}});
+      var isAuto = task._auto;
+      /* Find active agent linked to this task */
+      var activeAg=null;if(sess.agents){for(var ai=0;ai<sess.agents.length;ai++){if(sess.agents[ai].taskId===task.id){activeAg=sess.agents[ai];break;}}}
+      var cls='kanban-card'+(task.rec&&!isAuto?' recommended':'')+(task.rec&&isAuto?' transition':'')+(isDep&&!task.rec?' dependency':'')+(activeAg?' agent-active':'');
+      var card = h('div',{cls:cls,draggable:true,data:{taskId:task.id}});
       card.addEventListener('dragstart',function(e){e.dataTransfer.setData('text/plain',task.id);e.dataTransfer.setData('session',sess.id);card.classList.add('dragging');});
       card.addEventListener('dragend',function(){card.classList.remove('dragging');});
       card.appendChild(h('div',{cls:'kanban-card-title',text:task.title}));
@@ -663,6 +588,13 @@ function renderKanban(container, sess) {
       var pc = task.priority==='high'?'priority-high':task.priority==='medium'?'priority-medium':'priority-low';
       meta.appendChild(h('span',{cls:'kanban-card-priority '+pc,text:task.priority.toUpperCase()}));
       card.appendChild(meta);
+      /* Active agent indicator */
+      if(activeAg){
+        var agInd=h('div',{cls:'active-agent-ind'});
+        agInd.appendChild(h('span',{cls:'ag-dot status-'+activeAg.status}));
+        agInd.appendChild(h('span',{text:activeAg.icon+' '+activeAg.name}));
+        card.appendChild(agInd);
+      }
       /* Show dependency tags */
       if (task.deps && task.deps.length) {
         var depTags = h('div',{cls:'kanban-card-deps'});
@@ -679,6 +611,8 @@ function renderKanban(container, sess) {
         btns.appendChild(h('button',{cls:'btn-approve',text:'\u2713 Allow',onclick:function(e){
           e.stopPropagation(); task.depOf=null;
           task.status='in-progress';
+          if(sess._prev)sess._prev[task.id]=task.status;
+          if(sess._approved)sess._approved[task.id+'_'+task.status]=true;
           syncAgentStatus(sess);
           sess.events.push({agent:'You',type:'task',text:'Allowed: '+task.title+' \u2192 In Progress (dependency)',timestamp:ts()});
           render();
@@ -690,25 +624,52 @@ function renderKanban(container, sess) {
         }}));
         card.appendChild(btns);
       }
-      /* Claude permission request */
+      /* Claude permission request / auto-detected transition */
       if (task.rec) {
-        card.appendChild(h('div',{cls:'recommend-badge',text:'\u26A1 Permission: '+task.recWhy}));
+        var badge=isAuto?h('div',{cls:'transition-badge',text:'\uD83D\uDD04 Transition: '+task.recWhy}):h('div',{cls:'recommend-badge',text:'\u26A1 Permission: '+task.recWhy});
+        card.appendChild(badge);
         var btns2 = h('div',{cls:'approval-btns'});
-        btns2.appendChild(h('button',{cls:'btn-approve',text:'\u2713 Allow',onclick:function(e){
-          e.stopPropagation(); task.rec=false;
-          var ci=COLS.indexOf(task.status);
-          if(ci<COLS.length-1){
-            if(task.status==='done')sess.done--;
-            task.status=COLS[ci+1];
-            if(task.status==='done')sess.done++;
+        btns2.appendChild(h('button',{cls:'btn-approve',text:'\u2713 '+(isAuto?'Confirm':'Allow'),onclick:function(e){
+          e.stopPropagation();
+          if(task._auto){
+            /* Auto-detected: task already at new status, just confirm */
+            task.rec=false;task._auto=false;
+            if(sess._approved)sess._approved[task.id+'_'+task.status]=true;
+            if(sess._prev)sess._prev[task.id]=task.status;
+            syncAgentStatus(sess);
+            sess.events.push({agent:'You',type:'task',text:'Confirmed: '+task.title+' \u2192 '+COL_LABELS[task.status],timestamp:ts()});
+          } else {
+            /* JSON-driven: advance one column */
+            task.rec=false;
+            if(sess._approved)sess._approved[task.id+'_'+task.status]=true;
+            var ci=COLS.indexOf(task.status);
+            if(ci<COLS.length-1){
+              if(task.status==='done')sess.done--;
+              task.status=COLS[ci+1];
+              if(task.status==='done')sess.done++;
+            }
+            if(sess._prev)sess._prev[task.id]=task.status;
+            if(sess._approved)sess._approved[task.id+'_'+task.status]=true;
+            syncAgentStatus(sess);
+            sess.events.push({agent:'You',type:'task',text:'Allowed: '+task.title+' \u2192 '+COL_LABELS[task.status],timestamp:ts()});
           }
-          syncAgentStatus(sess);
-          sess.events.push({agent:'You',type:'task',text:'Allowed: '+task.title+' \u2192 '+COL_LABELS[task.status],timestamp:ts()});
           render();
         }}));
-        btns2.appendChild(h('button',{cls:'btn-reject',text:'\u2717 Deny',onclick:function(e){
-          e.stopPropagation();task.rec=false;
-          sess.events.push({agent:'You',type:'task',text:'Denied: '+task.title,timestamp:ts()});
+        btns2.appendChild(h('button',{cls:'btn-reject',text:'\u2717 '+(isAuto?'Revert':'Deny'),onclick:function(e){
+          e.stopPropagation();
+          if(task._auto&&task._prevSt){
+            /* Auto-detected: revert to previous status */
+            if(task.status==='done')sess.done--;
+            task.status=task._prevSt;
+            if(task.status==='done')sess.done++;
+            task.rec=false;task._auto=false;
+            if(sess._prev)sess._prev[task.id]=task.status;
+            syncAgentStatus(sess);
+            sess.events.push({agent:'You',type:'task',text:'Reverted: '+task.title+' \u2192 '+COL_LABELS[task.status],timestamp:ts()});
+          } else {
+            task.rec=false;
+            sess.events.push({agent:'You',type:'task',text:'Denied: '+task.title,timestamp:ts()});
+          }
           render();
         }}));
         card.appendChild(btns2);
@@ -770,55 +731,6 @@ function syncAgentStatus(sess) {
   });
 }
 
-/* ===== Simulation ===== */
-function simTick() {
-  S.order.forEach(function(sid){
-    var sess=S.sessions[sid], pool=POOLS[sid]; if(!pool||!pool.length)return;
-    /* Generate events */
-    var n=Math.random()>0.6?2:1;
-    for(var i=0;i<n;i++){
-      var ev=pool[Math.floor(Math.random()*pool.length)];
-      sess.events.push({agent:ev.agent,type:ev.type,text:ev.text,timestamp:ts()});
-      if(sess.events.length>60)sess.events.shift();
-    }
-    /* Auto-advance tasks — skip tasks awaiting approval (rec:true) or dependency pull (depOf) */
-    if(Math.random()>0.7){
-      var mv=sess.tasks.filter(function(t){return t.status!=='done' && !t.rec && !t.depOf;});
-      if(mv.length){
-        var t=mv[Math.floor(Math.random()*mv.length)];
-        var ci=COLS.indexOf(t.status);
-        if(ci<COLS.length-1){t.status=COLS[ci+1];if(t.status==='done')sess.done++;}
-      }
-    }
-    /* Occasionally request permission for a task (Claude Code style) */
-    if(Math.random()>0.92){
-      var ur=sess.tasks.filter(function(t){return !t.rec&&!t.depOf&&t.status!=='done'&&t.status!=='backlog';});
-      if(ur.length){
-        var t2=ur[Math.floor(Math.random()*ur.length)];
-        t2.rec=true;
-        /* Generate Claude Code-style permission requests based on task type */
-        var perms=[
-          'Execute: npm run build','Run database migration','Write to '+t2.title.toLowerCase().replace(/ /g,'_')+'.php',
-          'Modify routes/api.php','Execute test suite','Read environment config','Install composer package',
-          'Run artisan command','Deploy to staging','Update .env configuration'
-        ];
-        t2.recWhy=perms[Math.floor(Math.random()*perms.length)];
-      }
-    }
-    /* Update metrics for active agents */
-    sess.agents.forEach(function(ag){
-      if(ag.status==='working'||ag.status==='thinking'){
-        ag.m.msgs=parseInt(ag.m.msgs)+Math.floor(Math.random()*3);
-        ag.m.cost='$'+(parseFloat(ag.m.cost.replace('$',''))+Math.random()*0.05).toFixed(2);
-        ag.m.ctx=Math.min(99,parseInt(ag.m.ctx)+Math.floor(Math.random()*2))+'%';
-      }
-    });
-    /* Sync agent status from task status */
-    syncAgentStatus(sess);
-  });
-  render();
-}
-
 /* ===== File Watch ===== */
 function toggleFW() {
   var path=document.getElementById('fw-path').value, stEl=document.getElementById('fw-status'), btn=document.getElementById('fw-toggle');
@@ -826,9 +738,9 @@ function toggleFW() {
     clearInterval(S.fw.iv);S.fw.on=false;
     btn.textContent='START';btn.className='fw-btn fw-btn-start';stEl.textContent='Idle';return;
   }
-  S.fw.on=true;btn.textContent='STOP';btn.className='fw-btn fw-btn-stop';stEl.textContent='Watching...';
+  S.fw.on=true;S.fw.removed=false;btn.textContent='STOP';btn.className='fw-btn fw-btn-stop';stEl.textContent='Watching...';
   function poll(){
-    fetch(path).then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.json();}).then(function(data){
+    fetch(path+(path.indexOf('?')<0?'?':'&')+'_t='+Date.now()).then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.json();}).then(function(data){
       applyFW(data);stEl.textContent='Updated '+ts();
     }).catch(function(e){stEl.textContent='Error: '+e.message;});
   }
@@ -836,17 +748,35 @@ function toggleFW() {
 }
 function applyFW(d) {
   var sid='filewatch';
+  if(S.fw.removed)return;
   if(!S.sessions[sid]){
-    S.sessions[sid]={id:sid,name:d.project||'File Watch',project:d.project||'File Watch',stageIdx:0,total:0,done:0,stages:[],agents:[],tasks:[],events:[]};
+    S.sessions[sid]={id:sid,name:d.project||'File Watch',project:d.project||'File Watch',stageIdx:0,total:0,done:0,stages:[],agents:[],tasks:[],events:[],_prev:{},_approved:{}};
     S.order.push(sid);S.active=sid;fixPanes();
   }
   var s=S.sessions[sid];
   s.name=d.project||s.name;s.project=d.project||s.project;s.stageIdx=d.currentStageIdx||0;s.total=d.totalTasks||0;s.done=d.completedTasks||0;
   if(d.stages)s.stages=d.stages;
-  if(d.agents)s.agents=d.agents.map(function(a){return {id:a.id,name:a.name,role:a.role,type:a.type||'backend',status:a.status||'idle',icon:a.icon||'\u2699\uFE0F',task:a.task||'',m:a.metrics||{ctx:'0%',cost:'$0',msgs:0}};});
-  if(d.events){d.events.forEach(function(ev){
-    s.events.push({agent:ev.agent||'',type:ev.type||'message',text:(ev.text||'').replace(/<[^>]*>/g,''),timestamp:ev.timestamp||ts()});
-  });while(s.events.length>60)s.events.shift();}
+  if(d.agents)s.agents=d.agents.map(function(a){return {id:a.id,name:a.name,role:a.role,type:a.type||'backend',status:a.status||'idle',icon:a.icon||'\u2699\uFE0F',task:a.task||'',taskId:a.taskId||null,m:a.metrics||{ctx:'0%',cost:'$0',msgs:0}};});
+  if(d.tasks){
+    var prev=s._prev||{};var approved=s._approved||{};
+    s.tasks=d.tasks.map(function(t){
+      var m={id:t.id,title:t.title||'',status:t.status||'backlog',assignee:t.assignee||'',priority:t.priority||'medium',rec:false,recWhy:'',deps:t.deps||[],depOf:t.depOf||null,_auto:false,_prevSt:null};
+      /* JSON-driven approval takes priority */
+      if(t.rec){m.rec=true;m.recWhy=t.recWhy||'Agent requests permission';m._auto=false;}
+      /* Transition detection: flag status changes not yet user-approved */
+      else if(prev[t.id]&&prev[t.id]!==m.status&&!approved[t.id+'_'+m.status]){
+        if(m.status==='done'){m.rec=true;m.recWhy='Auto-completed by agent \u2192 confirm done';m._auto=true;m._prevSt=prev[t.id];}
+        else if(prev[t.id]==='backlog'&&m.status==='in-progress'){m.rec=true;m.recWhy='Agent started this task \u2192 approve?';m._auto=true;m._prevSt=prev[t.id];}
+      }
+      return m;
+    });
+    /* Rebuild prev-statuses map for next poll */
+    s._prev={};s.tasks.forEach(function(t){s._prev[t.id]=t.status;});
+    s.done=s.tasks.filter(function(t){return t.status==='done';}).length;s.total=s.tasks.length;
+  }
+  if(d.events){s.events=d.events.map(function(ev){
+    return {agent:ev.agent||'',type:ev.type||'message',text:(ev.text||'').replace(/<[^>]*>/g,''),timestamp:ev.timestamp||ts()};
+  });}
   render();
 }
 
@@ -861,22 +791,17 @@ function render(){renderTabs();renderScreenPicker();renderTilePicker();renderWor
 
 /* ===== Init ===== */
 (function init(){
-  S.sessions.ccrs=mkCCRS();S.sessions.ceafrica=mkCEA();
-  S.order=['ccrs','ceafrica'];S.active='ccrs';
-  S.panes=[{sid:'ccrs',view:'agents'},{sid:'ccrs',view:'kanban'}];
+  /* Start empty — no demo sessions. Use "+ Add" or File Watch to load real data. */
+  S.order=[];S.active='';
+  S.panes=[{sid:'',view:'agents'}];
   document.getElementById('fw-toggle').addEventListener('click',toggleFW);
   document.addEventListener('keydown',function(e){
     if(e.key==='f'&&!e.ctrlKey&&!e.metaKey&&e.target.tagName!=='INPUT')
       document.getElementById('filewatch-bar').classList.toggle('visible');
   });
-  /* Seed events & sync initial agent statuses */
-  S.order.forEach(function(sid){
-    var pool=POOLS[sid];if(!pool)return;
-    for(var i=0;i<8;i++){var ev=pool[Math.floor(Math.random()*pool.length)];S.sessions[sid].events.push({agent:ev.agent,type:ev.type,text:ev.text,timestamp:ts()});}
-    syncAgentStatus(S.sessions[sid]);
-  });
+  /* Show File Watch bar on startup so user knows how to connect real data */
+  document.getElementById('filewatch-bar').classList.add('visible');
   render();updateClock();setInterval(updateClock,1000);
-  S.simIv=setInterval(simTick,3200);
 })();
 </script>
 </body>
