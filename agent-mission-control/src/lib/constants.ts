@@ -32,3 +32,6 @@ export const SESSION_STALE_MS = 5 * 60 * 1000; // 5 minutes
 
 /** How often to re-check for stale sessions (ms) */
 export const SESSION_POLL_MS = 30 * 1000; // 30 seconds
+
+/** Maximum number of stale sessions to fetch */
+export const STALE_SESSIONS_LIMIT = 20;
