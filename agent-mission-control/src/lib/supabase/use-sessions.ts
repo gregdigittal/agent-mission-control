@@ -1,7 +1,7 @@
 // src/lib/supabase/use-sessions.ts
 "use client";
 
-import { useEffect, useRef, useCallback } from "react";
+import { useEffect, useRef } from "react";
 import { supabase } from "./client";
 import { useUIStore } from "@/stores/ui-store";
 import { SESSION_STALE_MS, SESSION_POLL_MS, STALE_SESSIONS_LIMIT } from "@/lib/constants";
@@ -23,41 +23,36 @@ function isActive(session: Session): boolean {
  * and periodically prune stale sessions.
  */
 export function useSessionSync() {
-  const setSessions = useUIStore((s) => s.setSessions);
-  const upsertSession = useUIStore((s) => s.upsertSession);
-  const removeSession = useUIStore((s) => s.removeSession);
-  const setStaleSessions = useUIStore((s) => s.setStaleSessions);
-  const demoteToStale = useUIStore((s) => s.demoteToStale);
-  const promoteFromStale = useUIStore((s) => s.promoteFromStale);
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
 
-  const fetchActive = useCallback(async () => {
-    const { data, error } = await supabase
-      .from("sessions")
-      .select("*")
-      .gte("updated_at", staleCutoff())
-      .order("updated_at", { ascending: false });
-
-    if (!error && data) {
-      setSessions(data as Session[]);
-    }
-  }, [setSessions]);
-
-  const fetchStale = useCallback(async () => {
-    const { data, error } = await supabase
-      .from("sessions")
-      .select("*")
-      .lt("updated_at", staleCutoff())
-      .order("updated_at", { ascending: false })
-      .limit(STALE_SESSIONS_LIMIT);
-
-    if (!error && data) {
-      setStaleSessions(data as Session[]);
-    }
-  }, [setStaleSessions]);
-
   useEffect(() => {
-    // Initial fetch — active then stale sessions
+    // Initial fetch — active sessions
+    const fetchActive = async () => {
+      const { data, error } = await supabase
+        .from("sessions")
+        .select("*")
+        .gte("updated_at", staleCutoff())
+        .order("updated_at", { ascending: false });
+
+      if (!error && data) {
+        useUIStore.getState().setSessions(data as Session[]);
+      }
+    };
+
+    // Initial fetch — stale sessions
+    const fetchStale = async () => {
+      const { data, error } = await supabase
+        .from("sessions")
+        .select("*")
+        .lt("updated_at", staleCutoff())
+        .order("updated_at", { ascending: false })
+        .limit(STALE_SESSIONS_LIMIT);
+
+      if (!error && data) {
+        useUIStore.getState().setStaleSessions(data as Session[]);
+      }
+    };
+
     fetchActive();
     fetchStale();
 
@@ -71,12 +66,11 @@ export function useSessionSync() {
           if (payload.eventType === "INSERT" || payload.eventType === "UPDATE") {
             const session = payload.new as Session;
             if (isActive(session)) {
-              // If this session is currently in stale list, promote it first
-              const { staleSessions } = useUIStore.getState();
-              if (staleSessions[session.id]) {
-                promoteFromStale(session.id);
+              const store = useUIStore.getState();
+              if (store.staleSessions[session.id]) {
+                store.promoteFromStale(session.id);
               }
-              upsertSession(session);
+              store.upsertSession(session);
             }
           }
         }
@@ -87,7 +81,7 @@ export function useSessionSync() {
 
     // Periodic prune: demote sessions that have gone stale
     const pruneInterval = setInterval(() => {
-      const { sessions, order } = useUIStore.getState();
+      const { sessions, order, demoteToStale } = useUIStore.getState();
       for (const sid of order) {
         const s = sessions[sid];
         if (s && !isActive(s)) {
@@ -100,5 +94,5 @@ export function useSessionSync() {
       channel.unsubscribe();
       clearInterval(pruneInterval);
     };
-  }, [fetchActive, fetchStale, upsertSession, removeSession, demoteToStale, promoteFromStale]);
+  }, []);
 }
