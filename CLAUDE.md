@@ -32,10 +32,11 @@ All state lives in the `S` object (no localStorage). Rendering uses safe DOM met
 - **Session management**: Two demo sessions (CCRS E-Signature, CE Africa Valuation) plus "+" button to add custom sessions, "×" to remove
 - **Tiling window manager**: 1-4 panes, each with independent session/view selectors
 - **Agent View**: Progress ring, pipeline stage pills, agent cards with status/metrics, activity feed with filters
-- **Kanban Board**: 4 columns with HTML5 drag-and-drop, Claude recommendation badges, approve/reject workflow
-- **Simulation engine**: Ticks every 3.2s, generates events, updates agent statuses, progresses tasks
+- **Kanban Board**: 4 columns with HTML5 drag-and-drop, Claude recommendation badges, transition detection, approve/reject workflow
+- **Agent ↔ Task Link**: Agents link to Kanban cards via `taskId`; Kanban cards show active-agent indicator
+- **Approval system**: JSON-driven (`rec`/`recWhy`) + auto-detected transitions between polls; Allow/Deny with state preservation
 - **Screen profiles**: Laptop 14" (max 2 panes), Desktop 27" (3 panes), Ultrawide 49" (4 panes)
-- **File Watch mode**: Press F to toggle bar, polls `agent_state.json` every 3 seconds
+- **File Watch mode**: Press F to toggle bar, polls `agent_state.json` every 3 seconds with cache-busting
 
 ## File Watch JSON Schema
 
@@ -48,7 +49,8 @@ Place an `agent_state.json` file next to `index.html` (or specify a path) with t
   "totalTasks": 24,
   "completedTasks": 9,
   "stages": [{"name": "string", "desc": "string", "status": "completed|active|pending"}],
-  "agents": [{"id": "string", "name": "string", "role": "string", "type": "leader|backend|frontend|tester|reviewer", "status": "working|thinking|idle|error|leader", "icon": "emoji", "task": "string", "metrics": {"ctx": "42%", "cost": "$0.83", "msgs": 47}}],
+  "agents": [{"id": "string", "name": "string", "role": "string", "type": "leader|backend|frontend|tester|reviewer", "status": "working|thinking|idle|error|leader", "icon": "emoji", "task": "string", "taskId": "t10 (links agent to Kanban card)", "metrics": {"ctx": "42%", "cost": "$0.83", "msgs": 47}}],
+  "tasks": [{"id": "string", "title": "string", "status": "backlog|in-progress|review|done", "assignee": "string", "priority": "high|medium|low", "deps": ["taskId"], "rec": false, "recWhy": "Reason for permission request (when rec=true)"}],
   "events": [{"agent": "string", "type": "tool|file|task|message|thinking|error", "text": "string", "timestamp": "HH:MM:SS"}]
 }
 ```

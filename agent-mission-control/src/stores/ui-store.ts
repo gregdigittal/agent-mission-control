@@ -87,11 +87,10 @@ export const useUIStore = create<UIState>((set, get) => ({
 
   removeSession: (sid) => {
     const { sessions, order, active, panes } = get();
-    if (order.length <= 1) return;
     const newSessions = { ...sessions };
     delete newSessions[sid];
     const newOrder = order.filter((id) => id !== sid);
-    const newActive = active === sid ? newOrder[0] : active;
+    const newActive = active === sid ? (newOrder[0] || "") : active;
     set({
       sessions: newSessions,
       order: newOrder,

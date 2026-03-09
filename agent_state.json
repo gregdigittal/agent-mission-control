@@ -22,6 +22,7 @@
       "status": "working",
       "icon": "\ud83d\udc51",
       "task": "Designing API authentication middleware",
+      "taskId": "t10",
       "metrics": { "ctx": "62%", "cost": "$1.24", "msgs": 83 }
     },
     {
@@ -32,6 +33,7 @@
       "status": "working",
       "icon": "\u2699\ufe0f",
       "task": "Implementing valuation CRUD endpoints",
+      "taskId": "t11",
       "metrics": { "ctx": "45%", "cost": "$0.91", "msgs": 56 }
     },
     {
@@ -42,6 +44,7 @@
       "status": "thinking",
       "icon": "\ud83c\udfa8",
       "task": "Planning component hierarchy for dashboard",
+      "taskId": "t15",
       "metrics": { "ctx": "28%", "cost": "$0.47", "msgs": 31 }
     },
     {
@@ -52,8 +55,35 @@
       "status": "idle",
       "icon": "\ud83e\uddea",
       "task": "Waiting for API endpoints to test",
+      "taskId": "t20",
       "metrics": { "ctx": "12%", "cost": "$0.18", "msgs": 14 }
     }
+  ],
+  "tasks": [
+    { "id": "t1", "title": "Define project architecture", "status": "done", "assignee": "Architect", "priority": "high" },
+    { "id": "t2", "title": "Create task breakdown document", "status": "done", "assignee": "Architect", "priority": "high" },
+    { "id": "t3", "title": "Initialize monorepo structure", "status": "done", "assignee": "Backend Dev", "priority": "high" },
+    { "id": "t4", "title": "Configure TypeScript & ESLint", "status": "done", "assignee": "Backend Dev", "priority": "medium" },
+    { "id": "t5", "title": "Set up CI/CD pipeline", "status": "done", "assignee": "Backend Dev", "priority": "medium" },
+    { "id": "t6", "title": "Implement valuation models", "status": "done", "assignee": "Backend Dev", "priority": "high" },
+    { "id": "t7", "title": "Build DCF calculation engine", "status": "done", "assignee": "Backend Dev", "priority": "high" },
+    { "id": "t8", "title": "Create comparable analysis module", "status": "done", "assignee": "Backend Dev", "priority": "high" },
+    { "id": "t9", "title": "Implement data validation layer", "status": "done", "assignee": "Backend Dev", "priority": "medium" },
+    { "id": "t10", "title": "Design API authentication middleware", "status": "in-progress", "assignee": "Architect", "priority": "high" },
+    { "id": "t11", "title": "Implement valuation CRUD endpoints", "status": "in-progress", "assignee": "Backend Dev", "priority": "high" },
+    { "id": "t12", "title": "Build API rate limiting", "status": "in-progress", "assignee": "Backend Dev", "priority": "medium", "rec": true, "recWhy": "Token bucket or sliding window strategy?" },
+    { "id": "t13", "title": "Create user management endpoints", "status": "backlog", "assignee": "Backend Dev", "priority": "medium" },
+    { "id": "t14", "title": "Implement report generation API", "status": "backlog", "assignee": "Backend Dev", "priority": "medium" },
+    { "id": "t15", "title": "Plan component hierarchy for dashboard", "status": "review", "assignee": "Frontend Dev", "priority": "high" },
+    { "id": "t16", "title": "Build dashboard layout components", "status": "backlog", "assignee": "Frontend Dev", "priority": "high" },
+    { "id": "t17", "title": "Create valuation input forms", "status": "backlog", "assignee": "Frontend Dev", "priority": "high" },
+    { "id": "t18", "title": "Build data visualization charts", "status": "backlog", "assignee": "Frontend Dev", "priority": "medium" },
+    { "id": "t19", "title": "Implement report viewer component", "status": "backlog", "assignee": "Frontend Dev", "priority": "medium" },
+    { "id": "t20", "title": "Draft test plan for auth endpoints", "status": "review", "assignee": "QA Engineer", "priority": "high" },
+    { "id": "t21", "title": "Write unit tests for valuation models", "status": "backlog", "assignee": "QA Engineer", "priority": "high" },
+    { "id": "t22", "title": "Create integration test suite", "status": "backlog", "assignee": "QA Engineer", "priority": "medium" },
+    { "id": "t23", "title": "End-to-end wiring & smoke tests", "status": "backlog", "assignee": "Architect", "priority": "high" },
+    { "id": "t24", "title": "Final code review & polish", "status": "backlog", "assignee": "Architect", "priority": "medium" }
   ],
   "events": [
     { "agent": "Architect", "type": "task", "text": "Completed JWT auth service implementation", "timestamp": "14:32:18" },
