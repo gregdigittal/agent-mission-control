@@ -13,12 +13,12 @@ const STATUS_BORDER: Record<string, string> = {
   leader: "border-l-amber",
 };
 
-const STATUS_TEXT: Record<string, string> = {
-  working: "text-cyan",
-  thinking: "text-violet",
-  idle: "text-text-4",
-  error: "text-red",
-  leader: "text-amber",
+const STATUS_BG: Record<string, string> = {
+  working: "text-cyan bg-cyan/10",
+  thinking: "text-violet bg-violet/10",
+  idle: "text-text-4 bg-bg-3",
+  error: "text-red bg-red/10",
+  leader: "text-amber bg-amber/10",
 };
 
 export function AgentCard({ agent, taskTitle }: AgentCardProps) {
@@ -26,7 +26,7 @@ export function AgentCard({ agent, taskTitle }: AgentCardProps) {
 
   return (
     <div
-      className={`bg-bg-2 rounded-lg p-[var(--density-pad)] border border-border-1 border-l-2 ${
+      className={`bg-bg-2 rounded-lg p-[var(--card-pad,12px)] border border-border-1 border-l-2 transition-all hover:border-border-2 ${
         STATUS_BORDER[agent.status] || "border-l-text-4"
       }`}
     >
@@ -42,8 +42,8 @@ export function AgentCard({ agent, taskTitle }: AgentCardProps) {
         </div>
         <div className="flex items-center gap-1">
           <span
-            className={`text-xxs font-mono px-1.5 py-0.5 rounded-full border border-current/30 bg-current/5 ${
-              STATUS_TEXT[agent.status] || "text-text-4"
+            className={`text-xxs font-mono px-1.5 py-0.5 rounded border border-current/20 ${
+              STATUS_BG[agent.status] || "text-text-4 bg-bg-3"
             }`}
           >
             {agent.status}

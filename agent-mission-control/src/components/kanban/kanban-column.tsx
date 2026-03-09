@@ -33,9 +33,9 @@ export function KanbanColumn({ status, tasks, sessionId, agents }: KanbanColumnP
 
   return (
     <div
-      className={`flex-shrink-0 w-[var(--kb-col-w,280px)] flex flex-col rounded-lg border transition-colors ${
+      className={`flex-shrink-0 w-[var(--kb-col-w,280px)] flex flex-col rounded-lg border transition-all ${
         dragOver
-          ? "border-cyan/50 bg-cyan/5"
+          ? "border-cyan/50 bg-cyan/5 glow-cyan"
           : "border-border-1 bg-bg-2"
       }`}
       onDragOver={(e) => {
@@ -47,8 +47,8 @@ export function KanbanColumn({ status, tasks, sessionId, agents }: KanbanColumnP
       onDrop={handleDrop}
     >
       {/* Column header */}
-      <div className="flex items-center justify-between px-3 py-2 border-b border-border-1">
-        <span className="text-xxs font-mono text-text-3 tracking-wider">
+      <div className="flex items-center justify-between px-[var(--card-pad,12px)] py-2.5 border-b border-border-1">
+        <span className="text-xxs font-mono text-text-3 tracking-wider font-semibold">
           {COLUMN_LABELS[status]}
         </span>
         <span className="text-xxs font-mono text-text-4 bg-bg-3 px-1.5 py-0.5 rounded-full">
@@ -57,7 +57,7 @@ export function KanbanColumn({ status, tasks, sessionId, agents }: KanbanColumnP
       </div>
 
       {/* Cards */}
-      <div className="flex flex-col gap-2 p-2 flex-1 overflow-y-auto">
+      <div className="flex flex-col gap-1.5 p-2 flex-1 overflow-y-auto">
         {tasks.map((task) => (
           <KanbanCard
             key={task.id}

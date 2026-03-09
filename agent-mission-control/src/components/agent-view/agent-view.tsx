@@ -17,7 +17,7 @@ export function AgentView({ session }: AgentViewProps) {
   return (
     <div>
       {/* Build banner */}
-      <div className="flex items-center gap-4 mb-4 bg-bg-2 rounded-lg p-4 border border-border-1">
+      <div className="flex items-center gap-4 mb-4 bg-bg-2 rounded-lg p-[var(--card-pad,12px)] border border-border-1">
         <ProgressRing percent={pct} />
         <div>
           <div className="text-sm font-mono text-text-1 font-semibold">

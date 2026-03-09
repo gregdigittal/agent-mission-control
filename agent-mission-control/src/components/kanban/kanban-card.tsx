@@ -37,7 +37,7 @@ export function KanbanCard({ task, sessionId, activeAgent }: KanbanCardProps) {
         e.dataTransfer.setData("text/plain", task.id);
         e.dataTransfer.effectAllowed = "move";
       }}
-      className={`bg-bg-2 rounded-lg p-3 border cursor-grab hover:-translate-y-px transition-transform ${borderClass}`}
+      className={`bg-bg-3 rounded-md p-[var(--card-pad,12px)] border cursor-grab hover:-translate-y-px hover:border-border-2 transition-all select-none ${borderClass}`}
     >
       {/* Priority dot + title */}
       <div className="flex items-start gap-2 mb-1">

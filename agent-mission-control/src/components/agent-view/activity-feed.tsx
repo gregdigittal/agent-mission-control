@@ -50,11 +50,11 @@ export function ActivityFeed({ events }: ActivityFeedProps) {
         </div>
       </div>
 
-      <div className="flex flex-col gap-0.5 max-h-[300px] overflow-y-auto">
+      <div className="flex flex-col gap-0.5 max-h-[300px] overflow-y-auto bg-bg-2 rounded-lg border border-border-1 p-1">
         {display.map((ev, i) => (
           <div
             key={`${ev.timestamp}-${i}`}
-            className="flex gap-2 px-2 py-1 rounded text-xs animate-feed-in"
+            className="flex gap-2 px-2 py-1 rounded text-xs animate-feed-in hover:bg-bg-3/50 transition-colors"
           >
             <span className="font-mono text-xxs text-text-4 whitespace-nowrap min-w-[55px]">
               {ev.timestamp}
