@@ -9,8 +9,19 @@ You are reviewing three third-party AI agent orchestration tools to inform the *
 - The **MCP server integration** (agents self-report via MCP tools)
 - The **design language** (dark theme, Geist fonts, cyan/green/amber accents, scanline overlay)
 - The **deployment target** (VPC with remote browser access, Claude Max subscription)
+- **Slack integration** (users must be able to action tasks directly from Slack — see details below)
 
 Everything else — framework, language, database, hosting, state management, build system — is open to change.
+
+### Slack Integration Requirement
+Users must be able to **action Kanban tasks directly from Slack** without opening the dashboard. This includes:
+- **Task notifications:** When agents complete tasks, request approval, encounter errors, or need input — send structured Slack messages to a configured channel
+- **Actionable messages:** Slack messages should include interactive buttons/menus for: approving/rejecting agent recommendations, moving tasks between Kanban columns, assigning tasks to agents, restarting failed tasks
+- **Slash commands or bot:** A `/amc` slash command or Slack bot that can: list active sessions and their status, show task summaries, trigger agent actions (start, stop, reassign)
+- **Bidirectional sync:** Task state changes in Slack must reflect in the dashboard in real-time, and vice versa
+- **Thread-based context:** Each task should map to a Slack thread so discussion, approvals, and agent output stay organized
+
+Note: Claw-Kanban already supports chat-to-card integration via webhooks (Telegram, Slack) — evaluate their approach and whether it can be adopted or improved upon for AMC v2.
 
 ---
 
@@ -38,6 +49,7 @@ Everything else — framework, language, database, hosting, state management, bu
 - No code review or diff viewing capabilities
 - No checkpoint/rollback system for agent work
 - No plugin/extension system for custom agent behaviors
+- No Slack or messaging integration — all interaction requires opening the dashboard
 
 ---
 
@@ -161,6 +173,7 @@ Create a detailed table comparing features across all three tools AND Agent Miss
 - Data Architecture (database, persistence, backup)
 - Process Management (spawning, monitoring, terminating agents)
 - Remote Access (tunneling, auth, mobile support)
+- Chat/Messaging Integration (Slack, Telegram, webhooks, actionable messages)
 
 ### B. Best-of-Breed Feature Selection
 For each feature category above, identify:
@@ -185,6 +198,7 @@ Design the target architecture for AMC v2. **Do not assume the current stack wil
 11. **Remote access:** Cloudflare Tunnel + auth middleware design.
 12. **Mobile experience:** Responsive design considerations for phone/tablet monitoring.
 13. **Plugin system:** How to support custom agent behaviors, skills, and commands (Agent Factory concept from claude-ws).
+14. **Slack integration:** Architecture for bidirectional Slack integration — incoming webhooks for notifications, Slack Block Kit for actionable messages, slash commands or bot for task management, thread-based context per task. How does this integrate with the real-time layer and Kanban state?
 
 ### D. Migration / Build Plan
 Produce a phased plan. This may be a **migration** from the current codebase OR a **greenfield build** if the architecture analysis warrants it. Be explicit about which approach you recommend and why.
