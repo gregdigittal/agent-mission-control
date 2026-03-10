@@ -50,12 +50,14 @@ Deno.serve(async (req: Request) => {
       req.headers.get("x-session-id") ||
       body.project.toLowerCase().replace(/[^a-z0-9]+/g, "-");
 
-    // Upsert session
+    // Upsert session — always refresh updated_at so the dashboard
+    // knows the session is still alive (prevents false-stale detection)
     const { error: upsertError } = await supabase.from("sessions").upsert(
       {
         id: sessionId,
         project: body.project,
         state: body,
+        updated_at: new Date().toISOString(),
       },
       { onConflict: "id" }
     );
