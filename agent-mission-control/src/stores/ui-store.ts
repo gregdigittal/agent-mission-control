@@ -67,18 +67,37 @@ export const useUIStore = create<UIState>((set, get) => ({
 
   setSessions: (sessions) => {
     const map: Record<string, Session> = {};
-    const order: string[] = [];
+    const newOrder: string[] = [];
     sessions.forEach((s) => {
       map[s.id] = s;
-      order.push(s.id);
+      newOrder.push(s.id);
     });
-    const active = order[0] || "";
-    set({
-      sessions: map,
-      order,
-      active,
-      panes: [{ sid: active, view: "agents" }],
-    });
+    const { order: prevOrder, active: prevActive, panes: prevPanes } = get();
+    const isFirstLoad = prevOrder.length === 0;
+    const newActive = newOrder.includes(prevActive)
+      ? prevActive
+      : newOrder[0] || "";
+
+    if (isFirstLoad) {
+      // First load: initialise panes
+      set({
+        sessions: map,
+        order: newOrder,
+        active: newActive,
+        panes: [{ sid: newActive, view: "agents" }],
+      });
+    } else {
+      // Subsequent fetches: preserve existing pane layout, just update data
+      const updatedPanes = prevPanes.map((p) =>
+        p.sid && newOrder.includes(p.sid) ? p : { ...p, sid: newActive }
+      );
+      set({
+        sessions: map,
+        order: newOrder,
+        active: newActive,
+        panes: updatedPanes,
+      });
+    }
   },
 
   upsertSession: (session) => {

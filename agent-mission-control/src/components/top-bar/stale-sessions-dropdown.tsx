@@ -18,6 +18,7 @@ function relativeTime(dateStr: string): string {
 export function StaleSessionsDropdown() {
   const staleOrder = useUIStore((s) => s.staleOrder);
   const staleSessions = useUIStore((s) => s.staleSessions);
+  const promoteFromStale = useUIStore((s) => s.promoteFromStale);
   const upsertSession = useUIStore((s) => s.upsertSession);
   const [open, setOpen] = useState(false);
   const [restartTarget, setRestartTarget] = useState<Session | null>(null);
@@ -73,6 +74,7 @@ export function StaleSessionsDropdown() {
                     <div className="flex items-center gap-1 ml-2 shrink-0">
                       <button
                         onClick={() => {
+                          promoteFromStale(sid);
                           upsertSession(sess);
                           setOpen(false);
                         }}

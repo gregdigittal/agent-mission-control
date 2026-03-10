@@ -56,7 +56,7 @@ export function useSessionSync() {
     fetchActive();
     fetchStale();
 
-    // Realtime subscription — add new/updated, ignore stale
+    // Realtime subscription — handle INSERT, UPDATE, and DELETE
     const channel = supabase
       .channel("sessions-realtime")
       .on(
@@ -71,6 +71,26 @@ export function useSessionSync() {
                 store.promoteFromStale(session.id);
               }
               store.upsertSession(session);
+            }
+          } else if (payload.eventType === "DELETE") {
+            const old = payload.old as { id?: string };
+            if (old?.id) {
+              const store = useUIStore.getState();
+              // Remove from whichever list it's in
+              if (store.sessions[old.id]) {
+                store.removeSession(old.id);
+              }
+              if (store.staleSessions[old.id]) {
+                const newStaleSessions = { ...store.staleSessions };
+                delete newStaleSessions[old.id];
+                const newStaleOrder = store.staleOrder.filter(
+                  (sid) => sid !== old.id
+                );
+                useUIStore.setState({
+                  staleSessions: newStaleSessions,
+                  staleOrder: newStaleOrder,
+                });
+              }
             }
           }
         }
