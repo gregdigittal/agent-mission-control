@@ -65,13 +65,15 @@ export function useSessionSync() {
         (payload) => {
           if (payload.eventType === "INSERT" || payload.eventType === "UPDATE") {
             const session = payload.new as Session;
-            if (isActive(session)) {
-              const store = useUIStore.getState();
-              if (store.staleSessions[session.id]) {
-                store.promoteFromStale(session.id);
-              }
-              store.upsertSession(session);
+            const store = useUIStore.getState();
+
+            // Any UPDATE means the session is alive — always promote if stale
+            if (store.staleSessions[session.id]) {
+              store.promoteFromStale(session.id);
             }
+
+            // Always upsert into active sessions on INSERT/UPDATE
+            store.upsertSession(session);
           } else if (payload.eventType === "DELETE") {
             const old = payload.old as { id?: string };
             if (old?.id) {
