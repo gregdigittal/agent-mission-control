@@ -42,3 +42,4 @@ next-env.d.ts
 
 # agent state file (pushed by hook, not source-controlled)
 agent_state.json
+.env*.local
