@@ -1,0 +1,246 @@
+# Agent Mission Control — Development Backlog
+
+**Last updated:** March 2026
+**Priority:** P0 = Critical, P1 = High, P2 = Medium, P3 = Nice-to-have
+**Effort:** S = Small (hours), M = Medium (1 day), L = Large (2-3 days), XL = Extra Large (week+)
+
+---
+
+## Milestone 0: Foundation Setup ✅
+
+| ID | Title | Priority | Effort | Status |
+|----|-------|----------|--------|--------|
+| F-001 | Supabase project creation | P0 | S | ✅ Done |
+| F-002 | Database schema (profiles, projects, agent_sessions, agents, events, kanban_tasks, vps_nodes, model_configs, approval_queue) | P0 | M | ✅ Done |
+| F-003 | RLS policies on all tables | P0 | S | ✅ Done |
+| F-004 | Budget enforcement triggers | P0 | S | ✅ Done |
+| F-005 | Realtime enabled on 6 tables | P0 | S | ✅ Done |
+| F-006 | Auto-create profile trigger on signup | P0 | S | ✅ Done |
+| F-007 | Functional specification document | P0 | M | ✅ Done |
+| F-008 | Individual build prompts (6 prompts) | P0 | M | ✅ Done |
+| F-009 | Market research & competitive analysis | P1 | L | ✅ Done |
+
+---
+
+## Milestone 1: Personal Dashboard MVP
+
+> **Prompt:** `PROMPT_01_DASHBOARD_MVP.md`
+> **Goal:** Working dashboard accessible from ultrawide AND phone
+
+| ID | Title | Priority | Effort | Deps | Status |
+|----|-------|----------|--------|------|--------|
+| M1-001 | Single-file HTML scaffold with CSS custom properties | P0 | M | — | 🔲 |
+| M1-002 | Color palette + design system implementation | P0 | S | M1-001 | 🔲 |
+| M1-003 | Screen profile system (mobile/laptop/desktop/ultrawide) | P0 | M | M1-001 | 🔲 |
+| M1-004 | Mobile bottom navigation bar | P0 | M | M1-003 | 🔲 |
+| M1-005 | Mobile responsive layout (agent cards, kanban) | P0 | L | M1-004 | 🔲 |
+| M1-006 | Pull-to-refresh on mobile | P1 | S | M1-004 | 🔲 |
+| M1-007 | Tiling window system (1-4 panes) | P0 | L | M1-003 | 🔲 |
+| M1-008 | Session management (add/remove/switch) | P0 | M | M1-001 | 🔲 |
+| M1-009 | Agent View: build stage banner + progress ring | P0 | M | M1-001 | 🔲 |
+| M1-010 | Agent View: pipeline row (8 stages) | P0 | M | M1-009 | 🔲 |
+| M1-011 | Agent View: agent cards with metrics | P0 | M | M1-001 | 🔲 |
+| M1-012 | Agent View: activity stream with filters | P0 | M | M1-001 | 🔲 |
+| M1-013 | Kanban board: 4 columns + drag-and-drop (mouse) | P0 | L | M1-001 | 🔲 |
+| M1-014 | Kanban board: touch drag-and-drop for mobile | P0 | M | M1-013 | 🔲 |
+| M1-015 | Kanban: Claude recommendation badge + approve workflow | P0 | M | M1-013 | 🔲 |
+| M1-016 | Supabase Realtime integration | P0 | M | M1-001 | 🔲 |
+| M1-017 | File Watch fallback (agent_state.json polling) | P1 | M | M1-001 | 🔲 |
+| M1-018 | Simulation mode with realistic data | P1 | M | M1-001 | 🔲 |
+| M1-019 | Visual effects (scanline, glow, animations) | P1 | M | M1-001 | 🔲 |
+| M1-020 | Keyboard shortcuts (desktop only) | P2 | S | M1-001 | 🔲 |
+| M1-021 | VPS serving instructions + nginx config | P0 | S | M1-001 | 🔲 |
+| M1-022 | agent_state_example.json | P1 | S | — | 🔲 |
+| M1-023 | hooks/write_state.sh for Claude Code | P1 | S | — | 🔲 |
+
+---
+
+## Milestone 2: Hybrid Bridge
+
+> **Prompt:** `PROMPT_02_HYBRID_BRIDGE.md`
+> **Goal:** Agent process management with zero network listeners
+
+| ID | Title | Priority | Effort | Deps | Status |
+|----|-------|----------|--------|------|--------|
+| M2-001 | Project scaffold (TS, package.json, tsconfig) | P0 | S | — | 🔲 |
+| M2-002 | Main loop (4-operation cycle, 2s interval) | P0 | M | M2-001 | 🔲 |
+| M2-003 | Config management (config.json parsing, defaults) | P0 | M | M2-001 | 🔲 |
+| M2-004 | Session token generation and validation | P0 | S | M2-001 | 🔲 |
+| M2-005 | Command processor (read, validate, execute, archive) | P0 | L | M2-004 | 🔲 |
+| M2-006 | Agent spawning (claude --headless, worktree) | P0 | L | M2-005 | 🔲 |
+| M2-007 | Agent termination (graceful + force) | P0 | M | M2-006 | 🔲 |
+| M2-008 | Health checker (PID liveness, staleness detection) | P0 | M | M2-006 | 🔲 |
+| M2-009 | Auto-restart on crash | P1 | M | M2-008 | 🔲 |
+| M2-010 | Status aggregator (read Claude Code state) | P0 | L | M2-001 | 🔲 |
+| M2-011 | State writer (dashboard_state.json) | P0 | M | M2-010 | 🔲 |
+| M2-012 | Git worktree manager (create/cleanup) | P0 | L | M2-001 | 🔲 |
+| M2-013 | Environment bootstrapper (copy .env, npm install) | P1 | M | M2-012 | 🔲 |
+| M2-014 | Tool allowlist enforcement at spawn | P0 | M | M2-006 | 🔲 |
+| M2-015 | Audit logger (append-only JSONL) | P0 | M | M2-001 | 🔲 |
+| M2-016 | Supabase sync (optional, push state + pull commands) | P1 | L | M2-011 | 🔲 |
+| M2-017 | Graceful shutdown (SIGINT/SIGTERM) | P0 | S | M2-002 | 🔲 |
+| M2-018 | install.sh setup script | P1 | S | M2-001 | 🔲 |
+| M2-019 | README with install + config docs | P1 | M | — | 🔲 |
+
+---
+
+## Milestone 3: Open-Source React Dashboard
+
+> **Prompt:** `PROMPT_03_REACT_DASHBOARD.md`
+> **Goal:** Full-featured dashboard with auth, multi-model, cost governance
+
+| ID | Title | Priority | Effort | Deps | Status |
+|----|-------|----------|--------|------|--------|
+| M3-001 | Vite + React + TS project scaffold | P0 | M | — | 🔲 |
+| M3-002 | Tailwind CSS 4 + design system port | P0 | M | M3-001 | 🔲 |
+| M3-003 | Supabase Auth (email + GitHub) | P0 | L | M3-001 | 🔲 |
+| M3-004 | Zustand stores (session, agent, kanban, cost, vps, auth) | P0 | L | M3-001 | 🔲 |
+| M3-005 | Realtime subscriptions (agents, events, kanban, sessions) | P0 | L | M3-003 | 🔲 |
+| M3-006 | Topbar component suite | P0 | M | M3-002 | 🔲 |
+| M3-007 | Pane system (container, tab bar, session selector) | P0 | L | M3-002 | 🔲 |
+| M3-008 | Agent View components (banner, pipeline, cards, stream) | P0 | XL | M3-007 | 🔲 |
+| M3-009 | Kanban Board with @dnd-kit | P0 | L | M3-007 | 🔲 |
+| M3-010 | Mobile layout (bottom nav, swipe, pull-to-refresh) | P0 | L | M3-002 | 🔲 |
+| M3-011 | Cost Dashboard component | P0 | L | M3-004 | 🔲 |
+| M3-012 | Budget alerts + pause UI | P0 | M | M3-011 | 🔲 |
+| M3-013 | Graduated permissions UI (traffic light) | P0 | L | M3-004 | 🔲 |
+| M3-014 | Approval queue (sidebar desktop, tab mobile) | P0 | M | M3-013 | 🔲 |
+| M3-015 | Multi-model selector + provider badges | P1 | L | M3-004 | 🔲 |
+| M3-016 | Model config management UI | P1 | M | M3-015 | 🔲 |
+| M3-017 | VPS manager panel | P1 | L | M3-004 | 🔲 |
+| M3-018 | Offline/local-only fallback mode | P1 | M | M3-001 | 🔲 |
+| M3-019 | Vercel deployment config | P0 | S | M3-001 | 🔲 |
+| M3-020 | .env.example + README | P0 | S | — | 🔲 |
+
+---
+
+## Milestone 4: Multi-VPS Orchestration
+
+> **Prompt:** `PROMPT_04_MULTI_VPS.md`
+> **Goal:** Agents running across multiple VPS nodes
+
+| ID | Title | Priority | Effort | Deps | Status |
+|----|-------|----------|--------|------|--------|
+| M4-001 | SSH wrapper module | P0 | M | M2-001 | 🔲 |
+| M4-002 | rsync state sync | P0 | M | M4-001 | 🔲 |
+| M4-003 | Remote bridge deployment script | P0 | L | M4-001 | 🔲 |
+| M4-004 | bridge-remote project (lightweight bridge) | P0 | L | M2-001 | 🔲 |
+| M4-005 | VPS registration interactive CLI | P0 | M | M4-001 | 🔲 |
+| M4-006 | Heartbeat monitoring + offline detection | P0 | M | M4-002 | 🔲 |
+| M4-007 | Load balancer (VPS selection for new agents) | P1 | M | M4-006 | 🔲 |
+| M4-008 | Git worktree sync strategy (shared_remote / rsync) | P1 | L | M4-002 | 🔲 |
+| M4-009 | Updated README with multi-VPS guide | P1 | M | — | 🔲 |
+
+---
+
+## Milestone 5: MCP Server
+
+> **Prompt:** `PROMPT_05_MCP_SERVER.md`
+> **Goal:** Bidirectional agent ↔ dashboard communication
+
+| ID | Title | Priority | Effort | Deps | Status |
+|----|-------|----------|--------|------|--------|
+| M5-001 | MCP server scaffold (stdio transport) | P0 | M | — | 🔲 |
+| M5-002 | Status tools (report_status, report_cost, get_team_status) | P0 | L | M5-001 | 🔲 |
+| M5-003 | Task tools (get_tasks, update_task) | P0 | M | M5-001 | 🔲 |
+| M5-004 | Approval tools (request_approval, check_approval) | P0 | L | M5-001 | 🔲 |
+| M5-005 | Event logging tool | P0 | S | M5-001 | 🔲 |
+| M5-006 | Messaging tools (send_message, read_messages) | P1 | M | M5-001 | 🔲 |
+| M5-007 | Filesystem state reader/writer | P0 | M | M5-001 | 🔲 |
+| M5-008 | Example .mcp.json config | P0 | S | — | 🔲 |
+| M5-009 | README + integration guide | P1 | M | — | 🔲 |
+
+---
+
+## Milestone 6: Enhanced Orchestration
+
+| ID | Title | Priority | Effort | Deps | Status |
+|----|-------|----------|--------|------|--------|
+| M6-001 | Task decomposition engine (AI objective → subtasks) | P1 | XL | M5-003 | 🔲 |
+| M6-002 | DAG visualization for task dependencies | P2 | L | M6-001 | 🔲 |
+| M6-003 | Auto task assignment based on agent capabilities | P2 | L | M6-001 | 🔲 |
+| M6-004 | Parallel exploration mode (competing approaches) | P2 | XL | M4-004 | 🔲 |
+| M6-005 | Review loop with configurable retry limits | P2 | L | M5-004 | 🔲 |
+| M6-006 | Session replay with cost annotation timeline | P2 | XL | M2-015 | 🔲 |
+| M6-007 | Context window compaction alerts | P1 | M | M5-002 | 🔲 |
+| M6-008 | Auto-handoff when context near full | P2 | L | M6-007 | 🔲 |
+
+---
+
+## Milestone 7: Git & Code Intelligence
+
+| ID | Title | Priority | Effort | Deps | Status |
+|----|-------|----------|--------|------|--------|
+| M7-001 | Visual diff preview component (full implementation) | P1 | L | M3-008 | 🔲 |
+| M7-002 | Auto-commit per agent action with meaningful messages | P1 | M | M2-012 | 🔲 |
+| M7-003 | Branch management UI (create, merge, rebase) | P2 | L | M3-001 | 🔲 |
+| M7-004 | Conflict detection and resolution workflow | P2 | XL | M7-003 | 🔲 |
+| M7-005 | Architectural ownership boundaries (agent X owns /src/db) | P1 | L | M2-014 | 🔲 |
+| M7-006 | PR creation from session (aggregate agent changes) | P2 | L | M7-002 | 🔲 |
+
+---
+
+## Milestone 8: Enterprise & Polish
+
+| ID | Title | Priority | Effort | Deps | Status |
+|----|-------|----------|--------|------|--------|
+| M8-001 | Team workspaces (shared projects, VPS pools) | P2 | XL | M3-003 | 🔲 |
+| M8-002 | SSO integration (SAML, OIDC) | P3 | L | M8-001 | 🔲 |
+| M8-003 | Centralized billing dashboard | P2 | L | M3-011 | 🔲 |
+| M8-004 | Admin controls (org budgets, model restrictions) | P3 | L | M8-001 | 🔲 |
+| M8-005 | Export session data (JSON, CSV) | P2 | M | M3-004 | 🔲 |
+| M8-006 | API access for CI/CD integration | P2 | L | M3-001 | 🔲 |
+| M8-007 | GitHub Actions integration (agent on PR) | P2 | L | M8-006 | 🔲 |
+| M8-008 | Webhook support for external integrations | P2 | M | M8-006 | 🔲 |
+| M8-009 | Browser push notifications for approvals | P1 | M | M3-014 | 🔲 |
+
+---
+
+## Milestone 9: Community & Ecosystem
+
+| ID | Title | Priority | Effort | Deps | Status |
+|----|-------|----------|--------|------|--------|
+| M9-001 | Plugin/extension API for custom agent behaviors | P3 | XL | M5-001 | 🔲 |
+| M9-002 | Community agent role templates | P3 | L | M9-001 | 🔲 |
+| M9-003 | Documentation site (Docusaurus or similar) | P2 | L | — | 🔲 |
+| M9-004 | CLI tool (`agent-mc`) for headless operation | P2 | L | M2-001 | 🔲 |
+| M9-005 | Homebrew formula | P3 | M | M9-004 | 🔲 |
+| M9-006 | Docker Compose for self-hosted Supabase + dashboard | P2 | L | M3-001 | 🔲 |
+
+---
+
+## Technical Debt & Infrastructure
+
+| ID | Title | Priority | Effort | Status |
+|----|-------|----------|--------|--------|
+| TD-001 | Virtualized lists for large event streams | P1 | M | 🔲 |
+| TD-002 | Unit tests for bridge | P1 | L | 🔲 |
+| TD-003 | Integration tests for dashboard | P1 | L | 🔲 |
+| TD-004 | GitHub Actions CI/CD pipeline | P1 | M | 🔲 |
+| TD-005 | Error tracking (Sentry or similar) | P2 | M | 🔲 |
+| TD-006 | Performance monitoring | P2 | M | 🔲 |
+| TD-007 | Accessibility audit (keyboard nav, screen readers) | P2 | L | 🔲 |
+| TD-008 | Internationalization (i18n) framework | P3 | L | 🔲 |
+| TD-009 | End-to-end test suite (Playwright) | P2 | L | 🔲 |
+
+---
+
+## Summary
+
+| Milestone | Items | P0 Count | Estimated Total Effort |
+|-----------|-------|----------|----------------------|
+| 0: Foundation | 9 | 7 | ✅ Complete |
+| 1: Dashboard MVP | 23 | 14 | ~1 week |
+| 2: Bridge | 19 | 12 | ~1 week |
+| 3: React Dashboard | 20 | 14 | ~2 weeks |
+| 4: Multi-VPS | 9 | 5 | ~1 week |
+| 5: MCP Server | 9 | 6 | ~3-4 days |
+| 6: Enhanced Orchestration | 8 | 0 | ~3 weeks |
+| 7: Git Intelligence | 6 | 0 | ~2 weeks |
+| 8: Enterprise | 9 | 0 | ~4 weeks |
+| 9: Community | 6 | 0 | ~3 weeks |
+| Tech Debt | 9 | 0 | Ongoing |
+| **Total** | **127** | **58** | — |
+
+**Critical path to first usable product:** M1 (1 week) → M2 (1 week) = 2 weeks to personal tool.
+**Critical path to OSS launch:** M1 + M2 + M3 + M5 + Prompt 06 docs = ~5 weeks.

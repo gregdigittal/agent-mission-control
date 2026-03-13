@@ -1,0 +1,275 @@
+{
+  "sessions": [
+    {
+      "id": "sess-001",
+      "name": "Alpha Sprint",
+      "status": "active",
+      "currentStage": 3,
+      "stages": [
+        {"name": "Planning"},
+        {"name": "Scaffolding"},
+        {"name": "Backend"},
+        {"name": "Frontend"},
+        {"name": "Integration"},
+        {"name": "Testing"},
+        {"name": "Optimization"},
+        {"name": "Review"}
+      ],
+      "projectName": "agent-mission-control",
+      "totalTasks": 12,
+      "completedTasks": 5,
+      "budgetLimit": 5000,
+      "totalCost": 842,
+      "agents": [
+        {
+          "id": "agent-001",
+          "key": "nova",
+          "name": "Nova",
+          "role": "lead",
+          "icon": "🤖",
+          "status": "leader",
+          "task": "Coordinating backend API implementation",
+          "ctx": 45,
+          "cost": 312,
+          "msgs": 67,
+          "files": ["src/api/routes.ts", "src/auth/middleware.ts"],
+          "budgetLimit": 1000
+        },
+        {
+          "id": "agent-002",
+          "key": "bolt",
+          "name": "Bolt",
+          "role": "backend",
+          "icon": "⚡",
+          "status": "working",
+          "task": "Implementing user authentication endpoints",
+          "ctx": 62,
+          "cost": 285,
+          "msgs": 43,
+          "files": ["src/api/auth.ts", "src/models/user.ts", "package.json"],
+          "budgetLimit": 1000
+        },
+        {
+          "id": "agent-003",
+          "key": "echo",
+          "name": "Echo",
+          "role": "frontend",
+          "icon": "📡",
+          "status": "thinking",
+          "task": "Building dashboard React components",
+          "ctx": 38,
+          "cost": 145,
+          "msgs": 28,
+          "files": ["src/components/Dashboard.tsx"],
+          "budgetLimit": 1000
+        },
+        {
+          "id": "agent-004",
+          "key": "sage",
+          "name": "Sage",
+          "role": "testing",
+          "icon": "🧠",
+          "status": "idle",
+          "task": "Waiting for auth module to be ready",
+          "ctx": 15,
+          "cost": 55,
+          "msgs": 12,
+          "files": ["tests/auth.test.ts"],
+          "budgetLimit": 1000
+        },
+        {
+          "id": "agent-005",
+          "key": "flux",
+          "name": "Flux",
+          "role": "devops",
+          "icon": "🔄",
+          "status": "working",
+          "task": "Configuring CI/CD pipeline with GitHub Actions",
+          "ctx": 28,
+          "cost": 45,
+          "msgs": 15,
+          "files": [".github/workflows/ci.yml", "Dockerfile"],
+          "budgetLimit": 1000
+        }
+      ],
+      "events": [
+        {
+          "id": "evt-001",
+          "type": "tool",
+          "agent": "bolt",
+          "desc": "Ran npm test -- --watch=false",
+          "time": "2026-03-12T10:30:00Z"
+        },
+        {
+          "id": "evt-002",
+          "type": "file",
+          "agent": "bolt",
+          "desc": "Edited src/api/auth.ts — added login endpoint",
+          "time": "2026-03-12T10:29:45Z"
+        },
+        {
+          "id": "evt-003",
+          "type": "thinking",
+          "agent": "echo",
+          "desc": "Evaluating component architecture for dashboard...",
+          "time": "2026-03-12T10:29:30Z"
+        },
+        {
+          "id": "evt-004",
+          "type": "message",
+          "agent": "nova",
+          "desc": "Auth module 80% complete, starting API routes next",
+          "time": "2026-03-12T10:29:00Z"
+        },
+        {
+          "id": "evt-005",
+          "type": "task",
+          "agent": "nova",
+          "desc": "Moved 'Implement auth' to In Progress",
+          "time": "2026-03-12T10:28:30Z"
+        },
+        {
+          "id": "evt-006",
+          "type": "spawn",
+          "agent": "flux",
+          "desc": "Agent Flux spawned for devops tasks",
+          "time": "2026-03-12T10:25:00Z"
+        },
+        {
+          "id": "evt-007",
+          "type": "cost",
+          "agent": "bolt",
+          "desc": "Session cost: $2.85 — agent Bolt consuming most tokens",
+          "time": "2026-03-12T10:27:00Z"
+        },
+        {
+          "id": "evt-008",
+          "type": "file",
+          "agent": "flux",
+          "desc": "Created .github/workflows/ci.yml",
+          "time": "2026-03-12T10:26:00Z"
+        }
+      ],
+      "tasks": [
+        {
+          "id": "task-001",
+          "title": "Set up authentication middleware",
+          "desc": "JWT-based auth with refresh tokens",
+          "tag": "backend",
+          "priority": "high",
+          "column": "in_progress",
+          "agent": "bolt"
+        },
+        {
+          "id": "task-002",
+          "title": "Build dashboard layout components",
+          "desc": "React components for main layout",
+          "tag": "frontend",
+          "priority": "high",
+          "column": "in_progress",
+          "agent": "echo"
+        },
+        {
+          "id": "task-003",
+          "title": "Configure CI/CD pipeline",
+          "desc": "GitHub Actions for test + deploy",
+          "tag": "devops",
+          "priority": "medium",
+          "column": "todo",
+          "agent": "flux"
+        },
+        {
+          "id": "task-004",
+          "title": "Write integration tests for auth",
+          "desc": "Cover login, register, refresh flows",
+          "tag": "testing",
+          "priority": "medium",
+          "column": "backlog",
+          "agent": "sage"
+        },
+        {
+          "id": "task-005",
+          "title": "Implement user profile API",
+          "desc": "CRUD endpoints for user profiles",
+          "tag": "backend",
+          "priority": "medium",
+          "column": "backlog",
+          "agent": "bolt",
+          "recommendation": "Claude recommends starting this after auth is complete",
+          "needsApproval": true,
+          "approved": false
+        },
+        {
+          "id": "task-006",
+          "title": "Design database migration for v2",
+          "desc": "Add columns for multi-tenant support",
+          "tag": "database",
+          "priority": "low",
+          "column": "backlog"
+        },
+        {
+          "id": "task-007",
+          "title": "Set up project scaffolding",
+          "tag": "infra",
+          "priority": "high",
+          "column": "done",
+          "agent": "nova"
+        },
+        {
+          "id": "task-008",
+          "title": "Initialize Git repository",
+          "tag": "devops",
+          "priority": "high",
+          "column": "done",
+          "agent": "nova"
+        },
+        {
+          "id": "task-009",
+          "title": "Add real-time WebSocket handler",
+          "tag": "backend",
+          "priority": "medium",
+          "column": "backlog"
+        },
+        {
+          "id": "task-010",
+          "title": "Review security audit findings",
+          "tag": "security",
+          "priority": "high",
+          "column": "backlog",
+          "recommendation": "Claude identified 3 potential issues",
+          "needsApproval": true,
+          "approved": false
+        }
+      ],
+      "approvals": [
+        {
+          "id": "appr-001",
+          "agent": "bolt",
+          "desc": "Write to .env file — adding JWT_SECRET",
+          "risk": "red",
+          "files": [".env"],
+          "status": "pending",
+          "created": "2026-03-12T10:28:00Z"
+        },
+        {
+          "id": "appr-002",
+          "agent": "flux",
+          "desc": "Install new npm package: @github/actions-core",
+          "risk": "yellow",
+          "files": ["package.json", "package-lock.json"],
+          "status": "pending",
+          "created": "2026-03-12T10:26:30Z"
+        },
+        {
+          "id": "appr-003",
+          "agent": "echo",
+          "desc": "Read src/config/database.ts",
+          "risk": "green",
+          "files": ["src/config/database.ts"],
+          "status": "pending",
+          "created": "2026-03-12T10:25:00Z"
+        }
+      ]
+    }
+  ]
+}
