@@ -1,0 +1,117 @@
+{
+  "project": "CCRS E-Signature Platform",
+  "currentStageIdx": 2,
+  "totalTasks": 18,
+  "completedTasks": 7,
+  "stages": [
+    { "name": "Planning",    "desc": "Architecture & task breakdown", "status": "completed" },
+    { "name": "Scaffolding", "desc": "Project structure & config",    "status": "completed" },
+    { "name": "Core Logic",  "desc": "Business logic & models",       "status": "active"    },
+    { "name": "API Layer",   "desc": "REST endpoints & middleware",   "status": "pending"   },
+    { "name": "Frontend",    "desc": "React components & pages",      "status": "pending"   },
+    { "name": "Testing",     "desc": "Unit & integration tests",      "status": "pending"   },
+    { "name": "Integration", "desc": "End-to-end wiring",            "status": "pending"   },
+    { "name": "Review",      "desc": "Code review & polish",          "status": "pending"   }
+  ],
+  "agents": [
+    {
+      "id": "lead-1",
+      "name": "Architect",
+      "role": "Project Lead",
+      "type": "leader",
+      "status": "working",
+      "icon": "👑",
+      "task": "Coordinating signature workflow design",
+      "taskId": "cs-t8",
+      "metrics": { "ctx": "58%", "cost": "$1.12", "msgs": 74 }
+    },
+    {
+      "id": "back-1",
+      "name": "Alex Chen",
+      "role": "Backend Dev",
+      "type": "backend",
+      "status": "working",
+      "icon": "⚙️",
+      "task": "Implementing DocuSign webhook handlers",
+      "taskId": "cs-t9",
+      "metrics": { "ctx": "41%", "cost": "$0.83", "msgs": 52 }
+    },
+    {
+      "id": "front-1",
+      "name": "Sam Rivera",
+      "role": "Frontend Dev",
+      "type": "frontend",
+      "status": "thinking",
+      "icon": "🎨",
+      "task": "Designing signature capture UI component",
+      "taskId": "cs-t11",
+      "metrics": { "ctx": "32%", "cost": "$0.61", "msgs": 39 }
+    },
+    {
+      "id": "test-1",
+      "name": "Jordan Lee",
+      "role": "QA Engineer",
+      "type": "tester",
+      "status": "idle",
+      "icon": "🧪",
+      "task": "Awaiting component handoff for test planning",
+      "taskId": null,
+      "metrics": { "ctx": "15%", "cost": "$0.28", "msgs": 19 }
+    }
+  ],
+  "tasks": [
+    { "id": "cs-t1",  "title": "Define e-signature architecture",        "status": "done",        "assignee": "Architect",  "priority": "high",   "deps": [] },
+    { "id": "cs-t2",  "title": "Select DocuSign vs EasySign provider",   "status": "done",        "assignee": "Architect",  "priority": "high",   "deps": [] },
+    { "id": "cs-t3",  "title": "Initialise monorepo structure",          "status": "done",        "assignee": "Alex Chen",  "priority": "high",   "deps": ["cs-t1"] },
+    { "id": "cs-t4",  "title": "Configure TypeScript & tooling",         "status": "done",        "assignee": "Alex Chen",  "priority": "medium", "deps": ["cs-t3"] },
+    { "id": "cs-t5",  "title": "Setup CI/CD pipeline",                   "status": "done",        "assignee": "Alex Chen",  "priority": "medium", "deps": ["cs-t3"] },
+    { "id": "cs-t6",  "title": "Implement document model",               "status": "done",        "assignee": "Alex Chen",  "priority": "high",   "deps": ["cs-t2"] },
+    { "id": "cs-t7",  "title": "Build signature state machine",          "status": "done",        "assignee": "Alex Chen",  "priority": "high",   "deps": ["cs-t6"] },
+    {
+      "id": "cs-t8",
+      "title": "Design signature workflow orchestrator",
+      "status": "in-progress",
+      "assignee": "Architect",
+      "priority": "high",
+      "deps": ["cs-t7"],
+      "rec": false
+    },
+    {
+      "id": "cs-t9",
+      "title": "Implement DocuSign webhook handlers",
+      "status": "in-progress",
+      "assignee": "Alex Chen",
+      "priority": "high",
+      "deps": ["cs-t7"],
+      "rec": false
+    },
+    {
+      "id": "cs-t10",
+      "title": "Build audit trail service",
+      "status": "in-progress",
+      "assignee": "Alex Chen",
+      "priority": "medium",
+      "deps": [],
+      "rec": true,
+      "recWhy": "Should audit logs be async or sync? Performance trade-off."
+    },
+    { "id": "cs-t11", "title": "Design signature capture UI component", "status": "review",   "assignee": "Sam Rivera", "priority": "high",   "deps": ["cs-t8"] },
+    { "id": "cs-t12", "title": "Build document preview component",      "status": "backlog",  "assignee": "Sam Rivera", "priority": "high",   "deps": ["cs-t11"] },
+    { "id": "cs-t13", "title": "Create signer notification emails",     "status": "backlog",  "assignee": "Sam Rivera", "priority": "medium", "deps": [] },
+    { "id": "cs-t14", "title": "Implement bulk send workflow",          "status": "backlog",  "assignee": "Alex Chen",  "priority": "medium", "deps": ["cs-t9"] },
+    { "id": "cs-t15", "title": "Write unit tests for state machine",    "status": "backlog",  "assignee": "Jordan Lee", "priority": "high",   "deps": ["cs-t7"] },
+    { "id": "cs-t16", "title": "Integration tests for webhook flow",    "status": "backlog",  "assignee": "Jordan Lee", "priority": "high",   "deps": ["cs-t9"] },
+    { "id": "cs-t17", "title": "End-to-end signing workflow test",      "status": "backlog",  "assignee": "Jordan Lee", "priority": "medium", "deps": ["cs-t15","cs-t16"] },
+    { "id": "cs-t18", "title": "Final review & security audit",        "status": "backlog",  "assignee": "Architect",  "priority": "high",   "deps": ["cs-t17"] }
+  ],
+  "events": [
+    { "agent": "Alex Chen",   "type": "file",     "text": "Created src/webhooks/docusign-handler.ts",     "timestamp": "14:32:18" },
+    { "agent": "Architect",   "type": "thinking", "text": "Evaluating async vs sync audit log approach",  "timestamp": "14:31:55" },
+    { "agent": "Sam Rivera",  "type": "task",     "text": "Submitted signature capture UI for review",    "timestamp": "14:31:22" },
+    { "agent": "Alex Chen",   "type": "tool",     "text": "Running npm test -- --filter=webhooks",        "timestamp": "14:30:48" },
+    { "agent": "Architect",   "type": "message",  "text": "Webhook handler pattern approved",             "timestamp": "14:29:31" },
+    { "agent": "Sam Rivera",  "type": "file",     "text": "Modified src/components/SignatureCapture.tsx", "timestamp": "14:28:15" },
+    { "agent": "Alex Chen",   "type": "file",     "text": "Created src/services/audit-trail.ts",         "timestamp": "14:27:44" },
+    { "agent": "Jordan Lee",  "type": "message",  "text": "Awaiting component handoff for test plan",    "timestamp": "14:26:19" }
+  ]
+}
