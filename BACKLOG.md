@@ -1,12 +1,15 @@
-# Agent Mission Control — Backlog
+# Agent Mission Control — Task Backlog
 
 > Last updated: 2026-03-15
 > Reference: Production Build Prompt v2.0 (15 March 2026)
 
+**Naming convention:** Items here are *tasks*. Each task maps to a Kanban card in `agent_state.json`.
+Task status in the Kanban: `backlog` (To Do) → `in-progress` → `review` → `done`.
+
 ## Status Key
 - ✅ Done
 - ⚠️ Partial
-- ❌ Not started
+- ❌ Not started (= Kanban status: `backlog`)
 
 ---
 
