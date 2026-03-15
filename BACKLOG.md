@@ -1,6 +1,6 @@
 # Agent Mission Control — Task Backlog
 
-> Last updated: 2026-03-16 (all P1 complete)
+> Last updated: 2026-03-16 (all P1 + P2 + P2+ complete — full backlog cleared)
 > Reference: Production Build Prompt v2.0 (15 March 2026)
 
 **Naming convention:** Items here are *tasks*. Each task maps to a Kanban card in `agent_state.json`.
@@ -49,7 +49,7 @@ Task status in the Kanban: `backlog` (To Do) → `in-progress` → `review` → 
 
 | ID | Feature | Status | Notes |
 |----|---------|--------|-------|
-| F-052 | Help tooltip ("?" panel with shortcuts) | ❌ | Floating panel from topbar "?" button |
+| F-052 | Help tooltip ("?" panel with shortcuts) | ✅ | Floating panel from topbar "?" button; `?` key toggles; click-outside closes |
 
 ---
 
@@ -57,8 +57,8 @@ Task status in the Kanban: `backlog` (To Do) → `in-progress` → `review` → 
 
 | ID | Feature | Status | Notes |
 |----|---------|--------|-------|
-| F-063 | Agent heartbeat liveness (<30s green, 30-60s amber, >60s red) | ❌ | Per-agent lastHeartbeat tracking |
-| F-064 | Cost tracking widget — total + per-agent + trend | ❌ | Parse from agent metrics.cost; sparkline in topbar |
+| F-063 | Agent heartbeat liveness (<30s green, 30-60s amber, >60s red) | ✅ | `hb-dot` CSS (fresh/stale/dead); falls back to session `_lastUpdate` when no per-agent `lastHeartbeat` |
+| F-064 | Cost tracking widget — total + per-agent + trend | ✅ | `renderCostWidget()` aggregates all session agent costs; shows `$x.xx` in topbar; hidden when total is $0.00 |
 
 ---
 
@@ -66,6 +66,9 @@ Task status in the Kanban: `backlog` (To Do) → `in-progress` → `review` → 
 
 | ID | Feature |
 |----|---------|
+| F-064 | Cost tracking widget — total + per-agent |
+| F-063 | Agent heartbeat liveness indicators |
+| F-052 | Help tooltip ("?" panel with shortcuts) |
 | F-074 | Testing framework — Playwright E2E |
 | F-073 | CI/CD pipeline — GitHub Actions |
 | F-072 | Docker Compose (app + nginx) |

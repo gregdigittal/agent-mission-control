@@ -2,7 +2,7 @@
   "project": "Agent Mission Control",
   "currentStageIdx": 3,
   "totalTasks": 18,
-  "completedTasks": 15,
+  "completedTasks": 18,
   "stages": [
     {
       "name": "Security",
@@ -36,9 +36,9 @@
       "name": "Claude",
       "role": "AI Agent",
       "type": "leader",
-      "status": "working",
+      "status": "idle",
       "icon": "\u25c6",
-      "task": "All P1 items complete",
+      "task": "Full backlog cleared \u2014 all items complete",
       "taskId": null,
       "metrics": {
         "ctx": "0%",
@@ -201,7 +201,7 @@
     {
       "id": "F-052",
       "title": "F-052: Help tooltip (? panel with shortcuts)",
-      "status": "backlog",
+      "status": "done",
       "assignee": "Claude",
       "priority": "low",
       "deps": [],
@@ -211,7 +211,7 @@
     {
       "id": "F-063",
       "title": "F-063: Agent heartbeat liveness indicators",
-      "status": "backlog",
+      "status": "done",
       "assignee": "Claude",
       "priority": "low",
       "deps": [],
@@ -221,7 +221,7 @@
     {
       "id": "F-064",
       "title": "F-064: Cost tracking widget \u2014 total + per-agent + trend",
-      "status": "backlog",
+      "status": "done",
       "assignee": "Claude",
       "priority": "low",
       "deps": [],
@@ -271,6 +271,12 @@
       "type": "task",
       "text": "F-073 done \u2014 GitHub Actions CI/CD (lint+test+docker+deploy)",
       "timestamp": "15:39:52"
+    },
+    {
+      "agent": "Claude",
+      "type": "task",
+      "text": "Backlog cleared \u2014 F-052/063/064 all implemented and closed",
+      "timestamp": "16:10:06"
     }
   ]
 }
