@@ -757,7 +757,10 @@ AMC.Render = {
       var sess = AMC.State.sessions[sid];
       var status = self._connStatus(sess);
       var tab = h('div', {cls:'session-tab'+(sid===AMC.State.active?' active':''),
-        onclick: function(){ AMC.State.active = sid; AMC.State.fixPanes(); AMC.Render.render(); }});
+        onclick: function(){
+          AMC.State.active = sid;
+          if (AMC.State.panes.length > 0) AMC.State.panes[0].sid = sid;
+          AMC.State.fixPanes(); AMC.Render.render(); }});
       /* F-062: colored status dot */
       var dot = h('span', {cls:'conn-dot '+(status==='unknown'?'unknown':status),
         title:'Data source: '+status+(sess._lastUpdate ? ' ('+timeSince(new Date(sess._lastUpdate))+')' : '')});
