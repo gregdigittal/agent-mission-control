@@ -49,6 +49,7 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;b
 .session-tab .tab-close{display:none;margin-left:4px;font-size:10px;color:var(--text-3);cursor:pointer;padding:0 2px;border-radius:2px;line-height:1}
 .session-tab:hover .tab-close{display:inline-flex}
 .session-tab .tab-close:hover{color:var(--red);background:rgba(248,113,113,.15)}
+.source-badge{font-size:9px;padding:0 4px;border-radius:3px;font-family:var(--mono);letter-spacing:.04em;color:var(--text-3);background:var(--bg-4);border:1px solid var(--border-0);line-height:16px}
 .add-session-btn{padding:5px 10px;border-radius:6px;cursor:pointer;font-family:var(--mono);font-size:var(--font-xs);color:var(--text-3);background:transparent;border:1px dashed var(--border-1);white-space:nowrap;transition:all .15s;display:flex;align-items:center;flex-shrink:0}
 .add-session-btn:hover{color:var(--green);border-color:var(--green);background:rgba(52,211,153,.05)}
 .topbar-right{display:flex;align-items:center;gap:var(--density-gap);margin-left:auto;white-space:nowrap}
@@ -121,6 +122,10 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;b
 .stage-pill.active{color:var(--cyan);border-color:rgba(34,211,238,.3);background:rgba(34,211,238,.08);box-shadow:0 0 10px rgba(34,211,238,.15)}
 .stage-dot{width:5px;height:5px;border-radius:50%;background:currentColor;flex-shrink:0}
 .stage-pill.active .stage-dot{animation:pulse 1.5s infinite}
+.stage-pill.gate-blocked{border-color:rgba(251,191,36,.4);box-shadow:0 0 8px rgba(251,191,36,.1)}
+.stage-gate-lock{font-size:var(--font-xxs);margin-left:3px;opacity:.85}
+.evidence-gate-bar{display:flex;align-items:center;gap:8px;padding:3px 6px;border-radius:4px;background:rgba(251,191,36,.06);border:1px solid rgba(251,191,36,.2);margin-bottom:var(--density-gap);font-family:var(--mono);font-size:var(--font-xxs);color:var(--amber);flex-wrap:wrap}
+.evidence-gate-bar.gate-clear{background:rgba(52,211,153,.06);border-color:rgba(52,211,153,.2);color:var(--green)}
 
 /* ── Agent Cards ──────────────────────────────────────────────────────────── */
 .agents-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:var(--density-gap);margin-bottom:var(--density-gap)}
@@ -200,6 +205,10 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;b
 .kanban-card.dependency{border-color:var(--amber);box-shadow:0 0 10px rgba(251,191,36,.1)}
 .kanban-card-deps{display:flex;flex-wrap:wrap;gap:3px;margin-top:3px}
 .dep-tag{font-size:var(--font-xxs);color:var(--text-2);background:var(--bg-4);border-radius:3px;padding:1px 5px}
+.dep-tag.dep-blocking{color:var(--amber);background:rgba(251,191,36,.1)}
+.kanban-card-deps-header{font-size:var(--font-xxs);color:var(--amber);margin-top:5px;margin-bottom:2px;display:flex;align-items:center;gap:3px}
+.dep-cycle-badge{display:flex;align-items:center;gap:4px;margin-top:5px;padding:3px 7px;background:rgba(248,113,113,.08);border-radius:4px;font-size:var(--font-xxs);color:var(--red)}
+.kanban-card.has-cycle{border-color:var(--red);box-shadow:0 0 10px rgba(248,113,113,.15)}
 .active-agent-ind{display:flex;align-items:center;gap:4px;margin-top:5px;padding:3px 7px;background:rgba(34,211,238,.06);border-radius:4px;font-size:var(--font-xxs);color:var(--cyan)}
 .ag-dot{width:5px;height:5px;border-radius:50%;background:var(--cyan);animation:pulseDot 1.5s ease-in-out infinite;flex-shrink:0}
 .ag-dot.status-thinking{background:var(--violet)}
@@ -293,8 +302,10 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;b
 
 <footer id="filewatch-bar">
   <button id="fw-mode-file" class="fw-mode fw-mode-active">FILE</button>
+  <button id="fw-mode-url" class="fw-mode">URL</button>
   <button id="fw-mode-sb" class="fw-mode">SUPABASE</button>
   <span id="fw-file-grp"><input id="fw-path" class="fw-input" value="agent_state.json"></span>
+  <span id="fw-url-grp" style="display:none"><input id="fw-url" class="fw-input" placeholder="https://example.com/agent_state.json"></span>
   <span id="fw-sb-grp" style="display:none">
     <input id="fw-sb-url" class="fw-input fw-input-sb" placeholder="https://xxx.supabase.co">
     <input id="fw-sb-key" class="fw-input fw-input-sb" placeholder="anon key">
@@ -426,6 +437,7 @@ AMC.State = {
     document.body.className = 'screen-' + s;
     var mx = this.maxPanes[s];
     if (this.tiles > mx) { this.tiles = mx; this.panes = this.panes.slice(0, mx); }
+    try { localStorage.setItem('amc_screen', s); } catch(e) {}
   },
 
   setTiles: function(n) {
@@ -454,6 +466,7 @@ AMC.Data = {
   _fwErrCount: 0,   /* F-003: backoff state */
   _sbIv: null, _sbUrl: '', _sbKey: '', _sbActive: false,
   _sbErrCount: 0,   /* F-003: backoff state for Supabase */
+  _urlIv: null, _urlActive: false, _urlErrCount: 0, /* F-034: URL mode */
 
   /* F-060: validate + normalise incoming state JSON */
   validateState: function(d) {
@@ -478,7 +491,9 @@ AMC.Data = {
         return {
           name: safeStr(s.name),
           desc: safeStr(s.desc),
-          status: VALID_STATUSES.stage.includes(s.status) ? s.status : 'pending'
+          status: VALID_STATUSES.stage.includes(s.status) ? s.status : 'pending',
+          minTasks: (typeof s.minTasks === 'number' && s.minTasks > 0) ? s.minTasks : null,
+          minEvents: (typeof s.minEvents === 'number' && s.minEvents > 0) ? s.minEvents : null
         };
       });
     }
@@ -570,6 +585,43 @@ AMC.Data = {
     this._fwRemoved = true;
     if (this._fwIv) { clearTimeout(this._fwIv); this._fwIv = null; }
     this._fwErrCount = 0;
+  },
+
+  /* F-034: URL polling mode — polls a remote URL returning agent_state.json */
+  startUrlWatch: function(url) {
+    var self = this;
+    this._urlActive = true;
+    this._urlErrCount = 0;
+    this._fwRemoved = false;
+    function scheduleNext() {
+      if (!self._urlActive) return;
+      var delay = Math.min(3000 * Math.pow(2, self._urlErrCount), 60000);
+      self._urlIv = setTimeout(poll, delay);
+    }
+    function poll() {
+      if (!self._urlActive) return;
+      fetch(url)
+        .then(function(r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+        .then(function(raw) {
+          self._urlErrCount = 0;
+          self.mergeState(AMC.Data.validateState(raw));
+          AMC.UI.dismissError();
+          scheduleNext();
+        })
+        .catch(function(err) {
+          self._urlErrCount++;
+          var delay = Math.min(3 * Math.pow(2, self._urlErrCount), 60);
+          AMC.UI.showError('URL watch: ' + err.message + ' \u2014 retrying in ' + delay + 's\u2026');
+          scheduleNext();
+        });
+    }
+    poll();
+  },
+
+  stopUrlWatch: function() {
+    this._urlActive = false;
+    if (this._urlIv) { clearTimeout(this._urlIv); this._urlIv = null; }
+    this._urlErrCount = 0;
   },
 
   fetchState: function(path) {
@@ -765,6 +817,9 @@ AMC.Render = {
       var dot = h('span', {cls:'conn-dot '+(status==='unknown'?'unknown':status),
         title:'Data source: '+status+(sess._lastUpdate ? ' ('+timeSince(new Date(sess._lastUpdate))+')' : '')});
       tab.appendChild(dot);
+      /* F-033: per-session source badge */
+      var srcLabel = sid.indexOf('sb-') === 0 ? 'SB' : sid === 'filewatch' ? (AMC.Data._urlActive ? 'URL' : 'FILE') : 'SIM';
+      tab.appendChild(h('span', {cls:'source-badge', text:srcLabel}));
       tab.appendChild(h('span', {text:'\u25CF ', style:{color:ACCENT_CYCLE[i%ACCENT_CYCLE.length],fontSize:'0.65em'}}));
       tab.appendChild(txt(sess.name));
       if (AMC.State.order.length > 1 || sid === 'filewatch') {
@@ -868,14 +923,37 @@ AMC.Render = {
     container.appendChild(banner);
 
     /* Pipeline */
+    var activeStageDef = (sess.stages || [])[sess.stageIdx] || null;
+    var doneTaskCount = (sess.tasks || []).filter(function(t){ return t.status === 'done'; }).length;
+    var eventCount = (sess.events || []).length;
+    var gateTasksOk  = !activeStageDef || !activeStageDef.minTasks  || doneTaskCount  >= activeStageDef.minTasks;
+    var gateEventsOk = !activeStageDef || !activeStageDef.minEvents || eventCount >= activeStageDef.minEvents;
+    var gateBlocked = activeStageDef && (activeStageDef.minTasks || activeStageDef.minEvents) && !(gateTasksOk && gateEventsOk);
+    var gateClear   = activeStageDef && (activeStageDef.minTasks || activeStageDef.minEvents) && gateTasksOk && gateEventsOk;
+
     var pipe = h('div', {cls:'pipeline'});
-    (sess.stages || []).forEach(function(st){
-      var pill = h('div', {cls:'stage-pill '+(st.status||'pending')});
+    (sess.stages || []).forEach(function(st, idx){
+      var isActive = st.status === 'active';
+      var pillCls = 'stage-pill '+(st.status||'pending')+(isActive && gateBlocked ? ' gate-blocked' : '');
+      var pill = h('div', {cls:pillCls});
       pill.appendChild(h('span', {cls:'stage-dot'}));
       pill.appendChild(txt(' '+st.name));
+      if (isActive && gateBlocked)  pill.appendChild(h('span', {cls:'stage-gate-lock', text:'\uD83D\uDD12'}));
+      if (isActive && gateClear)    pill.appendChild(h('span', {cls:'stage-gate-lock', text:'\u2713'}));
       pipe.appendChild(pill);
     });
     container.appendChild(pipe);
+
+    /* Evidence gate status bar — shown only when active stage has gates defined */
+    if (activeStageDef && (activeStageDef.minTasks || activeStageDef.minEvents)) {
+      var parts = [];
+      if (activeStageDef.minTasks)  parts.push((gateTasksOk  ? '\u2713' : '\uD83D\uDD12')+' Tasks done: '+doneTaskCount+'/'+activeStageDef.minTasks);
+      if (activeStageDef.minEvents) parts.push((gateEventsOk ? '\u2713' : '\uD83D\uDD12')+' Events: '+eventCount+'/'+activeStageDef.minEvents);
+      var gateBarCls = 'evidence-gate-bar'+(gateClear ? ' gate-clear' : '');
+      var gateBar = h('div', {cls:gateBarCls});
+      gateBar.appendChild(h('span', {text:(gateBlocked ? 'Stage gate: ' : 'Stage gate cleared: ')+parts.join('  \u00B7  ')}));
+      container.appendChild(gateBar);
+    }
 
     /* Agent Cards */
     var grid = h('div', {cls:'agents-grid'});
@@ -956,6 +1034,7 @@ AMC.Render = {
 
   renderKanban: function(container, sess) {
     var kb = h('div', {cls:'kanban'});
+    var cyclicIds = detectCycles(sess.tasks);
     COLS.forEach(function(col){
       var colEl = h('div', {cls:'kanban-col'});
       var tasks = (sess.tasks||[]).filter(function(t){ return t.status===col; });
@@ -988,7 +1067,8 @@ AMC.Render = {
         var isAuto = task._auto, isDep = task.depOf;
         var cls = 'kanban-card'
           +(task.rec&&!isAuto?' recommended':'')+(task.rec&&isAuto?' transition':'')
-          +(isDep&&!task.rec?' dependency':'')+(activeAg?' agent-active':'');
+          +(isDep&&!task.rec?' dependency':'')+(activeAg?' agent-active':'')
+          +(cyclicIds.has(task.id)?' has-cycle':'');
         var card = h('div', {cls:cls, draggable:true, data:{taskId:task.id}});
         card.addEventListener('dragstart', function(e){
           e.dataTransfer.setData('text/plain', task.id);
@@ -1009,12 +1089,27 @@ AMC.Render = {
           card.appendChild(agInd);
         }
         if (task.deps && task.deps.length) {
+          var allTasks = sess.tasks || [];
+          var blockerCount = task.deps.filter(function(depId){
+            var dep = allTasks.filter(function(t2){ return t2.id===depId; })[0];
+            return dep && dep.status !== 'done';
+          }).length;
+          if (blockerCount > 0) {
+            card.appendChild(h('div', {cls:'kanban-card-deps-header',
+              text:'\uD83D\uDD12 Blocked by '+blockerCount+' dep'+(blockerCount>1?'s':'')}));
+          }
           var depTags = h('div', {cls:'kanban-card-deps'});
           task.deps.forEach(function(depId){
-            var dep = (sess.tasks||[]).filter(function(t2){ return t2.id===depId; })[0];
-            if (dep) depTags.appendChild(h('span', {cls:'dep-tag', text:'\u2190 '+dep.title}));
+            var dep = allTasks.filter(function(t2){ return t2.id===depId; })[0];
+            if (dep) {
+              var tagCls = 'dep-tag'+(dep.status!=='done'?' dep-blocking':'');
+              depTags.appendChild(h('span', {cls:tagCls, text:'\u2190 '+dep.title}));
+            }
           });
           card.appendChild(depTags);
+        }
+        if (cyclicIds.has(task.id)) {
+          card.appendChild(h('div', {cls:'dep-cycle-badge', text:'\u26A0 Circular dependency detected'}));
         }
         if (isDep && !task.rec) {
           card.appendChild(h('div', {cls:'dep-badge', text:'\uD83D\uDD17 Required for: '+isDep}));
@@ -1182,12 +1277,14 @@ AMC.UI = {
     function setMode(m) {
       _mode = m;
       document.getElementById('fw-mode-file').className = 'fw-mode' + (m === 'file' ? ' fw-mode-active' : '');
-      document.getElementById('fw-mode-sb').className = 'fw-mode' + (m === 'supabase' ? ' fw-mode-active' : '');
+      document.getElementById('fw-mode-url').className  = 'fw-mode' + (m === 'url'  ? ' fw-mode-active' : '');
+      document.getElementById('fw-mode-sb').className   = 'fw-mode' + (m === 'supabase' ? ' fw-mode-active' : '');
       document.getElementById('fw-file-grp').style.display = m === 'file' ? '' : 'none';
-      document.getElementById('fw-sb-grp').style.display = m === 'supabase' ? '' : 'none';
+      document.getElementById('fw-url-grp').style.display  = m === 'url'  ? '' : 'none';
+      document.getElementById('fw-sb-grp').style.display   = m === 'supabase' ? '' : 'none';
     }
     function stopAll() {
-      AMC.Data.stopFileWatch(); AMC.Data.stopSupabase();
+      AMC.Data.stopFileWatch(); AMC.Data.stopSupabase(); AMC.Data.stopUrlWatch();
       AMC.State.removeSession('filewatch');
       var btn = document.getElementById('fw-toggle');
       var stEl = document.getElementById('fw-status');
@@ -1196,17 +1293,21 @@ AMC.UI = {
       AMC.Render.render();
     }
     document.getElementById('fw-mode-file').addEventListener('click', function() {
-      if (AMC.Data._sbActive) stopAll();
+      if (AMC.Data._sbActive || AMC.Data._urlActive) stopAll();
       setMode('file');
     });
+    document.getElementById('fw-mode-url').addEventListener('click', function() {
+      if (AMC.Data._fwIv || AMC.Data._sbActive) stopAll();
+      setMode('url');
+    });
     document.getElementById('fw-mode-sb').addEventListener('click', function() {
-      if (AMC.Data._fwIv) stopAll();
+      if (AMC.Data._fwIv || AMC.Data._urlActive) stopAll();
       setMode('supabase');
     });
     document.getElementById('fw-toggle').addEventListener('click', function(){
       var stEl = document.getElementById('fw-status');
       var btn = document.getElementById('fw-toggle');
-      var isRunning = _mode === 'file' ? !!AMC.Data._fwIv : AMC.Data._sbActive;
+      var isRunning = _mode === 'file' ? !!AMC.Data._fwIv : _mode === 'url' ? AMC.Data._urlActive : AMC.Data._sbActive;
       if (isRunning) {
         stopAll();
       } else if (_mode === 'file') {
@@ -1214,6 +1315,12 @@ AMC.UI = {
         btn.textContent = 'STOP'; btn.className = 'fw-btn fw-btn-stop';
         stEl.textContent = 'Watching\u2026';
         AMC.Data.startFileWatch(path);
+      } else if (_mode === 'url') {
+        var urlVal = document.getElementById('fw-url').value.trim();
+        if (!urlVal) { AMC.UI.showError('Enter a URL to poll'); return; }
+        btn.textContent = 'STOP'; btn.className = 'fw-btn fw-btn-stop';
+        stEl.textContent = 'Polling\u2026';
+        AMC.Data.startUrlWatch(urlVal);
       } else {
         var url = document.getElementById('fw-sb-url').value.trim();
         var key = document.getElementById('fw-sb-key').value.trim();
@@ -1255,6 +1362,34 @@ function pullDependencies(sess, movedTask) {
     AMC.State.logEvent(sess.id, {agent:'Orchestrator', type:'thinking',
       text:'Dependency analysis: '+names+' needed for "'+movedTask.title+'"', timestamp:ts()});
   }
+}
+
+/* Returns a Set of task IDs that participate in a dependency cycle */
+function detectCycles(tasks) {
+  var taskMap = {};
+  (tasks||[]).forEach(function(t){ taskMap[t.id] = t; });
+  var cycleIds = new Set();
+  // DFS with three-colour marking: 0=unvisited, 1=in-stack, 2=done
+  var colour = {};
+  function dfs(id, stack) {
+    if (colour[id] === 2) return;
+    if (colour[id] === 1) {
+      // cycle detected — mark the current stack path
+      var cycleStart = stack.indexOf(id);
+      for (var i = cycleStart; i < stack.length; i++) cycleIds.add(stack[i]);
+      cycleIds.add(id);
+      return;
+    }
+    colour[id] = 1;
+    stack.push(id);
+    var task = taskMap[id];
+    if (task && Array.isArray(task.deps)) {
+      task.deps.forEach(function(depId){ dfs(depId, stack.slice()); });
+    }
+    colour[id] = 2;
+  }
+  (tasks||[]).forEach(function(t){ if (!colour[t.id]) dfs(t.id, []); });
+  return cycleIds;
 }
 
 function syncAgentStatus(sess) {
@@ -1370,7 +1505,13 @@ function timeSince(date) {
    INIT
    ════════════════════════════════════════════════════════ */
 (function init() {
-  AMC.State.screen = 'desktop';
+  var savedScreen = null;
+  try { savedScreen = localStorage.getItem('amc_screen'); } catch(e) {}
+  var validScreens = ['laptop','desktop','ultrawide'];
+  var initScreen = (savedScreen && validScreens.indexOf(savedScreen) !== -1) ? savedScreen : null;
+
+  AMC.State.screen = initScreen || 'desktop';
+  document.body.className = 'screen-' + AMC.State.screen;
   AMC.State.tiles = 1;
   AMC.State.panes = [{sid:'', view:'agents'}];
 
@@ -1381,7 +1522,11 @@ function timeSince(date) {
 
   document.getElementById('filewatch-bar').classList.add('visible');
   AMC.Render.render();
-  document.getElementById('first-run-modal').style.display = 'flex';
+
+  if (!initScreen) {
+    // First visit — show profile picker; pre-select desktop card
+    document.getElementById('first-run-modal').style.display = 'flex';
+  }
 })();
 </script>
 </body>

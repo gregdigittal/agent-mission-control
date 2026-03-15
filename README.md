@@ -61,6 +61,32 @@ AMC_PROJECT="My Project" AMC_STAGE_IDX=3 AMC_TOTAL=24 AMC_DONE=9 \
 
 Any process can write the file. Mission Control polls and merges updates.
 
+### Option 3 — Supabase relay (multi-machine / hosted)
+
+Push state to a Supabase edge function so any browser can watch a live session without sharing a filesystem.
+
+**One-time setup:**
+```sh
+# Deploy the edge function (requires Supabase CLI)
+supabase functions deploy ingest-state --project-ref <your-project-ref>
+
+# Set the auth secret
+supabase secrets set AMC_WRITE_SECRET=<your-secret> --project-ref <your-project-ref>
+```
+
+**From agents (add to your push hook):**
+```sh
+export AMC_SUPABASE_URL="https://<your-ref>.supabase.co"
+export AMC_SUPABASE_KEY="<your-anon-key>"
+cat agent_state.json | ./hooks/write_state.sh
+```
+
+**In the dashboard:**
+1. Click **FILE ▾** in the bottom bar → switch to **SUPABASE**
+2. Enter your Supabase project URL and anon key → click **START**
+
+The hosted dashboard at `https://agent-mission-control-ruddy.vercel.app` works the same way — just point it at your Supabase project.
+
 ---
 
 ## `agent_state.json` Schema
@@ -145,6 +171,11 @@ Each pane is independent:
 - **View selector** — switch between Agent View and Kanban Board per pane
 
 To add a session: click **+ Add** in the topbar. Sessions discovered via `./discover_sessions.sh` appear in the dropdown.
+
+```sh
+# Regenerate available_sessions.json (run from project root)
+./discover_sessions.sh
+```
 
 ---
 
