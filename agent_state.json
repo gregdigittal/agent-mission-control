@@ -38,7 +38,7 @@
       "type": "leader",
       "status": "working",
       "icon": "\u25c6",
-      "task": "Fixing cross-session state contamination",
+      "task": "Fix ID case + Done column persistence",
       "taskId": null,
       "metrics": {
         "ctx": "0%",
@@ -49,7 +49,7 @@
   ],
   "tasks": [
     {
-      "id": "f-060",
+      "id": "F-060",
       "title": "F-060: Input sanitization / XSS validation",
       "status": "done",
       "assignee": "Claude",
@@ -59,7 +59,7 @@
       "recWhy": ""
     },
     {
-      "id": "f-070",
+      "id": "F-070",
       "title": "F-070: MCP server auth \u2014 Bearer token on write endpoints",
       "status": "done",
       "assignee": "Claude",
@@ -69,7 +69,7 @@
       "recWhy": ""
     },
     {
-      "id": "f-002",
+      "id": "F-002",
       "title": "F-002: CSS variable audit \u2014 hardcoded px sweep",
       "status": "done",
       "assignee": "Claude",
@@ -79,7 +79,7 @@
       "recWhy": ""
     },
     {
-      "id": "f-003",
+      "id": "F-003",
       "title": "F-003: Error handling \u2014 inline banners + exponential backoff",
       "status": "done",
       "assignee": "Claude",
@@ -89,7 +89,7 @@
       "recWhy": ""
     },
     {
-      "id": "f-065",
+      "id": "F-065",
       "title": "F-065: Task dependency DAG \u2014 blocked tasks, cycle detection",
       "status": "done",
       "assignee": "Claude",
@@ -99,7 +99,7 @@
       "recWhy": ""
     },
     {
-      "id": "f-061",
+      "id": "F-061",
       "title": "F-061: Evidence gates \u2014 block stage advancement",
       "status": "done",
       "assignee": "Claude",
@@ -109,7 +109,7 @@
       "recWhy": ""
     },
     {
-      "id": "f-034",
+      "id": "F-034",
       "title": "F-034: URL data source mode",
       "status": "done",
       "assignee": "Claude",
@@ -119,7 +119,7 @@
       "recWhy": ""
     },
     {
-      "id": "f-033",
+      "id": "F-033",
       "title": "F-033: Per-session source badge (SIM/FILE/URL/SB)",
       "status": "done",
       "assignee": "Claude",
@@ -129,7 +129,7 @@
       "recWhy": ""
     },
     {
-      "id": "f-004",
+      "id": "F-004",
       "title": "F-004: First-run screen profile modal",
       "status": "backlog",
       "assignee": "Claude",
@@ -139,7 +139,7 @@
       "recWhy": ""
     },
     {
-      "id": "f-005",
+      "id": "F-005",
       "title": "F-005: Keyboard shortcuts (1-4 layouts, L/D/U profiles)",
       "status": "backlog",
       "assignee": "Claude",
@@ -149,7 +149,7 @@
       "recWhy": ""
     },
     {
-      "id": "f-051",
+      "id": "F-051",
       "title": "F-051: Custom scrollbars",
       "status": "backlog",
       "assignee": "Claude",
@@ -159,7 +159,7 @@
       "recWhy": ""
     },
     {
-      "id": "f-042",
+      "id": "F-042",
       "title": "F-042: README \u2014 user-facing setup guide",
       "status": "backlog",
       "assignee": "Claude",
@@ -169,7 +169,7 @@
       "recWhy": ""
     },
     {
-      "id": "f-072",
+      "id": "F-072",
       "title": "F-072: Docker Compose (app + postgres + mcp-server)",
       "status": "backlog",
       "assignee": "Claude",
@@ -179,7 +179,7 @@
       "recWhy": ""
     },
     {
-      "id": "f-073",
+      "id": "F-073",
       "title": "F-073: CI/CD pipeline \u2014 GitHub Actions",
       "status": "backlog",
       "assignee": "Claude",
@@ -189,7 +189,7 @@
       "recWhy": ""
     },
     {
-      "id": "f-074",
+      "id": "F-074",
       "title": "F-074: Testing framework \u2014 Vitest + Playwright",
       "status": "backlog",
       "assignee": "Claude",
@@ -199,7 +199,7 @@
       "recWhy": ""
     },
     {
-      "id": "f-052",
+      "id": "F-052",
       "title": "F-052: Help tooltip (? panel with shortcuts)",
       "status": "backlog",
       "assignee": "Claude",
@@ -209,7 +209,7 @@
       "recWhy": ""
     },
     {
-      "id": "f-063",
+      "id": "F-063",
       "title": "F-063: Agent heartbeat liveness indicators",
       "status": "backlog",
       "assignee": "Claude",
@@ -219,7 +219,7 @@
       "recWhy": ""
     },
     {
-      "id": "f-064",
+      "id": "F-064",
       "title": "F-064: Cost tracking widget \u2014 total + per-agent + trend",
       "status": "backlog",
       "assignee": "Claude",
@@ -235,6 +235,12 @@
       "type": "task",
       "text": "agent_state.json restored \u2014 contamination fixed",
       "timestamp": "08:37:57"
+    },
+    {
+      "agent": "Claude",
+      "type": "task",
+      "text": "Canonicalized task IDs to uppercase (F-xxx) matching BACKLOG.md",
+      "timestamp": "14:29:08"
     }
   ]
 }

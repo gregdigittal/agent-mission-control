@@ -663,6 +663,11 @@ AMC.Data = {
     }
     if (d.tasks.length) {
       var prev = s._prev || {}, approved = s._approved || {};
+      // Index incoming task IDs so we can detect which done tasks are absent from new payload
+      var newIds = {};
+      d.tasks.forEach(function(t){ newIds[t.id] = true; });
+      // Preserve done tasks from prior state that the new payload doesn't mention
+      var preserved = (s.tasks || []).filter(function(t){ return t.status === 'done' && !newIds[t.id]; });
       s.tasks = d.tasks.map(function(t) {
         var m = Object.assign({}, t);
         if (!t.rec && prev[t.id] && prev[t.id] !== t.status && !approved[t.id+'_'+t.status]) {
@@ -670,7 +675,7 @@ AMC.Data = {
           else if (prev[t.id] === 'backlog' && t.status === 'in-progress') { m.rec = true; m.recWhy = 'Agent started task \u2192 approve?'; m._auto = true; m._prevSt = prev[t.id]; }
         }
         return m;
-      });
+      }).concat(preserved);
       s._prev = {};
       s.tasks.forEach(function(t){ s._prev[t.id] = t.status; });
       s.done = s.tasks.filter(function(t){ return t.status === 'done'; }).length;
