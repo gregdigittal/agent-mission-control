@@ -648,7 +648,7 @@ AMC.Data = {
   _fetchSessions: function() {
     if (!this._sbActive) return;
     var self = this;
-    var cutoff = new Date(Date.now() - 5 * 60 * 1000).toISOString();
+    var cutoff = new Date(Date.now() - 60 * 60 * 1000).toISOString();
     var stEl = document.getElementById('fw-status');
     fetch(this._sbUrl + '/rest/v1/sessions?select=*&order=updated_at.desc&updated_at=gte.' + encodeURIComponent(cutoff), {
       headers: { 'apikey': this._sbKey, 'Authorization': 'Bearer ' + this._sbKey }
