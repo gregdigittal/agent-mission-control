@@ -1,32 +1,32 @@
 {
-  "project": "virtual_analyst",
-  "currentStageIdx": 4,
-  "totalTasks": 19,
-  "completedTasks": 4,
+  "project": "agent-mission-control",
+  "currentStageIdx": 3,
+  "totalTasks": 18,
+  "completedTasks": 8,
   "stages": [
     {
-      "name": "Sprint 0",
-      "desc": "7 PIM gates + 23 REM items",
+      "name": "Security",
+      "desc": "Auth + XSS hardening",
       "status": "completed"
     },
     {
-      "name": "AFS Module",
-      "desc": "P1\u2013P6 complete",
+      "name": "Polish",
+      "desc": "CSS vars, backoff, UI fixes",
       "status": "completed"
     },
     {
-      "name": "PIM Sprint 1",
-      "desc": "Sentiment Ingestion (FR-1)",
+      "name": "P2+ Features",
+      "desc": "DAG, gates, URL mode, source badges",
+      "status": "completed"
+    },
+    {
+      "name": "P1 Features",
+      "desc": "Modal, shortcuts, scrollbars, README",
       "status": "active"
     },
     {
-      "name": "PIM Sprint 2\u20133",
-      "desc": "Economic Context + Markov Engine",
-      "status": "pending"
-    },
-    {
-      "name": "PIM Sprint 4\u20136",
-      "desc": "Portfolio, Backtesting, PE Benchmarking",
+      "name": "Hosted Track",
+      "desc": "Docker, CI/CD, testing",
       "status": "pending"
     }
   ],
@@ -38,7 +38,7 @@
       "type": "leader",
       "status": "working",
       "icon": "\u25c6",
-      "task": "PIM Sprint 1 \u2014 Sentiment Ingestion",
+      "task": "Fixing cross-session state contamination",
       "taskId": null,
       "metrics": {
         "ctx": "0%",
@@ -49,8 +49,8 @@
   ],
   "tasks": [
     {
-      "id": "tier1-3",
-      "title": "Tiers 1-3: Ship blockers, quality, UX polish",
+      "id": "f-060",
+      "title": "F-060: Input sanitization / XSS validation",
       "status": "done",
       "assignee": "Claude",
       "priority": "high",
@@ -59,8 +59,8 @@
       "recWhy": ""
     },
     {
-      "id": "afs-p1-p6",
-      "title": "AFS Module: All phases P1-P6 complete",
+      "id": "f-070",
+      "title": "F-070: MCP server auth \u2014 Bearer token on write endpoints",
       "status": "done",
       "assignee": "Claude",
       "priority": "high",
@@ -69,9 +69,69 @@
       "recWhy": ""
     },
     {
-      "id": "sprint0-gates",
-      "title": "Sprint 0: All 7 PIM gates closed (GATE-1 to GATE-7)",
+      "id": "f-002",
+      "title": "F-002: CSS variable audit \u2014 hardcoded px sweep",
       "status": "done",
+      "assignee": "Claude",
+      "priority": "medium",
+      "deps": [],
+      "rec": false,
+      "recWhy": ""
+    },
+    {
+      "id": "f-003",
+      "title": "F-003: Error handling \u2014 inline banners + exponential backoff",
+      "status": "done",
+      "assignee": "Claude",
+      "priority": "medium",
+      "deps": [],
+      "rec": false,
+      "recWhy": ""
+    },
+    {
+      "id": "f-065",
+      "title": "F-065: Task dependency DAG \u2014 blocked tasks, cycle detection",
+      "status": "done",
+      "assignee": "Claude",
+      "priority": "low",
+      "deps": [],
+      "rec": false,
+      "recWhy": ""
+    },
+    {
+      "id": "f-061",
+      "title": "F-061: Evidence gates \u2014 block stage advancement",
+      "status": "done",
+      "assignee": "Claude",
+      "priority": "low",
+      "deps": [],
+      "rec": false,
+      "recWhy": ""
+    },
+    {
+      "id": "f-034",
+      "title": "F-034: URL data source mode",
+      "status": "done",
+      "assignee": "Claude",
+      "priority": "low",
+      "deps": [],
+      "rec": false,
+      "recWhy": ""
+    },
+    {
+      "id": "f-033",
+      "title": "F-033: Per-session source badge (SIM/FILE/URL/SB)",
+      "status": "done",
+      "assignee": "Claude",
+      "priority": "low",
+      "deps": [],
+      "rec": false,
+      "recWhy": ""
+    },
+    {
+      "id": "f-004",
+      "title": "F-004: First-run screen profile modal",
+      "status": "backlog",
       "assignee": "Claude",
       "priority": "high",
       "deps": [],
@@ -79,9 +139,9 @@
       "recWhy": ""
     },
     {
-      "id": "sprint0-rem",
-      "title": "Sprint 0: All 23 remediation items done (REM-01 to REM-23)",
-      "status": "done",
+      "id": "f-005",
+      "title": "F-005: Keyboard shortcuts (1-4 layouts, L/D/U profiles)",
+      "status": "backlog",
       "assignee": "Claude",
       "priority": "high",
       "deps": [],
@@ -89,151 +149,58 @@
       "recWhy": ""
     },
     {
-      "id": "pim-s1-db",
-      "title": "PIM S1: 3 new DB tables (pim_sentiment_scores, pim_news_items, pim_universe)",
-      "status": "done",
+      "id": "f-051",
+      "title": "F-051: Custom scrollbars",
+      "status": "backlog",
       "assignee": "Claude",
-      "priority": "high",
+      "priority": "medium",
       "deps": [],
       "rec": false,
       "recWhy": ""
     },
     {
-      "id": "pim-s1-polygon",
-      "title": "PIM S1: Polygon.io integration + sentiment ingestion worker",
-      "status": "done",
-      "assignee": "Claude",
-      "priority": "high",
-      "deps": [
-        "pim-s1-db"
-      ],
-      "rec": false,
-      "recWhy": ""
-    },
-    {
-      "id": "pim-s1-newsapi",
-      "title": "PIM S1: NewsAPI integration + article ingestion",
-      "status": "done",
-      "assignee": "Claude",
-      "priority": "high",
-      "deps": [
-        "pim-s1-db"
-      ],
-      "rec": false,
-      "recWhy": ""
-    },
-    {
-      "id": "pim-s1-llm",
-      "title": "PIM S1: LLM sentiment scoring (LLMRouter structured output)",
-      "status": "done",
-      "assignee": "Claude",
-      "priority": "high",
-      "deps": [
-        "pim-s1-polygon",
-        "pim-s1-newsapi"
-      ],
-      "rec": false,
-      "recWhy": ""
-    },
-    {
-      "id": "pim-s1-celery",
-      "title": "PIM S1: Celery workers for async sentiment processing",
-      "status": "done",
-      "assignee": "Claude",
-      "priority": "high",
-      "deps": [
-        "pim-s1-llm"
-      ],
-      "rec": false,
-      "recWhy": ""
-    },
-    {
-      "id": "pim-s1-api",
-      "title": "PIM S1: API endpoints (pim_sentiment router)",
-      "status": "done",
-      "assignee": "Claude",
-      "priority": "high",
-      "deps": [
-        "pim-s1-celery"
-      ],
-      "rec": false,
-      "recWhy": ""
-    },
-    {
-      "id": "pim-s1-tests",
-      "title": "PIM S1: Tests for sentiment ingestion (unit + integration)",
-      "status": "done",
-      "assignee": "Claude",
-      "priority": "high",
-      "deps": [
-        "pim-s1-api"
-      ],
-      "rec": false,
-      "recWhy": ""
-    },
-    {
-      "id": "pim-s2",
-      "title": "PIM S2: Economic Context \u2014 FRED API, regime classification, dashboard",
+      "id": "f-042",
+      "title": "F-042: README \u2014 user-facing setup guide",
       "status": "backlog",
       "assignee": "Claude",
       "priority": "medium",
-      "deps": [
-        "pim-s1-api"
-      ],
+      "deps": [],
       "rec": false,
       "recWhy": ""
     },
     {
-      "id": "pim-s3",
-      "title": "PIM S3: CIS & Markov Engine \u2014 81-state chain, QuantEcon, Numba JIT",
+      "id": "f-072",
+      "title": "F-072: Docker Compose (app + postgres + mcp-server)",
       "status": "backlog",
       "assignee": "Claude",
       "priority": "medium",
-      "deps": [
-        "pim-s2"
-      ],
+      "deps": [],
       "rec": false,
       "recWhy": ""
     },
     {
-      "id": "pim-s4",
-      "title": "PIM S4: Portfolio Construction \u2014 greedy optimizer, constraints, rebalancing",
+      "id": "f-073",
+      "title": "F-073: CI/CD pipeline \u2014 GitHub Actions",
       "status": "backlog",
       "assignee": "Claude",
       "priority": "medium",
-      "deps": [
-        "pim-s3"
-      ],
+      "deps": [],
       "rec": false,
       "recWhy": ""
     },
     {
-      "id": "pim-s5",
-      "title": "PIM S5: Backtesting \u2014 walk-forward, IC/ICIR/SPC, backtest studio UI",
+      "id": "f-074",
+      "title": "F-074: Testing framework \u2014 Vitest + Playwright",
       "status": "backlog",
       "assignee": "Claude",
       "priority": "medium",
-      "deps": [
-        "pim-s4"
-      ],
+      "deps": [],
       "rec": false,
       "recWhy": ""
     },
     {
-      "id": "pim-s6",
-      "title": "PIM S6: PE Benchmarking + DTF \u2014 J-curve, DPI/TVPI/IRR, validation",
-      "status": "backlog",
-      "assignee": "Claude",
-      "priority": "medium",
-      "deps": [
-        "pim-s5"
-      ],
-      "rec": false,
-      "recWhy": ""
-    },
-    {
-      "id": "n-01",
-      "title": "N-01: Integration tests without real DB (Docker Compose / Supabase local)",
+      "id": "f-052",
+      "title": "F-052: Help tooltip (? panel with shortcuts)",
       "status": "backlog",
       "assignee": "Claude",
       "priority": "low",
@@ -242,8 +209,8 @@
       "recWhy": ""
     },
     {
-      "id": "n-07",
-      "title": "N-07: Monitoring & alerting \u2014 Sentry, Datadog, uptime",
+      "id": "f-063",
+      "title": "F-063: Agent heartbeat liveness indicators",
       "status": "backlog",
       "assignee": "Claude",
       "priority": "low",
@@ -252,8 +219,8 @@
       "recWhy": ""
     },
     {
-      "id": "n-08",
-      "title": "N-08: CI pipeline enhancements (vitest, tsc, Docker scan)",
+      "id": "f-064",
+      "title": "F-064: Cost tracking widget \u2014 total + per-agent + trend",
       "status": "backlog",
       "assignee": "Claude",
       "priority": "low",
@@ -265,9 +232,9 @@
   "events": [
     {
       "agent": "Claude",
-      "type": "message",
-      "text": "agent_state.json seeded \u2014 19 tasks (4 done)",
-      "timestamp": "07:57:52"
+      "type": "task",
+      "text": "agent_state.json restored \u2014 contamination fixed",
+      "timestamp": "08:37:57"
     }
   ]
 }
