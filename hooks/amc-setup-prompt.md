@@ -4,7 +4,23 @@ Paste this at the start of any Claude Code session to enable full AMC live dashb
 
 ---
 
-## The Prompt
+## Quick Task Status Update (run in any session)
+
+To move tasks through the Kanban from any Claude session:
+
+```bash
+# Mark a task in-progress
+python3 -c "import json; s=json.load(open('agent_state.json')); [t.update({'status':'in-progress'}) for t in s['tasks'] if t['id']=='TASK_ID']; open('agent_state.json','w').write(json.dumps(s,indent=2))"
+
+# Mark a task done
+python3 -c "import json; s=json.load(open('agent_state.json')); [t.update({'status':'done'}) for t in s['tasks'] if t['id']=='TASK_ID']; s.update({'completedTasks':sum(1 for t in s['tasks'] if t['status']=='done')}); open('agent_state.json','w').write(json.dumps(s,indent=2))"
+```
+
+The push hook fires automatically after the python3 command — no manual push needed.
+
+---
+
+## Full Session Setup Prompt
 
 ```
 Set up Agent Mission Control (AMC) integration for this project.
