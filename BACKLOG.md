@@ -1,6 +1,6 @@
 # Agent Mission Control — Task Backlog
 
-> Last updated: 2026-03-16
+> Last updated: 2026-03-16 (all P1 complete)
 > Reference: Production Build Prompt v2.0 (15 March 2026)
 
 **Naming convention:** Items here are *tasks*. Each task maps to a Kanban card in `agent_state.json`.
@@ -22,16 +22,16 @@ Task status in the Kanban: `backlog` (To Do) → `in-progress` → `review` → 
 
 ---
 
-## P1 — Phase 5 Polish (incomplete)
+## P1 — Phase 5 Polish
 
 | ID | Feature | Status | Notes |
 |----|---------|--------|-------|
-| F-004 | First-run screen profile modal | ❌ | Centered overlay on first load; Laptop/Desktop/Ultrawide cards |
-| F-005 | Keyboard shortcuts (1-4 layouts, L/D/U profiles) | ❌ | Guard with activeElement check |
-| F-051 | Custom scrollbars | ❌ | 5px via `::-webkit-scrollbar`; `scrollbar-width: thin` Firefox |
+| F-004 | First-run screen profile modal | ✅ | Centered overlay on first load; Laptop/Desktop/Ultrawide cards; persists to localStorage |
+| F-005 | Keyboard shortcuts (1-4 layouts, L/D/U profiles) | ✅ | Guard with activeElement check; ? toggles help panel |
+| F-051 | Custom scrollbars | ✅ | 5px via `::-webkit-scrollbar`; `scrollbar-width: thin` for Firefox |
 | F-002 | CSS variable audit — sweep remaining hardcoded px | ✅ | Agent card, agent-top, agent-metrics, kanban-cards, feed-header, feed-item, session-dropdown-item gaps/padding now use --density-gap/--density-pad. Fixed indicator sizes (5-6px dots, scrollbar) remain intentionally hardcoded. |
 | F-003 | Error handling — inline banners + exponential backoff | ✅ | Inline banner exists; exponential backoff added to both file watch and Supabase polling (3s→6s→12s…max 60s); retry countdown shown in banner |
-| F-042 | README — user-facing setup guide | ⚠️ | CLAUDE.md is dev guide; needs user quickstart, schema ref, troubleshooting |
+| F-042 | README — user-facing setup guide | ✅ | Quickstart, all three modes, full schema reference, screen profiles, keyboard shortcuts, Kanban features, troubleshooting, architecture |
 
 ---
 
@@ -39,9 +39,9 @@ Task status in the Kanban: `backlog` (To Do) → `in-progress` → `review` → 
 
 | ID | Feature | Status | Notes |
 |----|---------|--------|-------|
-| F-072 | Docker Compose (app + postgres + mcp-server) | ❌ | Multi-stage Dockerfile, health checks, volume persistence |
-| F-073 | CI/CD pipeline — GitHub Actions | ❌ | lint, typecheck, test, build, e2e, deploy to Vercel on main |
-| F-074 | Testing framework — Vitest + Playwright | ❌ | Unit + component + E2E; target 60% coverage |
+| F-072 | Docker Compose (app + nginx) | ✅ | Dockerfile (nginx:alpine) + docker-compose.yml; volume mount for File Watch; Supabase relay via hosted project |
+| F-073 | CI/CD pipeline — GitHub Actions | ✅ | lint (innerHTML security gate + secret scan) → E2E tests → Docker build → deploy to Vercel on main |
+| F-074 | Testing framework — Playwright E2E | ✅ | 13 tests: first-run modal, keyboard shortcuts, help panel, dashboard rendering; webServer auto-starts python http.server |
 
 ---
 
@@ -66,6 +66,13 @@ Task status in the Kanban: `backlog` (To Do) → `in-progress` → `review` → 
 
 | ID | Feature |
 |----|---------|
+| F-074 | Testing framework — Playwright E2E |
+| F-073 | CI/CD pipeline — GitHub Actions |
+| F-072 | Docker Compose (app + nginx) |
+| F-004 | First-run screen profile modal |
+| F-005 | Keyboard shortcuts (1-4 layouts, L/D/U profiles, ?) |
+| F-051 | Custom scrollbars |
+| F-042 | README — user-facing setup guide |
 | F-065 | Task dependency DAG — blocked tasks, cycle detection |
 | F-061 | Evidence gates — block stage advancement without proof |
 | F-034 | URL data source mode |

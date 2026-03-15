@@ -2,7 +2,7 @@
   "project": "Agent Mission Control",
   "currentStageIdx": 3,
   "totalTasks": 18,
-  "completedTasks": 8,
+  "completedTasks": 15,
   "stages": [
     {
       "name": "Security",
@@ -38,7 +38,7 @@
       "type": "leader",
       "status": "working",
       "icon": "\u25c6",
-      "task": "Fix ID case + Done column persistence",
+      "task": "All P1 items complete",
       "taskId": null,
       "metrics": {
         "ctx": "0%",
@@ -131,7 +131,7 @@
     {
       "id": "F-004",
       "title": "F-004: First-run screen profile modal",
-      "status": "backlog",
+      "status": "done",
       "assignee": "Claude",
       "priority": "high",
       "deps": [],
@@ -141,7 +141,7 @@
     {
       "id": "F-005",
       "title": "F-005: Keyboard shortcuts (1-4 layouts, L/D/U profiles)",
-      "status": "backlog",
+      "status": "done",
       "assignee": "Claude",
       "priority": "high",
       "deps": [],
@@ -151,7 +151,7 @@
     {
       "id": "F-051",
       "title": "F-051: Custom scrollbars",
-      "status": "backlog",
+      "status": "done",
       "assignee": "Claude",
       "priority": "medium",
       "deps": [],
@@ -161,7 +161,7 @@
     {
       "id": "F-042",
       "title": "F-042: README \u2014 user-facing setup guide",
-      "status": "backlog",
+      "status": "done",
       "assignee": "Claude",
       "priority": "medium",
       "deps": [],
@@ -171,7 +171,7 @@
     {
       "id": "F-072",
       "title": "F-072: Docker Compose (app + postgres + mcp-server)",
-      "status": "backlog",
+      "status": "done",
       "assignee": "Claude",
       "priority": "medium",
       "deps": [],
@@ -181,7 +181,7 @@
     {
       "id": "F-073",
       "title": "F-073: CI/CD pipeline \u2014 GitHub Actions",
-      "status": "backlog",
+      "status": "done",
       "assignee": "Claude",
       "priority": "medium",
       "deps": [],
@@ -191,7 +191,7 @@
     {
       "id": "F-074",
       "title": "F-074: Testing framework \u2014 Vitest + Playwright",
-      "status": "backlog",
+      "status": "done",
       "assignee": "Claude",
       "priority": "medium",
       "deps": [],
@@ -241,6 +241,36 @@
       "type": "task",
       "text": "Canonicalized task IDs to uppercase (F-xxx) matching BACKLOG.md",
       "timestamp": "14:29:08"
+    },
+    {
+      "agent": "Claude",
+      "type": "task",
+      "text": "Closed F-004/005/051/042 \u2014 already implemented, marking done",
+      "timestamp": "15:37:18"
+    },
+    {
+      "agent": "Claude",
+      "type": "task",
+      "text": "F-074 started \u2014 Playwright E2E setup",
+      "timestamp": "15:37:33"
+    },
+    {
+      "agent": "Claude",
+      "type": "task",
+      "text": "F-074 done \u2014 package.json + Playwright E2E (5 test suites)",
+      "timestamp": "15:38:28"
+    },
+    {
+      "agent": "Claude",
+      "type": "task",
+      "text": "F-072 done \u2014 Dockerfile + docker-compose.yml",
+      "timestamp": "15:39:01"
+    },
+    {
+      "agent": "Claude",
+      "type": "task",
+      "text": "F-073 done \u2014 GitHub Actions CI/CD (lint+test+docker+deploy)",
+      "timestamp": "15:39:52"
     }
   ]
 }

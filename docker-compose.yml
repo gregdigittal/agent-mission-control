@@ -1,0 +1,32 @@
+services:
+  dashboard:
+    build: .
+    ports:
+      - "8090:80"
+    volumes:
+      # Mount a local agent_state.json so File Watch mode sees live updates
+      - ./agent_state.json:/usr/share/nginx/html/agent_state.json:ro
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Supabase relay (Supabase mode only — not required for File Watch mode)
+# ─────────────────────────────────────────────────────────────────────────────
+# AMC uses a hosted Supabase project for the relay. There is no local
+# Supabase service in this compose file. To use Supabase mode:
+#
+#   1. Deploy the edge function:
+#      supabase functions deploy ingest-state --project-ref <your-ref>
+#
+#   2. Set the auth secret:
+#      supabase secrets set AMC_WRITE_SECRET=<secret> --project-ref <your-ref>
+#
+#   3. In the dashboard footer, switch to SUPABASE and enter your project
+#      URL + anon key.
+#
+# For a fully self-hosted stack (postgres + supabase/edge-runtime), see:
+# https://supabase.com/docs/guides/self-hosting/docker

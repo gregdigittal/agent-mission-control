@@ -1,0 +1,107 @@
+name: CI
+
+on:
+  push:
+    branches: [main, "feature/**"]
+  pull_request:
+    branches: [main]
+
+jobs:
+  # ───────────────────────────────────────────────────────────────────────────
+  # Lint — validate HTML structure and security patterns
+  # ───────────────────────────────────────────────────────────────────────────
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check index.html exists and is non-empty
+        run: test -s index.html
+
+      - name: Check for innerHTML usage (security gate)
+        run: |
+          if grep -n "\.innerHTML" index.html; then
+            echo "ERROR: innerHTML found — use safe DOM APIs only"
+            exit 1
+          fi
+          echo "Security check passed — no innerHTML usage"
+
+      - name: Check for hardcoded secrets pattern
+        run: |
+          if grep -Ei "(api_key|secret|password)\s*=\s*['\"][^'\"]{8,}" index.html; then
+            echo "ERROR: Possible hardcoded secret found"
+            exit 1
+          fi
+          echo "Secret scan passed"
+
+  # ───────────────────────────────────────────────────────────────────────────
+  # E2E tests — Playwright (Chromium)
+  # ───────────────────────────────────────────────────────────────────────────
+  test:
+    name: E2E Tests
+    runs-on: ubuntu-latest
+    needs: lint
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Run E2E tests
+        run: npm test
+
+      - name: Upload test results on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7
+
+  # ───────────────────────────────────────────────────────────────────────────
+  # Docker build — verify image builds cleanly
+  # ───────────────────────────────────────────────────────────────────────────
+  docker:
+    name: Docker Build
+    runs-on: ubuntu-latest
+    needs: lint
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build Docker image
+        run: docker build -t agent-mission-control:ci .
+
+  # ───────────────────────────────────────────────────────────────────────────
+  # Deploy to Vercel — main branch only
+  # Required secrets: VERCEL_TOKEN, VERCEL_ORG_ID, VERCEL_PROJECT_ID
+  # ───────────────────────────────────────────────────────────────────────────
+  deploy:
+    name: Deploy to Vercel
+    runs-on: ubuntu-latest
+    needs: [test, docker]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    environment:
+      name: production
+      url: https://agent-mission-control-ruddy.vercel.app
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Deploy to Vercel
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+        run: npx vercel --prod --token "$VERCEL_TOKEN" --yes
