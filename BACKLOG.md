@@ -1,6 +1,6 @@
 # Agent Mission Control — Task Backlog
 
-> Last updated: 2026-03-15
+> Last updated: 2026-03-16
 > Reference: Production Build Prompt v2.0 (15 March 2026)
 
 **Naming convention:** Items here are *tasks*. Each task maps to a Kanban card in `agent_state.json`.
@@ -49,10 +49,7 @@ Task status in the Kanban: `backlog` (To Do) → `in-progress` → `review` → 
 
 | ID | Feature | Status | Notes |
 |----|---------|--------|-------|
-| F-033 | Per-session data source config (sim/file/url) | ❌ | Each session independently configured |
-| F-034 | URL data source mode | ❌ | Remote agent_state.json fetch; CORS documented |
 | F-052 | Help tooltip ("?" panel with shortcuts) | ❌ | Floating panel from topbar "?" button |
-| F-032 | Auto-detect mode (file vs sim) | ⚠️ | Replaced with explicit FILE/SUPABASE toggle; auto-detect on FILE start possible |
 
 ---
 
@@ -62,8 +59,6 @@ Task status in the Kanban: `backlog` (To Do) → `in-progress` → `review` → 
 |----|---------|--------|-------|
 | F-063 | Agent heartbeat liveness (<30s green, 30-60s amber, >60s red) | ❌ | Per-agent lastHeartbeat tracking |
 | F-064 | Cost tracking widget — total + per-agent + trend | ❌ | Parse from agent metrics.cost; sparkline in topbar |
-| F-061 | Evidence gates — block stage advancement without proof | ❌ | minTasksDone + minEvents per stage; human override |
-| F-065 | Task dependency DAG — blocked tasks, cycle detection | ❌ | dependsOn[] on KanbanTask; lock icon; dotted lines |
 
 ---
 
@@ -71,6 +66,10 @@ Task status in the Kanban: `backlog` (To Do) → `in-progress` → `review` → 
 
 | ID | Feature |
 |----|---------|
+| F-065 | Task dependency DAG — blocked tasks, cycle detection |
+| F-061 | Evidence gates — block stage advancement without proof |
+| F-034 | URL data source mode |
+| F-033 | Per-session source badge (SIM/FILE/URL/SB) |
 | F-001 | JS module refactor (AMC.State, AMC.Data, AMC.Render, AMC.UI) |
 | F-010 | Build stage banner (progress ring, stats row) |
 | F-011 | Pipeline row (8 stages, completed/active/pending) |
