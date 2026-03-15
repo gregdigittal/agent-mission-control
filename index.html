@@ -220,6 +220,10 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;b
 .fw-btn-stop{background:rgba(248,113,113,.1);color:var(--red);border-color:rgba(248,113,113,.3)}
 .fw-btn-stop:hover{background:rgba(248,113,113,.2)}
 .fw-status{color:var(--text-3)}
+.fw-mode{padding:2px 8px;border-radius:4px;font-family:var(--mono);font-size:var(--font-xxs);cursor:pointer;border:1px solid var(--border-1);background:transparent;color:var(--text-2);outline:none;transition:all .15s}
+.fw-mode-active{color:var(--cyan);border-color:rgba(34,211,238,.4);background:rgba(34,211,238,.08)}
+.fw-mode:hover:not(.fw-mode-active){color:var(--text-1);border-color:var(--border-2)}
+.fw-input-sb{width:170px}
 
 /* ── Error Banner ─────────────────────────────────────────────────────────── */
 .error-banner{background:rgba(248,113,113,.1);border-bottom:1px solid rgba(248,113,113,.25);padding:0 var(--density-pad);height:var(--error-h);display:flex;align-items:center;gap:var(--density-gap);font-family:var(--mono);font-size:var(--font-xs);color:var(--red);position:sticky;top:var(--topbar-h);z-index:90}
@@ -288,8 +292,13 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;b
 <main id="workspace"></main>
 
 <footer id="filewatch-bar">
-  <span class="fw-label">FILE WATCH</span>
-  <input id="fw-path" class="fw-input" value="agent_state.json">
+  <button id="fw-mode-file" class="fw-mode fw-mode-active">FILE</button>
+  <button id="fw-mode-sb" class="fw-mode">SUPABASE</button>
+  <span id="fw-file-grp"><input id="fw-path" class="fw-input" value="agent_state.json"></span>
+  <span id="fw-sb-grp" style="display:none">
+    <input id="fw-sb-url" class="fw-input fw-input-sb" placeholder="https://xxx.supabase.co">
+    <input id="fw-sb-key" class="fw-input fw-input-sb" placeholder="anon key">
+  </span>
   <button id="fw-toggle" class="fw-btn fw-btn-start">START</button>
   <span id="fw-status" class="fw-status">Idle</span>
 </footer>
@@ -442,6 +451,7 @@ AMC.Data = {
   _fwIv: null,
   _fwRemoved: false,
   _errTimer: null,
+  _sbIv: null, _sbUrl: '', _sbKey: '', _sbActive: false,
 
   /* F-060: validate + normalise incoming state JSON */
   validateState: function(d) {
@@ -552,23 +562,20 @@ AMC.Data = {
     });
   },
 
-  mergeState: function(d) {
-    if (this._fwRemoved) return;
-    var sid = 'filewatch';
+  _mergeSessionData: function(sid, d, ts) {
     if (!AMC.State.sessions[sid]) {
-      var fw = {
-        id: sid, name: d.project || 'File Watch', project: d.project || 'File Watch',
+      AMC.State.sessions[sid] = {
+        id: sid, name: d.project || sid, project: d.project || sid,
         stageIdx: 0, total: 0, done: 0, stages: [], agents: [], tasks: [], events: [],
-        feedFilter: 'all', _prev: {}, _approved: {}, _lastUpdate: Date.now()
+        feedFilter: 'all', _prev: {}, _approved: {}, _lastUpdate: ts
       };
-      AMC.State.sessions[sid] = fw;
       AMC.State.order.push(sid);
-      AMC.State.active = sid;
-      if (AMC.State.panes.length) AMC.State.panes[0].sid = sid;
+      if (AMC.State.panes.length && !AMC.State.panes[0].sid) {
+        AMC.State.panes[0].sid = sid; AMC.State.active = sid;
+      }
     }
-
     var s = AMC.State.sessions[sid];
-    s._lastUpdate = Date.now();
+    s._lastUpdate = ts;
     s.name = d.project || s.name;
     s.project = d.project || s.project;
     s.stageIdx = d.currentStageIdx || 0;
@@ -598,6 +605,11 @@ AMC.Data = {
       s.total = s.tasks.length;
     }
     if (d.events.length) s.events = d.events;
+  },
+
+  mergeState: function(d) {
+    if (this._fwRemoved) return;
+    this._mergeSessionData('filewatch', d, Date.now());
     AMC.Render.render();
   },
 
@@ -614,6 +626,47 @@ AMC.Data = {
         if (stEl) stEl.textContent = 'Watching\u2026';
       })
       .catch(function(){ /* no file — stay empty */ });
+  },
+
+  startSupabase: function(url, key) {
+    var self = this;
+    this._sbUrl = url.replace(/\/$/, '');
+    this._sbKey = key;
+    this._sbActive = true;
+    this._fetchSessions();
+    this._sbIv = setInterval(function() { self._fetchSessions(); }, 3000);
+  },
+
+  stopSupabase: function() {
+    this._sbActive = false;
+    if (this._sbIv) { clearInterval(this._sbIv); this._sbIv = null; }
+    AMC.State.order.slice().forEach(function(sid) {
+      if (sid.indexOf('sb-') === 0) AMC.State.removeSession(sid);
+    });
+  },
+
+  _fetchSessions: function() {
+    if (!this._sbActive) return;
+    var self = this;
+    var cutoff = new Date(Date.now() - 5 * 60 * 1000).toISOString();
+    var stEl = document.getElementById('fw-status');
+    fetch(this._sbUrl + '/rest/v1/sessions?select=*&order=updated_at.desc&updated_at=gte.' + encodeURIComponent(cutoff), {
+      headers: { 'apikey': this._sbKey, 'Authorization': 'Bearer ' + this._sbKey }
+    })
+    .then(function(r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+    .then(function(rows) {
+      if (!Array.isArray(rows)) return;
+      if (stEl) stEl.textContent = rows.length + ' session' + (rows.length !== 1 ? 's' : '') + ' live';
+      AMC.UI.dismissError();
+      rows.forEach(function(row) {
+        if (!row || !row.state) return;
+        var raw; try { raw = AMC.Data.validateState(row.state); } catch(e) { return; }
+        var ts = row.updated_at ? new Date(row.updated_at).getTime() : Date.now();
+        self._mergeSessionData('sb-' + row.id, raw, ts);
+      });
+      AMC.Render.render();
+    })
+    .catch(function(err) { AMC.UI.showError('Supabase: ' + err.message + ' \u2014 retrying\u2026'); });
   }
 };
 
@@ -1082,20 +1135,57 @@ AMC.UI = {
   },
 
   initFileWatchBar: function() {
+    // Restore saved Supabase credentials
+    var savedUrl = localStorage.getItem('amc_sb_url') || '';
+    var savedKey = localStorage.getItem('amc_sb_key') || '';
+    if (savedUrl) document.getElementById('fw-sb-url').value = savedUrl;
+    if (savedKey) document.getElementById('fw-sb-key').value = savedKey;
+
+    var _mode = 'file';
+    function setMode(m) {
+      _mode = m;
+      document.getElementById('fw-mode-file').className = 'fw-mode' + (m === 'file' ? ' fw-mode-active' : '');
+      document.getElementById('fw-mode-sb').className = 'fw-mode' + (m === 'supabase' ? ' fw-mode-active' : '');
+      document.getElementById('fw-file-grp').style.display = m === 'file' ? '' : 'none';
+      document.getElementById('fw-sb-grp').style.display = m === 'supabase' ? '' : 'none';
+    }
+    function stopAll() {
+      AMC.Data.stopFileWatch(); AMC.Data.stopSupabase();
+      AMC.State.removeSession('filewatch');
+      var btn = document.getElementById('fw-toggle');
+      var stEl = document.getElementById('fw-status');
+      btn.textContent = 'START'; btn.className = 'fw-btn fw-btn-start';
+      stEl.textContent = 'Idle';
+      AMC.Render.render();
+    }
+    document.getElementById('fw-mode-file').addEventListener('click', function() {
+      if (AMC.Data._sbActive) stopAll();
+      setMode('file');
+    });
+    document.getElementById('fw-mode-sb').addEventListener('click', function() {
+      if (AMC.Data._fwIv) stopAll();
+      setMode('supabase');
+    });
     document.getElementById('fw-toggle').addEventListener('click', function(){
-      var path = document.getElementById('fw-path').value;
       var stEl = document.getElementById('fw-status');
       var btn = document.getElementById('fw-toggle');
-      if (AMC.Data._fwIv) {
-        AMC.Data.stopFileWatch();
-        AMC.State.removeSession('filewatch');
-        btn.textContent = 'START'; btn.className = 'fw-btn fw-btn-start';
-        stEl.textContent = 'Idle';
-        AMC.Render.render();
-      } else {
+      var isRunning = _mode === 'file' ? !!AMC.Data._fwIv : AMC.Data._sbActive;
+      if (isRunning) {
+        stopAll();
+      } else if (_mode === 'file') {
+        var path = document.getElementById('fw-path').value;
         btn.textContent = 'STOP'; btn.className = 'fw-btn fw-btn-stop';
         stEl.textContent = 'Watching\u2026';
         AMC.Data.startFileWatch(path);
+      } else {
+        var url = document.getElementById('fw-sb-url').value.trim();
+        var key = document.getElementById('fw-sb-key').value.trim();
+        if (!url || !key) { AMC.UI.showError('Enter Supabase URL and anon key'); return; }
+        localStorage.setItem('amc_sb_url', url);
+        localStorage.setItem('amc_sb_key', key);
+        btn.textContent = 'STOP'; btn.className = 'fw-btn fw-btn-stop';
+        stEl.textContent = 'Connecting\u2026';
+        AMC.Data.startSupabase(url, key);
       }
     });
     document.getElementById('error-dismiss').addEventListener('click', function(){ AMC.UI.dismissError(); });

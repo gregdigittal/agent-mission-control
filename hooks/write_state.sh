@@ -2,7 +2,8 @@
 # =============================================================================
 # write_state.sh — Agent Mission Control state writer
 # =============================================================================
-# Writes agent_state.json for consumption by Mission Control's File Watch mode.
+# Writes agent_state.json for local File Watch mode, and optionally pushes
+# state to Supabase for the hosted dashboard at agent-mission-control-ruddy.vercel.app
 #
 # Usage:
 #   ./hooks/write_state.sh                      # Interactive: reads from stdin (JSON)
@@ -13,10 +14,15 @@
 #   ./path/to/write_state.sh --from-env
 #
 # Environment variables (--from-env mode):
-#   AMC_PROJECT     Project name
-#   AMC_STAGE_IDX   Current stage index (0-7)
-#   AMC_TOTAL       Total task count
-#   AMC_DONE        Completed task count
+#   AMC_PROJECT        Project name
+#   AMC_STAGE_IDX      Current stage index (0-7)
+#   AMC_TOTAL          Total task count
+#   AMC_DONE           Completed task count
+#
+# Supabase push (optional — enables hosted dashboard):
+#   AMC_SUPABASE_URL   Your Supabase project URL (e.g. https://xxx.supabase.co)
+#   AMC_SUPABASE_KEY   Your Supabase anon or service-role key
+#   AMC_SESSION_ID     Session identifier (defaults to slugified project name)
 # =============================================================================
 
 set -euo pipefail
@@ -30,6 +36,17 @@ ts() { date +%H:%M:%S; }
 
 error() { echo "ERROR: $*" >&2; exit 1; }
 
+# Push JSON to Supabase ingest-state edge function (fire-and-forget)
+push_supabase() {
+  local json="$1"
+  if [ -z "${AMC_SUPABASE_URL:-}" ] || [ -z "${AMC_SUPABASE_KEY:-}" ]; then return; fi
+  curl -s -o /dev/null -X POST \
+    -H "Content-Type: application/json" \
+    -H "Authorization: Bearer ${AMC_SUPABASE_KEY}" \
+    "${AMC_SUPABASE_URL%/}/functions/v1/ingest-state" \
+    -d "$json" &
+}
+
 # ---------- modes ------------------------------------------------------------
 case "${1:-}" in
 
@@ -40,7 +57,7 @@ case "${1:-}" in
     TOTAL="${4:-0}"
     DONE="${5:-0}"
 
-    cat > "$REPO_DIR/$OUTFILE" <<JSON
+    JSON=$(cat <<JSON
 {
   "project": "$PROJECT",
   "currentStageIdx": $STAGE,
@@ -63,6 +80,9 @@ case "${1:-}" in
   ]
 }
 JSON
+)
+    echo "$JSON" > "$REPO_DIR/$OUTFILE"
+    push_supabase "$JSON"
     echo "Written $REPO_DIR/$OUTFILE (minimal mode)"
     ;;
 
@@ -99,6 +119,7 @@ JSON
         || error "stdin is not valid JSON"
     fi
     echo "$INPUT" > "$REPO_DIR/$OUTFILE"
+    push_supabase "$INPUT"
     echo "Written $REPO_DIR/$OUTFILE ($(echo "$INPUT" | wc -c | tr -d ' ') bytes)"
     ;;
 
