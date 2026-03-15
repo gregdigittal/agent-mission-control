@@ -4,258 +4,278 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Agent Mission Control</title>
-<link href="https://cdn.jsdelivr.net/npm/geist@1/dist/fonts/geist-sans/style.css" rel="stylesheet">
-<link href="https://cdn.jsdelivr.net/npm/geist@1/dist/fonts/geist-mono/style.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=JetBrains+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html{-webkit-font-smoothing:antialiased}
-body{font-family:var(--sans);font-size:var(--font-base);color:var(--text-1);background:var(--bg-0);min-height:100vh;overflow-x:hidden}
+body{font-family:var(--sans);font-size:var(--font-base);color:var(--text-0);background:var(--bg-0);min-height:100vh;overflow-x:hidden}
 body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.03) 2px,rgba(0,0,0,.03) 4px)}
 
-/* === Design Tokens === */
+/* ── Design Tokens ────────────────────────────────────────────────────────── */
 :root{
   --bg-0:#06080c;--bg-1:#0b0e14;--bg-2:#10141c;--bg-3:#161b26;--bg-4:#1c2232;--bg-5:#242b3d;
-  --border-1:#1a2030;--border-2:#242e42;--border-3:#2e3a52;
-  --text-1:#edf0f7;--text-2:#b0b8cc;--text-3:#6e7a94;--text-4:#3e4a64;
+  --border-0:#1a2030;--border-1:#242e42;--border-2:#2e3a52;
+  --text-0:#edf0f7;--text-1:#b0b8cc;--text-2:#6e7a94;--text-3:#3e4a64;
   --cyan:#22d3ee;--green:#34d399;--amber:#fbbf24;--red:#f87171;--violet:#a78bfa;--blue:#60a5fa;--rose:#fb7185;
-  --mono:'Geist Mono',monospace;--sans:'Geist Sans',sans-serif;
-  --density-pad:16px;--density-gap:12px;--pane-min:420px;--topbar-h:48px;
-  --font-base:13px;--font-sm:12px;--font-xs:11px;--font-xxs:10px;
-  --card-pad:12px;--kb-col-w:280px;
-  --bb-stage-size:44px;--bb-ring-size:56px;--bb-stat-size:13px;
+  --mono:'JetBrains Mono',monospace;--sans:'DM Sans',sans-serif;
+  /* Desktop (27") — default */
+  --density-pad:14px;--density-gap:10px;--pane-min:360px;--topbar-h:40px;
+  --font-base:13px;--font-sm:11px;--font-xs:10px;--font-xxs:9px;
+  --card-pad:12px 14px;--kb-col-w:210px;
+  --bb-stage-size:17px;--bb-ring-size:54px;--bb-stat-size:17px;
   --modal-radius:12px;--error-h:36px;
 }
 .screen-laptop{
-  --density-pad:12px;--density-gap:8px;--pane-min:360px;--topbar-h:40px;
-  --font-base:12px;--font-sm:11px;--font-xs:10px;--font-xxs:9px;
-  --card-pad:8px;--kb-col-w:240px;
-  --bb-stage-size:36px;--bb-ring-size:48px;--bb-stat-size:11px;
+  --density-pad:10px;--density-gap:7px;--pane-min:320px;--topbar-h:36px;
+  --font-base:12px;--font-sm:10px;--font-xs:9px;--font-xxs:8px;
+  --card-pad:8px 10px;--kb-col-w:180px;
+  --bb-stage-size:15px;--bb-ring-size:42px;--bb-stat-size:15px;
 }
 .screen-ultrawide{
-  --density-pad:20px;--density-gap:16px;--pane-min:480px;--topbar-h:52px;
-  --font-base:14px;--font-sm:13px;--font-xs:12px;--font-xxs:11px;
-  --card-pad:16px;--kb-col-w:320px;
-  --bb-stage-size:52px;--bb-ring-size:64px;--bb-stat-size:14px;
+  --density-pad:18px;--density-gap:12px;--pane-min:400px;--topbar-h:44px;
+  --font-base:14px;--font-sm:12px;--font-xs:11px;--font-xxs:10px;
+  --card-pad:14px 16px;--kb-col-w:240px;
+  --bb-stage-size:20px;--bb-ring-size:62px;--bb-stat-size:20px;
 }
 
-/* === Topbar === */
-#topbar{height:var(--topbar-h);background:var(--bg-1);border-bottom:1px solid var(--border-1);display:flex;align-items:center;padding:0 var(--density-pad);gap:var(--density-gap);position:sticky;top:0;z-index:100}
+/* ── Topbar ───────────────────────────────────────────────────────────────── */
+#topbar{height:var(--topbar-h);background:var(--bg-1);border-bottom:1px solid var(--border-0);display:flex;align-items:center;padding:0 var(--density-pad);gap:var(--density-gap);position:sticky;top:0;z-index:100}
 .brand{display:flex;align-items:center;gap:8px;font-family:var(--mono);font-weight:700;font-size:var(--font-sm);color:var(--cyan);letter-spacing:.05em;white-space:nowrap}
-.brand-icon{font-size:1.2em}
 #session-tabs{display:flex;gap:4px;flex:1;overflow-x:auto;min-width:0}
-.session-tab{padding:6px 14px;border-radius:6px;cursor:pointer;font-family:var(--mono);font-size:var(--font-xs);color:var(--text-3);background:transparent;border:1px solid transparent;white-space:nowrap;transition:all .15s;display:flex;align-items:center}
-.session-tab:hover{color:var(--text-2);background:var(--bg-3)}
-.session-tab.active{color:var(--cyan);background:var(--bg-3);border-color:var(--border-2);box-shadow:0 0 8px rgba(34,211,238,.1)}
-.session-tab .tab-close{display:none;margin-left:6px;font-size:10px;color:var(--text-4);cursor:pointer;padding:0 2px;border-radius:2px;line-height:1}
+.session-tab{padding:5px 12px;border-radius:6px;cursor:pointer;font-family:var(--mono);font-size:var(--font-xs);color:var(--text-2);background:transparent;border:1px solid transparent;white-space:nowrap;transition:all .15s;display:flex;align-items:center;gap:5px}
+.session-tab:hover{color:var(--text-1);background:var(--bg-3)}
+.session-tab.active{color:var(--cyan);background:var(--bg-3);border-color:var(--border-1);box-shadow:0 0 8px rgba(34,211,238,.1)}
+.session-tab .tab-close{display:none;margin-left:4px;font-size:10px;color:var(--text-3);cursor:pointer;padding:0 2px;border-radius:2px;line-height:1}
 .session-tab:hover .tab-close{display:inline-flex}
 .session-tab .tab-close:hover{color:var(--red);background:rgba(248,113,113,.15)}
-.add-session-btn{padding:6px 10px;border-radius:6px;cursor:pointer;font-family:var(--mono);font-size:var(--font-xs);color:var(--text-4);background:transparent;border:1px dashed var(--border-2);white-space:nowrap;transition:all .15s;display:flex;align-items:center;flex-shrink:0;position:relative}
+.add-session-btn{padding:5px 10px;border-radius:6px;cursor:pointer;font-family:var(--mono);font-size:var(--font-xs);color:var(--text-3);background:transparent;border:1px dashed var(--border-1);white-space:nowrap;transition:all .15s;display:flex;align-items:center;flex-shrink:0}
 .add-session-btn:hover{color:var(--green);border-color:var(--green);background:rgba(52,211,153,.05)}
 .topbar-right{display:flex;align-items:center;gap:var(--density-gap);margin-left:auto;white-space:nowrap}
 .live-badge{display:flex;align-items:center;gap:4px;font-family:var(--mono);font-size:var(--font-xxs);color:var(--green);font-weight:600;letter-spacing:.05em}
 .live-dot{animation:pulse 2s infinite}
-#clock{font-family:var(--mono);font-size:var(--font-xs);color:var(--text-3)}
+#clock{font-family:var(--mono);font-size:var(--font-xs);color:var(--text-2)}
 .picker{display:flex;gap:2px}
-.picker-btn{padding:4px 8px;border-radius:4px;cursor:pointer;font-family:var(--mono);font-size:var(--font-xxs);color:var(--text-4);background:transparent;border:1px solid var(--border-1);transition:all .15s}
-.picker-btn:hover{color:var(--text-3);border-color:var(--border-2)}
+.picker-btn{padding:3px 7px;border-radius:4px;cursor:pointer;font-family:var(--mono);font-size:var(--font-xxs);color:var(--text-3);background:transparent;border:1px solid var(--border-0);transition:all .15s}
+.picker-btn:hover{color:var(--text-2);border-color:var(--border-1)}
 .picker-btn.active{color:var(--cyan);border-color:var(--cyan);background:rgba(34,211,238,.06)}
 .picker-btn.disabled{opacity:.3;pointer-events:none}
-.help-btn{padding:4px 8px;border-radius:4px;cursor:pointer;font-family:var(--mono);font-size:var(--font-xxs);color:var(--text-3);background:transparent;border:1px solid var(--border-1);transition:all .15s;outline:none}
+.help-btn{padding:3px 7px;border-radius:4px;cursor:pointer;font-family:var(--mono);font-size:var(--font-xxs);color:var(--text-2);background:transparent;border:1px solid var(--border-0);transition:all .15s;outline:none}
 .help-btn:hover{color:var(--cyan);border-color:var(--cyan)}
 
-/* === Session Dropdown === */
-.session-dropdown{position:fixed;min-width:300px;max-height:340px;overflow-y:auto;background:var(--bg-2);border:1px solid var(--border-2);border-radius:8px;box-shadow:0 8px 32px rgba(0,0,0,.5);z-index:200;padding:6px}
+/* ── Cost Widget (F-064) ─────────────────────────────────────────────────── */
+.cost-widget{font-family:var(--mono);font-size:var(--font-xxs);color:var(--text-2);display:flex;align-items:center;gap:3px}
+.cost-widget .cost-val{color:var(--amber);font-weight:600}
+
+/* ── Connection Status (F-062) ───────────────────────────────────────────── */
+.conn-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.conn-dot.connected{background:var(--green)}
+.conn-dot.stale{background:var(--amber)}
+.conn-dot.disconnected{background:var(--red)}
+.conn-dot.unknown{background:var(--text-3)}
+
+/* ── Session Dropdown ─────────────────────────────────────────────────────── */
+.session-dropdown{position:fixed;min-width:300px;max-height:340px;overflow-y:auto;background:var(--bg-2);border:1px solid var(--border-1);border-radius:8px;box-shadow:0 8px 32px rgba(0,0,0,.5);z-index:200;padding:6px}
 .session-dropdown-item{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:6px;cursor:pointer;transition:all .12s;border:1px solid transparent}
-.session-dropdown-item:hover{background:var(--bg-3);border-color:var(--border-2)}
+.session-dropdown-item:hover{background:var(--bg-3);border-color:var(--border-1)}
 .session-dropdown-item .sdi-icon{font-size:1.2em;flex-shrink:0}
 .session-dropdown-item .sdi-info{flex:1;min-width:0}
-.session-dropdown-item .sdi-name{font-family:var(--mono);font-size:var(--font-xs);font-weight:600;color:var(--text-1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.session-dropdown-item .sdi-meta{font-size:var(--font-xxs);color:var(--text-4);display:flex;gap:8px}
+.session-dropdown-item .sdi-name{font-family:var(--mono);font-size:var(--font-xs);font-weight:600;color:var(--text-0);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.session-dropdown-item .sdi-meta{font-size:var(--font-xxs);color:var(--text-3);display:flex;gap:8px}
 .session-dropdown-item.disabled{opacity:.35;pointer-events:none}
-.session-dropdown-empty{padding:16px;text-align:center;font-size:var(--font-xs);color:var(--text-4)}
-.session-dropdown-loading{padding:16px;text-align:center;font-size:var(--font-xs);color:var(--text-3)}
-.session-dropdown-header{padding:6px 12px 8px;font-family:var(--mono);font-size:var(--font-xxs);color:var(--text-3);text-transform:uppercase;letter-spacing:.08em;border-bottom:1px solid var(--border-1);margin-bottom:4px}
+.session-dropdown-empty{padding:16px;text-align:center;font-size:var(--font-xs);color:var(--text-3)}
+.session-dropdown-loading{padding:16px;text-align:center;font-size:var(--font-xs);color:var(--text-2)}
+.session-dropdown-header{padding:6px 12px 8px;font-family:var(--mono);font-size:var(--font-xxs);color:var(--text-2);text-transform:uppercase;letter-spacing:.08em;border-bottom:1px solid var(--border-0);margin-bottom:4px}
 
-/* === Workspace & Panes === */
+/* ── Workspace & Panes ────────────────────────────────────────────────────── */
 #workspace{display:flex;height:calc(100vh - var(--topbar-h));overflow:hidden}
-.error-offset{height:calc(100vh - var(--topbar-h) - var(--error-h))}
-.pane{flex:1;min-width:var(--pane-min);border-right:1px solid var(--border-1);display:flex;flex-direction:column;overflow:hidden}
+.pane{flex:1;min-width:var(--pane-min);border-right:1px solid var(--border-0);display:flex;flex-direction:column;overflow:hidden}
 .pane:last-child{border-right:none}
-.pane-header{display:flex;align-items:center;justify-content:space-between;padding:8px var(--density-pad);background:var(--bg-1);border-bottom:1px solid var(--border-1);font-size:var(--font-xs);gap:8px}
-.pane-header select{background:var(--bg-3);color:var(--text-2);border:1px solid var(--border-2);border-radius:4px;padding:2px 6px;font-family:var(--mono);font-size:var(--font-xxs);cursor:pointer;outline:none}
+.pane-header{display:flex;align-items:center;justify-content:space-between;padding:var(--density-gap) var(--density-pad);background:var(--bg-1);border-bottom:1px solid var(--border-0);font-size:var(--font-xs);gap:8px}
+.pane-header select{background:var(--bg-3);color:var(--text-1);border:1px solid var(--border-1);border-radius:4px;padding:2px 6px;font-family:var(--mono);font-size:var(--font-xxs);cursor:pointer;outline:none}
 .pane-header select:focus{border-color:var(--cyan)}
 .pane-body{flex:1;overflow-y:auto;padding:var(--density-pad)}
+.empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:12px;color:var(--text-3);font-family:var(--mono);font-size:var(--font-xs)}
+.empty-state-icon{font-size:2em;color:var(--border-1)}
 
-/* === Build Banner === */
-.build-banner{display:flex;align-items:center;gap:var(--density-gap);padding:var(--card-pad);background:var(--bg-2);border:1px solid var(--border-1);border-radius:8px;margin-bottom:var(--density-gap)}
+/* ── Build Banner ─────────────────────────────────────────────────────────── */
+.build-banner{display:flex;align-items:center;gap:var(--density-gap);padding:var(--card-pad);background:var(--bg-2);border:1px solid var(--border-0);border-radius:8px;margin-bottom:var(--density-gap)}
 .progress-ring{position:relative;width:var(--bb-ring-size);height:var(--bb-ring-size);flex-shrink:0}
 .progress-ring svg{width:100%;height:100%;transform:rotate(-90deg)}
-.ring-bg{fill:none;stroke:var(--border-2);stroke-width:4}
+.ring-bg{fill:none;stroke:var(--border-1);stroke-width:4}
 .ring-fg{fill:none;stroke:var(--cyan);stroke-width:4;stroke-linecap:round;transition:stroke-dashoffset .5s;filter:drop-shadow(0 0 4px rgba(34,211,238,.4))}
-.progress-pct{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:var(--bb-stat-size);font-weight:700;color:var(--text-1)}
-.build-stats{display:flex;flex-direction:column;gap:2px}
-.build-project{font-family:var(--mono);font-size:var(--font-sm);font-weight:600;color:var(--text-1)}
-.build-detail{font-size:var(--font-xxs);color:var(--text-3)}
+.progress-pct{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:var(--bb-stat-size);font-weight:700;color:var(--text-0)}
+.build-stats{display:flex;flex-direction:column;gap:3px;flex:1}
+.build-project{font-family:var(--mono);font-size:var(--font-sm);font-weight:600;color:var(--text-0)}
+.build-stage{font-size:var(--font-xs);color:var(--cyan);font-weight:500}
+.build-detail{font-size:var(--font-xxs);color:var(--text-2)}
 .build-metrics{display:flex;gap:var(--density-gap);margin-top:4px}
 .build-metric{display:flex;flex-direction:column;gap:1px}
-.build-metric-val{font-family:var(--mono);font-size:var(--font-xs);font-weight:600;color:var(--text-1)}
-.build-metric-lbl{font-size:var(--font-xxs);color:var(--text-4)}
+.build-metric-val{font-family:var(--mono);font-size:var(--font-xs);font-weight:600;color:var(--text-0)}
+.build-metric-lbl{font-size:var(--font-xxs);color:var(--text-3)}
 
-/* === Pipeline === */
+/* ── Pipeline ─────────────────────────────────────────────────────────────── */
 .pipeline{display:flex;gap:4px;overflow-x:auto;padding-bottom:var(--density-gap);margin-bottom:var(--density-gap)}
-.stage-pill{display:flex;align-items:center;gap:4px;padding:4px 10px;border-radius:20px;font-family:var(--mono);font-size:var(--font-xxs);white-space:nowrap;background:var(--bg-3);color:var(--text-4);border:1px solid var(--border-1);transition:all .2s}
+.stage-pill{display:flex;align-items:center;gap:4px;padding:4px 10px;border-radius:20px;font-family:var(--mono);font-size:var(--font-xxs);white-space:nowrap;background:var(--bg-3);color:var(--text-3);border:1px solid var(--border-0);transition:all .2s}
 .stage-pill.completed{color:var(--green);border-color:rgba(52,211,153,.2);background:rgba(52,211,153,.06)}
-.stage-pill.active{color:var(--cyan);border-color:rgba(34,211,238,.3);background:rgba(34,211,238,.08);box-shadow:0 0 8px rgba(34,211,238,.15)}
-.stage-dot{width:6px;height:6px;border-radius:50%;background:currentColor;flex-shrink:0}
+.stage-pill.active{color:var(--cyan);border-color:rgba(34,211,238,.3);background:rgba(34,211,238,.08);box-shadow:0 0 10px rgba(34,211,238,.15)}
+.stage-dot{width:5px;height:5px;border-radius:50%;background:currentColor;flex-shrink:0}
 .stage-pill.active .stage-dot{animation:pulse 1.5s infinite}
 
-/* === Agent Cards === */
-.agents-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:var(--density-gap);margin-bottom:var(--density-gap)}
-.agent-card{background:var(--bg-2);border:1px solid var(--border-1);border-radius:8px;padding:var(--card-pad);display:flex;flex-direction:column;gap:8px;transition:all .15s}
-.agent-card:hover{border-color:var(--border-2);transform:translateY(-1px)}
+/* ── Agent Cards ──────────────────────────────────────────────────────────── */
+.agents-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:var(--density-gap);margin-bottom:var(--density-gap)}
+.agent-card{background:var(--bg-2);border:1px solid var(--border-0);border-radius:8px;padding:var(--card-pad);display:flex;flex-direction:column;gap:7px;transition:all .15s}
+.agent-card:hover{border-color:var(--border-1);transform:translateY(-1px)}
 .agent-card.status-working{border-left:2px solid var(--cyan)}
 .agent-card.status-thinking{border-left:2px solid var(--violet)}
-.agent-card.status-idle{border-left:2px solid var(--text-4)}
+.agent-card.status-idle{border-left:2px solid var(--text-3)}
 .agent-card.status-error{border-left:2px solid var(--red)}
 .agent-card.status-leader{border-left:2px solid var(--amber)}
 .agent-top{display:flex;align-items:center;gap:8px}
-.agent-icon{font-size:1.4em}
+.agent-icon{font-size:1.3em}
 .agent-info{flex:1;min-width:0}
-.agent-name{font-family:var(--mono);font-size:var(--font-sm);font-weight:600;color:var(--text-1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.agent-role{font-size:var(--font-xxs);color:var(--text-3)}
-.agent-status{font-family:var(--mono);font-size:var(--font-xxs);padding:2px 6px;border-radius:4px;display:inline-flex;align-items:center;gap:4px}
+.agent-name{font-family:var(--mono);font-size:var(--font-sm);font-weight:600;color:var(--text-0);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.agent-role{font-size:var(--font-xxs);color:var(--text-2)}
+.agent-status{font-family:var(--mono);font-size:var(--font-xxs);padding:2px 6px;border-radius:4px;display:inline-flex;align-items:center;gap:3px}
 .agent-status.working{color:var(--cyan);background:rgba(34,211,238,.1)}
 .agent-status.thinking{color:var(--violet);background:rgba(167,139,250,.1)}
-.agent-status.idle{color:var(--text-4);background:var(--bg-3)}
+.agent-status.idle{color:var(--text-3);background:var(--bg-3)}
 .agent-status.error{color:var(--red);background:rgba(248,113,113,.1)}
 .agent-status.leader{color:var(--amber);background:rgba(251,191,36,.1)}
-.agent-task{font-size:var(--font-xs);color:var(--text-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.agent-metrics{display:flex;gap:8px;font-family:var(--mono);font-size:var(--font-xxs);color:var(--text-4)}
+.agent-task{font-family:var(--mono);font-size:var(--font-xs);color:var(--text-1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.agent-metrics{display:flex;gap:8px;font-family:var(--mono);font-size:var(--font-xxs);color:var(--text-3)}
+.agent-metric-cost{color:var(--amber)}
 .typing-dots span{animation:typingDot .8s infinite;opacity:.3}
 .typing-dots span:nth-child(2){animation-delay:.15s}
 .typing-dots span:nth-child(3){animation-delay:.3s}
+/* F-063 Heartbeat indicator */
+.agent-heartbeat{display:flex;align-items:center;gap:4px;font-size:var(--font-xxs);color:var(--text-3);font-family:var(--mono)}
+.hb-dot{width:5px;height:5px;border-radius:50%;flex-shrink:0}
+.hb-dot.fresh{background:var(--green);animation:pulseDot 2s infinite}
+.hb-dot.stale{background:var(--amber)}
+.hb-dot.dead{background:var(--red)}
 
-/* === Activity Feed === */
+/* ── Activity Feed ────────────────────────────────────────────────────────── */
 .feed-section{margin-top:var(--density-gap)}
-.feed-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;font-family:var(--mono);font-size:var(--font-xs);color:var(--text-3)}
-.feed-filters{display:flex;gap:4px}
-.feed-filter-btn{padding:2px 8px;border-radius:4px;cursor:pointer;font-family:var(--mono);font-size:var(--font-xxs);color:var(--text-4);background:transparent;border:1px solid transparent;transition:all .15s}
-.feed-filter-btn:hover{color:var(--text-3)}
-.feed-filter-btn.active{color:var(--cyan);background:rgba(34,211,238,.06);border-color:var(--border-2)}
-.feed-list{display:flex;flex-direction:column;gap:2px;max-height:300px;overflow-y:auto}
-.feed-item{display:flex;gap:8px;padding:4px 8px;border-radius:4px;font-size:var(--font-xs);animation:feedIn .3s ease-out}
-.feed-time{font-family:var(--mono);font-size:var(--font-xxs);color:var(--text-4);white-space:nowrap;min-width:55px}
-.feed-agent{font-family:var(--mono);font-size:var(--font-xxs);color:var(--cyan);white-space:nowrap;min-width:80px;overflow:hidden;text-overflow:ellipsis}
-.feed-text{color:var(--text-2);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.feed-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;font-family:var(--mono);font-size:var(--font-xs);color:var(--text-2)}
+.feed-filters{display:flex;gap:3px}
+.feed-filter-btn{padding:2px 7px;border-radius:4px;cursor:pointer;font-family:var(--mono);font-size:var(--font-xxs);color:var(--text-3);background:transparent;border:1px solid transparent;transition:all .15s}
+.feed-filter-btn:hover{color:var(--text-2)}
+.feed-filter-btn.active{color:var(--cyan);background:rgba(34,211,238,.06);border-color:var(--border-1)}
+.feed-list{display:flex;flex-direction:column;gap:2px;max-height:280px;overflow-y:auto}
+.feed-item{display:flex;gap:7px;padding:4px 6px;border-radius:4px;font-size:var(--font-xs);animation:feedIn .3s ease-out}
+.feed-time{font-family:var(--mono);font-size:var(--font-xxs);color:var(--text-3);white-space:nowrap;min-width:52px}
+.feed-icon{font-size:.85em;flex-shrink:0}
+.feed-agent{font-family:var(--mono);font-size:var(--font-xxs);color:var(--cyan);white-space:nowrap;min-width:72px;overflow:hidden;text-overflow:ellipsis}
+.feed-text{color:var(--text-1);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .feed-type-tool .feed-text{color:var(--blue)}
 .feed-type-file .feed-text{color:var(--green)}
 .feed-type-error .feed-text{color:var(--red)}
 .feed-type-thinking .feed-text{color:var(--violet)}
 
-/* === Kanban === */
+/* ── Kanban ───────────────────────────────────────────────────────────────── */
 .kanban{display:flex;gap:var(--density-gap);overflow-x:auto;height:100%}
-.kanban-col{min-width:var(--kb-col-w);width:var(--kb-col-w);background:var(--bg-2);border:1px solid var(--border-1);border-radius:8px;display:flex;flex-direction:column;flex-shrink:0}
-.kanban-col-header{padding:10px var(--card-pad);border-bottom:1px solid var(--border-1);display:flex;align-items:center;justify-content:space-between;font-family:var(--mono);font-size:var(--font-xs);font-weight:600;color:var(--text-2)}
-.kanban-count{background:var(--bg-4);padding:1px 7px;border-radius:10px;font-size:var(--font-xxs);color:var(--text-3);font-weight:400}
-.kanban-cards{flex:1;padding:8px;display:flex;flex-direction:column;gap:6px;overflow-y:auto;min-height:40px}
-.kanban-cards.drag-over{background:rgba(34,211,238,.04);border-radius:4px;outline:1px dashed rgba(34,211,238,.25)}
-.kanban-card{background:var(--bg-3);border:1px solid var(--border-1);border-radius:6px;padding:var(--card-pad);cursor:grab;transition:all .15s;user-select:none}
-.kanban-card:hover{border-color:var(--border-2);transform:translateY(-1px)}
+.kanban-col{min-width:var(--kb-col-w);width:var(--kb-col-w);background:var(--bg-2);border:1px solid var(--border-0);border-radius:8px;display:flex;flex-direction:column;flex-shrink:0}
+.kanban-col-header{padding:var(--density-gap) var(--density-pad);border-bottom:1px solid var(--border-0);display:flex;align-items:center;justify-content:space-between;font-family:var(--mono);font-size:var(--font-xs);font-weight:600;color:var(--text-1)}
+.kanban-count{background:var(--bg-4);padding:1px 7px;border-radius:10px;font-size:var(--font-xxs);color:var(--text-2);font-weight:400}
+.kanban-cards{flex:1;padding:7px;display:flex;flex-direction:column;gap:5px;overflow-y:auto;min-height:40px}
+.kanban-cards.drag-over{background:rgba(34,211,238,.04);outline:1px dashed rgba(34,211,238,.2);border-radius:4px}
+.kanban-card{background:var(--bg-3);border:1px solid var(--border-0);border-radius:6px;padding:var(--card-pad);cursor:grab;transition:all .15s;user-select:none}
+.kanban-card:hover{border-color:var(--border-1);transform:translateY(-1px)}
 .kanban-card.dragging{opacity:.4;cursor:grabbing;transform:rotate(1deg)}
-.kanban-card-title{font-size:var(--font-xs);font-weight:500;color:var(--text-1);margin-bottom:6px}
+.kanban-card-title{font-size:var(--font-xs);font-weight:500;color:var(--text-0);margin-bottom:6px}
 .kanban-card-meta{display:flex;align-items:center;justify-content:space-between;font-size:var(--font-xxs)}
-.kanban-card-assignee{color:var(--text-3);font-family:var(--mono)}
-.kanban-card-priority{padding:1px 6px;border-radius:3px;font-family:var(--mono);font-weight:600}
+.kanban-card-assignee{color:var(--text-2);font-family:var(--mono)}
+.kanban-card-priority{padding:1px 5px;border-radius:3px;font-family:var(--mono);font-weight:600}
 .priority-high{color:var(--red);background:rgba(248,113,113,.1)}
 .priority-medium{color:var(--amber);background:rgba(251,191,36,.1)}
 .priority-low{color:var(--green);background:rgba(52,211,153,.1)}
-.kanban-card.recommended{border-color:var(--violet);box-shadow:0 0 12px rgba(167,139,250,.1)}
-.recommend-badge{display:flex;align-items:center;gap:4px;margin-top:6px;padding:4px 8px;background:rgba(167,139,250,.08);border-radius:4px;font-size:var(--font-xxs);color:var(--violet)}
-.approval-btns{display:flex;gap:4px;margin-top:6px}
-.approval-btns button{flex:1;padding:4px 8px;border:1px solid var(--border-2);border-radius:4px;font-family:var(--mono);font-size:var(--font-xxs);cursor:pointer;transition:all .15s;background:var(--bg-4);color:var(--text-3);outline:none}
+.kanban-card.recommended{border-color:var(--violet);box-shadow:0 0 10px rgba(167,139,250,.1)}
+.recommend-badge{display:flex;align-items:center;gap:4px;margin-top:5px;padding:3px 7px;background:rgba(167,139,250,.08);border-radius:4px;font-size:var(--font-xxs);color:var(--violet)}
+.approval-btns{display:flex;gap:4px;margin-top:5px}
+.approval-btns button{flex:1;padding:3px 6px;border:1px solid var(--border-1);border-radius:4px;font-family:var(--mono);font-size:var(--font-xxs);cursor:pointer;transition:all .15s;background:var(--bg-4);color:var(--text-2);outline:none}
 .btn-approve:hover{background:rgba(52,211,153,.15);color:var(--green);border-color:var(--green)}
 .btn-reject:hover{background:rgba(248,113,113,.15);color:var(--red);border-color:var(--red)}
-.dep-badge{display:flex;align-items:center;gap:4px;margin-top:6px;padding:4px 8px;background:rgba(251,191,36,.08);border-radius:4px;font-size:var(--font-xxs);color:var(--amber)}
-.kanban-card.dependency{border-color:var(--amber);box-shadow:0 0 12px rgba(251,191,36,.1)}
-.kanban-card-deps{display:flex;flex-wrap:wrap;gap:3px;margin-top:4px}
-.dep-tag{font-size:var(--font-xxs);color:var(--text-3);background:var(--bg-3);border-radius:3px;padding:1px 5px}
-.active-agent-ind{display:flex;align-items:center;gap:5px;margin-top:6px;padding:4px 8px;background:rgba(34,211,238,.06);border-radius:4px;font-size:var(--font-xxs);color:var(--cyan)}
-.active-agent-ind .ag-dot{width:6px;height:6px;border-radius:50%;background:var(--cyan);animation:pulseDot 1.5s ease-in-out infinite;flex-shrink:0}
-.active-agent-ind .ag-dot.status-thinking{background:var(--violet)}
-.active-agent-ind .ag-dot.status-idle{background:var(--text-4);animation:none}
+.dep-badge{display:flex;align-items:center;gap:4px;margin-top:5px;padding:3px 7px;background:rgba(251,191,36,.08);border-radius:4px;font-size:var(--font-xxs);color:var(--amber)}
+.kanban-card.dependency{border-color:var(--amber);box-shadow:0 0 10px rgba(251,191,36,.1)}
+.kanban-card-deps{display:flex;flex-wrap:wrap;gap:3px;margin-top:3px}
+.dep-tag{font-size:var(--font-xxs);color:var(--text-2);background:var(--bg-4);border-radius:3px;padding:1px 5px}
+.active-agent-ind{display:flex;align-items:center;gap:4px;margin-top:5px;padding:3px 7px;background:rgba(34,211,238,.06);border-radius:4px;font-size:var(--font-xxs);color:var(--cyan)}
+.ag-dot{width:5px;height:5px;border-radius:50%;background:var(--cyan);animation:pulseDot 1.5s ease-in-out infinite;flex-shrink:0}
+.ag-dot.status-thinking{background:var(--violet)}
+.ag-dot.status-idle{background:var(--text-3);animation:none}
 .kanban-card.agent-active{border-left:2px solid var(--cyan)}
-.transition-badge{display:flex;align-items:center;gap:4px;margin-top:6px;padding:4px 8px;background:rgba(96,165,250,.08);border-radius:4px;font-size:var(--font-xxs);color:var(--blue)}
-.kanban-card.transition{border-color:var(--blue);box-shadow:0 0 12px rgba(96,165,250,.1)}
+.transition-badge{display:flex;align-items:center;gap:4px;margin-top:5px;padding:3px 7px;background:rgba(96,165,250,.08);border-radius:4px;font-size:var(--font-xxs);color:var(--blue)}
+.kanban-card.transition{border-color:var(--blue);box-shadow:0 0 10px rgba(96,165,250,.1)}
 
-/* === File Watch Bar === */
-#filewatch-bar{display:none;position:fixed;bottom:0;left:0;right:0;height:36px;background:var(--bg-1);border-top:1px solid var(--border-1);padding:0 var(--density-pad);align-items:center;gap:var(--density-gap);font-family:var(--mono);font-size:var(--font-xxs);z-index:100}
+/* ── File Watch Bar ───────────────────────────────────────────────────────── */
+#filewatch-bar{display:none;position:fixed;bottom:0;left:0;right:0;height:36px;background:var(--bg-1);border-top:1px solid var(--border-0);padding:0 var(--density-pad);align-items:center;gap:var(--density-gap);font-family:var(--mono);font-size:var(--font-xxs);z-index:100}
 #filewatch-bar.visible{display:flex}
-.fw-label{color:var(--text-3)}
-.fw-input{background:var(--bg-3);color:var(--text-2);border:1px solid var(--border-2);border-radius:4px;padding:2px 8px;font-family:var(--mono);font-size:var(--font-xxs);width:200px;outline:none}
+.fw-label{color:var(--text-2)}
+.fw-input{background:var(--bg-3);color:var(--text-1);border:1px solid var(--border-1);border-radius:4px;padding:2px 8px;font-family:var(--mono);font-size:var(--font-xxs);width:200px;outline:none}
 .fw-input:focus{border-color:var(--cyan)}
 .fw-btn{padding:3px 10px;border-radius:4px;font-family:var(--mono);font-size:var(--font-xxs);cursor:pointer;border:1px solid;transition:all .15s;outline:none}
 .fw-btn-start{background:rgba(52,211,153,.1);color:var(--green);border-color:rgba(52,211,153,.3)}
 .fw-btn-start:hover{background:rgba(52,211,153,.2)}
 .fw-btn-stop{background:rgba(248,113,113,.1);color:var(--red);border-color:rgba(248,113,113,.3)}
 .fw-btn-stop:hover{background:rgba(248,113,113,.2)}
-.fw-status{color:var(--text-4)}
+.fw-status{color:var(--text-3)}
 
-/* === Error Banner === */
+/* ── Error Banner ─────────────────────────────────────────────────────────── */
 .error-banner{background:rgba(248,113,113,.1);border-bottom:1px solid rgba(248,113,113,.25);padding:0 var(--density-pad);height:var(--error-h);display:flex;align-items:center;gap:var(--density-gap);font-family:var(--mono);font-size:var(--font-xs);color:var(--red);position:sticky;top:var(--topbar-h);z-index:90}
 .error-banner-msg{flex:1}
-.error-banner-dismiss{cursor:pointer;color:var(--text-4);font-size:14px;padding:2px 6px;border-radius:3px;transition:color .15s}
-.error-banner-dismiss:hover{color:var(--text-2)}
+.error-banner-dismiss{cursor:pointer;color:var(--text-3);font-size:14px;padding:2px 6px;border-radius:3px;transition:color .15s}
+.error-banner-dismiss:hover{color:var(--text-1)}
 
-/* === First-Run Modal === */
-.modal-overlay{position:fixed;inset:0;background:rgba(6,8,12,.88);display:flex;align-items:center;justify-content:center;z-index:1000;backdrop-filter:blur(6px)}
-.modal-box{background:var(--bg-2);border:1px solid var(--border-2);border-radius:var(--modal-radius);padding:32px;max-width:560px;width:90%;box-shadow:0 24px 64px rgba(0,0,0,.7)}
-.modal-title{font-family:var(--mono);font-size:var(--font-sm);color:var(--cyan);letter-spacing:.08em;text-transform:uppercase;margin-bottom:8px}
-.modal-subtitle{font-size:var(--font-xs);color:var(--text-3);margin-bottom:24px;line-height:1.5}
+/* ── First-Run Modal ──────────────────────────────────────────────────────── */
+.modal-overlay{position:fixed;inset:0;background:rgba(6,8,12,.9);display:flex;align-items:center;justify-content:center;z-index:1000;backdrop-filter:blur(6px)}
+.modal-box{background:var(--bg-2);border:1px solid var(--border-1);border-radius:var(--modal-radius);padding:32px;max-width:560px;width:90%;box-shadow:0 24px 64px rgba(0,0,0,.7)}
+.modal-title{font-family:var(--mono);font-size:var(--font-sm);color:var(--cyan);letter-spacing:.08em;text-transform:uppercase;margin-bottom:6px}
+.modal-subtitle{font-size:var(--font-xs);color:var(--text-2);margin-bottom:24px;line-height:1.5}
 .screen-cards{display:flex;gap:12px}
-.screen-card{flex:1;background:var(--bg-3);border:2px solid var(--border-1);border-radius:8px;padding:20px 12px;cursor:pointer;transition:all .15s;text-align:center}
-.screen-card:hover{border-color:var(--border-3);background:var(--bg-4)}
+.screen-card{flex:1;background:var(--bg-3);border:2px solid var(--border-0);border-radius:8px;padding:20px 12px;cursor:pointer;transition:all .15s;text-align:center}
+.screen-card:hover{border-color:var(--border-1);background:var(--bg-4)}
 .screen-card.selected{border-color:var(--cyan);background:rgba(34,211,238,.06)}
 .screen-card-icon{font-size:2em;margin-bottom:10px}
-.screen-card-label{font-family:var(--mono);font-size:var(--font-xs);color:var(--text-1);font-weight:600;margin-bottom:4px}
-.screen-card-desc{font-size:var(--font-xxs);color:var(--text-3)}
+.screen-card-label{font-family:var(--mono);font-size:var(--font-xs);color:var(--text-0);font-weight:600;margin-bottom:4px}
+.screen-card-desc{font-size:var(--font-xxs);color:var(--text-2)}
 .modal-confirm{display:block;width:100%;margin-top:20px;padding:10px;background:rgba(34,211,238,.1);border:1px solid rgba(34,211,238,.3);border-radius:6px;font-family:var(--mono);font-size:var(--font-xs);color:var(--cyan);cursor:pointer;transition:all .15s;text-align:center;outline:none}
 .modal-confirm:hover{background:rgba(34,211,238,.18);border-color:var(--cyan)}
-.modal-confirm:disabled{opacity:.4;pointer-events:none}
 
-/* === Help Panel === */
-.help-panel{position:fixed;top:calc(var(--topbar-h) + 8px);right:var(--density-pad);background:var(--bg-2);border:1px solid var(--border-2);border-radius:8px;padding:16px;width:260px;z-index:200;box-shadow:0 8px 32px rgba(0,0,0,.5);display:none}
+/* ── Help Panel ───────────────────────────────────────────────────────────── */
+.help-panel{position:fixed;top:calc(var(--topbar-h) + 8px);right:var(--density-pad);background:var(--bg-2);border:1px solid var(--border-1);border-radius:8px;padding:16px;width:256px;z-index:200;box-shadow:0 8px 32px rgba(0,0,0,.5);display:none}
 .help-panel.open{display:block}
-.help-panel-title{font-family:var(--mono);font-size:var(--font-xxs);color:var(--cyan);letter-spacing:.08em;text-transform:uppercase;padding-bottom:8px;border-bottom:1px solid var(--border-1);margin-bottom:10px}
-.help-section{font-family:var(--mono);font-size:var(--font-xxs);color:var(--text-4);text-transform:uppercase;letter-spacing:.06em;margin:10px 0 4px}
+.help-panel-title{font-family:var(--mono);font-size:var(--font-xxs);color:var(--cyan);letter-spacing:.08em;text-transform:uppercase;padding-bottom:8px;border-bottom:1px solid var(--border-0);margin-bottom:10px}
+.help-section{font-family:var(--mono);font-size:var(--font-xxs);color:var(--text-3);text-transform:uppercase;letter-spacing:.06em;margin:9px 0 4px}
 .help-row{display:flex;align-items:center;justify-content:space-between;padding:3px 0;font-size:var(--font-xxs)}
-.help-key{font-family:var(--mono);background:var(--bg-4);border:1px solid var(--border-2);border-radius:3px;padding:1px 6px;color:var(--text-2)}
-.help-desc{color:var(--text-3)}
+.help-key{font-family:var(--mono);background:var(--bg-4);border:1px solid var(--border-1);border-radius:3px;padding:1px 6px;color:var(--text-1)}
+.help-desc{color:var(--text-2)}
 
-/* === Scrollbars === */
+/* ── Scrollbars ───────────────────────────────────────────────────────────── */
 ::-webkit-scrollbar{width:5px;height:5px}
 ::-webkit-scrollbar-track{background:transparent}
-::-webkit-scrollbar-thumb{background:var(--border-2);border-radius:3px}
-::-webkit-scrollbar-thumb:hover{background:var(--border-3)}
+::-webkit-scrollbar-thumb{background:var(--border-1);border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:var(--border-2)}
+*{scrollbar-width:thin;scrollbar-color:var(--border-1) transparent}
 
-/* === Animations === */
+/* ── Animations ───────────────────────────────────────────────────────────── */
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
 @keyframes pulseDot{0%,100%{opacity:1}50%{opacity:.3}}
 @keyframes typingDot{0%,100%{opacity:.3}50%{opacity:1}}
-@keyframes feedIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
+@keyframes feedIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 </style>
 </head>
 <body class="screen-desktop">
 
-<!-- Error Banner (hidden by default) -->
 <div id="error-banner" class="error-banner" style="display:none">
   <span id="error-banner-msg" class="error-banner-msg"></span>
   <span class="error-banner-dismiss" id="error-dismiss">&times;</span>
 </div>
 
 <header id="topbar">
-  <div class="brand"><span class="brand-icon">&loz;</span><span>MISSION CONTROL</span></div>
+  <div class="brand"><span>&loz;</span><span>MISSION CONTROL</span></div>
   <div id="session-tabs"></div>
   <div class="topbar-right">
+    <div id="cost-widget" class="cost-widget" style="display:none"></div>
     <div id="screen-picker" class="picker"></div>
     <div id="tile-picker" class="picker"></div>
     <span class="live-badge"><span class="live-dot">&bull;</span> LIVE</span>
@@ -277,22 +297,22 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;b
 <div id="first-run-modal" class="modal-overlay">
   <div class="modal-box">
     <div class="modal-title">&#9670; Agent Mission Control</div>
-    <div class="modal-subtitle">Select your screen size to optimise the layout density and font scaling.</div>
+    <div class="modal-subtitle">Select your screen size to optimise layout density and font scaling.</div>
     <div class="screen-cards" id="screen-cards">
       <div class="screen-card" data-screen="laptop" onclick="AMC.UI.pickScreen(this,'laptop')">
         <div class="screen-card-icon">&#128187;</div>
         <div class="screen-card-label">14&#8243; Laptop</div>
-        <div class="screen-card-desc">Compact density<br>1&ndash;2 panes</div>
+        <div class="screen-card-desc">Compact<br>1&ndash;2 panes</div>
       </div>
       <div class="screen-card selected" data-screen="desktop" onclick="AMC.UI.pickScreen(this,'desktop')">
         <div class="screen-card-icon">&#128444;</div>
         <div class="screen-card-label">27&#8243; Desktop</div>
-        <div class="screen-card-desc">Standard density<br>1&ndash;3 panes</div>
+        <div class="screen-card-desc">Standard<br>1&ndash;3 panes</div>
       </div>
       <div class="screen-card" data-screen="ultrawide" onclick="AMC.UI.pickScreen(this,'ultrawide')">
-        <div class="screen-card-icon">&#9472;</div>
+        <div class="screen-card-icon">&#9588;</div>
         <div class="screen-card-label">49&#8243; Ultrawide</div>
-        <div class="screen-card-desc">Expanded density<br>1&ndash;4 panes</div>
+        <div class="screen-card-desc">Expanded<br>1&ndash;4 panes</div>
       </div>
     </div>
     <button class="modal-confirm" id="modal-confirm" onclick="AMC.UI.confirmScreen()">Open Mission Control &rarr;</button>
@@ -317,9 +337,9 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;b
 </div>
 
 <script>
-/* ========================================================
+/* ════════════════════════════════════════════════════════
    DOM HELPERS
-   ======================================================== */
+   ════════════════════════════════════════════════════════ */
 function h(tag, p) {
   var el = document.createElement(tag);
   if (!p) return el;
@@ -329,10 +349,11 @@ function h(tag, p) {
   if (p.draggable) el.draggable = true;
   if (p.style) Object.assign(el.style, p.style);
   if (p.data) { for (var k in p.data) el.dataset[k] = p.data[k]; }
+  if (p.title) el.title = p.title;
   for (var k in p) { if (k.slice(0,2) === 'on') el.addEventListener(k.slice(2), p[k]); }
   return el;
 }
-function txt(s) { return document.createTextNode(s); }
+function txt(s) { return document.createTextNode(String(s)); }
 function svgNS(tag, attrs) {
   var el = document.createElementNS('http://www.w3.org/2000/svg', tag);
   if (attrs) for (var k in attrs) el.setAttribute(k, attrs[k]);
@@ -341,29 +362,27 @@ function svgNS(tag, attrs) {
 function clear(el) { while (el.firstChild) el.removeChild(el.firstChild); }
 function ts() { return new Date().toTimeString().slice(0,8); }
 
-/* ========================================================
+/* ════════════════════════════════════════════════════════
    CONSTANTS
-   ======================================================== */
+   ════════════════════════════════════════════════════════ */
 var STAGES = ['Planning','Scaffolding','Core Logic','API Layer','Frontend','Testing','Integration','Review'];
 var COLS = ['backlog','in-progress','review','done'];
 var COL_LABELS = {backlog:'Backlog','in-progress':'In Progress',review:'Review',done:'Done'};
 var ACCENT_CYCLE = ['var(--cyan)','var(--green)','var(--amber)','var(--violet)','var(--blue)','var(--rose)'];
+var FEED_ICONS = {tool:'⚡',file:'📄',task:'✦',message:'💬',thinking:'💭',error:'⚠'};
 
-/* ========================================================
-   AMC NAMESPACE
-   ======================================================== */
+/* ════════════════════════════════════════════════════════
+   AMC.State
+   ════════════════════════════════════════════════════════ */
 var AMC = {};
 
-/* --------------------------------------------------------
-   AMC.State
-   -------------------------------------------------------- */
 AMC.State = {
   sessions: {},
   order: [],
   active: null,
   screen: 'desktop',
   maxPanes: {laptop:2, desktop:3, ultrawide:4},
-  tiles: 2,
+  tiles: 1,
   panes: [],
 
   getSession: function(sid) { return this.sessions[sid]; },
@@ -382,9 +401,7 @@ AMC.State = {
     if (this.active === sid) this.active = this.order[0] || '';
     var self = this;
     this.panes.forEach(function(p){ if (p.sid === sid) p.sid = self.active; });
-    if (sid === 'filewatch') {
-      AMC.Data.stopFileWatch();
-    }
+    if (sid === 'filewatch') AMC.Data.stopFileWatch();
   },
 
   fixPanes: function() {
@@ -413,17 +430,98 @@ AMC.State = {
     var sess = this.sessions[sid];
     if (!sess) return;
     sess.events.push(ev);
-    if (sess.events.length > 100) sess.events = sess.events.slice(-100);
+    if (sess.events.length > 200) sess.events = sess.events.slice(-200);
   }
 };
 
-/* --------------------------------------------------------
-   AMC.Data  — File watch & auto-detect
-   -------------------------------------------------------- */
+/* ════════════════════════════════════════════════════════
+   AMC.Data  —  File watch, validation, auto-detect
+   ════════════════════════════════════════════════════════ */
 AMC.Data = {
   _fwIv: null,
   _fwRemoved: false,
   _errTimer: null,
+
+  /* F-060: validate + normalise incoming state JSON */
+  validateState: function(d) {
+    if (typeof d !== 'object' || d === null || Array.isArray(d)) {
+      throw new Error('State root must be a JSON object');
+    }
+    var safeStr = function(v, fb) { return typeof v === 'string' ? v.slice(0, 2000) : (fb || ''); };
+    var safeInt = function(v, fb) { var n = parseInt(v); return isNaN(n) ? (fb||0) : Math.max(0, n); };
+    var VALID_STATUSES = {agent:['leader','working','thinking','idle','error'], stage:['completed','active','pending'], task:['backlog','in-progress','review','done'], event:['tool','file','task','message','thinking','error']};
+
+    var out = {
+      project: safeStr(d.project, 'Unknown Project'),
+      currentStageIdx: Math.min(7, safeInt(d.currentStageIdx, 0)),
+      totalTasks: safeInt(d.totalTasks, 0),
+      completedTasks: safeInt(d.completedTasks, 0),
+      stages: [], agents: [], events: [], tasks: [],
+      meta: (d.meta && typeof d.meta === 'object') ? d.meta : null
+    };
+
+    if (Array.isArray(d.stages)) {
+      out.stages = d.stages.slice(0, 8).map(function(s) {
+        return {
+          name: safeStr(s.name),
+          desc: safeStr(s.desc),
+          status: VALID_STATUSES.stage.includes(s.status) ? s.status : 'pending'
+        };
+      });
+    }
+
+    if (Array.isArray(d.agents)) {
+      out.agents = d.agents.slice(0, 30).map(function(a) {
+        var m = (a.metrics && typeof a.metrics === 'object') ? a.metrics : {};
+        return {
+          id: safeStr(a.id),
+          name: safeStr(a.name, 'Agent'),
+          role: safeStr(a.role),
+          type: safeStr(a.type, 'backend'),
+          status: VALID_STATUSES.agent.includes(a.status) ? a.status : 'idle',
+          icon: safeStr(a.icon, '⚙️'),
+          task: safeStr(a.task),
+          taskId: a.taskId ? safeStr(a.taskId) : null,
+          metrics: {
+            ctx: safeStr(m.ctx, '0%'),
+            cost: safeStr(m.cost, '$0.00'),
+            msgs: safeInt(m.msgs, 0)
+          },
+          lastHeartbeat: (typeof a.lastHeartbeat === 'number') ? a.lastHeartbeat : null
+        };
+      });
+    }
+
+    if (Array.isArray(d.events)) {
+      out.events = d.events.slice(0, 300).map(function(e) {
+        return {
+          agent: safeStr(e.agent),
+          type: VALID_STATUSES.event.includes(e.type) ? e.type : 'message',
+          text: safeStr(e.text),
+          file: e.file ? safeStr(e.file) : null,
+          timestamp: safeStr(e.timestamp)
+        };
+      });
+    }
+
+    if (Array.isArray(d.tasks)) {
+      out.tasks = d.tasks.slice(0, 200).map(function(t) {
+        return {
+          id: safeStr(t.id),
+          title: safeStr(t.title),
+          status: VALID_STATUSES.task.includes(t.status) ? t.status : 'backlog',
+          assignee: safeStr(t.assignee),
+          priority: ['high','medium','low'].includes(t.priority) ? t.priority : 'medium',
+          deps: Array.isArray(t.deps) ? t.deps.map(function(x){ return safeStr(x); }) : [],
+          rec: !!t.rec,
+          recWhy: safeStr(t.recWhy),
+          depOf: t.depOf ? safeStr(t.depOf) : null,
+          _auto: false, _prevSt: null
+        };
+      });
+    }
+    return out;
+  },
 
   startFileWatch: function(path) {
     var self = this;
@@ -432,7 +530,7 @@ AMC.Data = {
     function poll() {
       self.fetchState(path)
         .then(function(data){ self.mergeState(data); AMC.UI.dismissError(); })
-        .catch(function(err){ AMC.UI.showError('File watch error: ' + err.message + ' — retrying\u2026'); });
+        .catch(function(err){ AMC.UI.showError('File watch: ' + err.message + ' — retrying\u2026'); });
     }
     poll();
     this._fwIv = setInterval(poll, 3000);
@@ -448,6 +546,8 @@ AMC.Data = {
     return fetch(url).then(function(r) {
       if (!r.ok) throw new Error('HTTP ' + r.status);
       return r.json();
+    }).then(function(raw) {
+      return AMC.Data.validateState(raw);
     });
   },
 
@@ -458,47 +558,36 @@ AMC.Data = {
       var fw = {
         id: sid, name: d.project || 'File Watch', project: d.project || 'File Watch',
         stageIdx: 0, total: 0, done: 0, stages: [], agents: [], tasks: [], events: [],
-        feedFilter: 'all', _prev: {}, _approved: {}
+        feedFilter: 'all', _prev: {}, _approved: {}, _lastUpdate: Date.now()
       };
       AMC.State.sessions[sid] = fw;
       AMC.State.order.push(sid);
       AMC.State.active = sid;
-      /* Assign first pane to file-watch */
       if (AMC.State.panes.length) AMC.State.panes[0].sid = sid;
     }
+
     var s = AMC.State.sessions[sid];
+    s._lastUpdate = Date.now();
     s.name = d.project || s.name;
     s.project = d.project || s.project;
     s.stageIdx = d.currentStageIdx || 0;
     s.total = d.totalTasks || 0;
     s.done = d.completedTasks || 0;
-    if (d.stages) s.stages = d.stages;
-    if (d.agents) {
+    if (d.stages.length) s.stages = d.stages;
+    if (d.agents.length) {
       s.agents = d.agents.map(function(a) {
-        return {id:a.id, name:a.name, role:a.role, type:a.type||'backend',
-          status:a.status||'idle', icon:a.icon||'\u2699\uFE0F',
-          task:a.task||'', taskId:a.taskId||null,
-          m:a.metrics||{ctx:'0%',cost:'$0',msgs:0}};
+        return {id:a.id, name:a.name, role:a.role, type:a.type,
+          status:a.status, icon:a.icon, task:a.task, taskId:a.taskId,
+          m:a.metrics, lastHeartbeat:a.lastHeartbeat};
       });
     }
-    if (d.tasks) {
-      var prev = s._prev || {};
-      var approved = s._approved || {};
+    if (d.tasks.length) {
+      var prev = s._prev || {}, approved = s._approved || {};
       s.tasks = d.tasks.map(function(t) {
-        var m = {id:t.id, title:t.title||'', status:t.status||'backlog',
-          assignee:t.assignee||'', priority:t.priority||'medium',
-          rec:false, recWhy:'', deps:t.deps||[], depOf:t.depOf||null,
-          _auto:false, _prevSt:null};
-        if (t.rec) {
-          m.rec = true; m.recWhy = t.recWhy || 'Agent requests permission'; m._auto = false;
-        } else if (prev[t.id] && prev[t.id] !== m.status && !approved[t.id+'_'+m.status]) {
-          if (m.status === 'done') {
-            m.rec = true; m.recWhy = 'Auto-completed by agent \u2192 confirm done';
-            m._auto = true; m._prevSt = prev[t.id];
-          } else if (prev[t.id] === 'backlog' && m.status === 'in-progress') {
-            m.rec = true; m.recWhy = 'Agent started this task \u2192 approve?';
-            m._auto = true; m._prevSt = prev[t.id];
-          }
+        var m = Object.assign({}, t);
+        if (!t.rec && prev[t.id] && prev[t.id] !== t.status && !approved[t.id+'_'+t.status]) {
+          if (t.status === 'done') { m.rec = true; m.recWhy = 'Auto-completed \u2192 confirm done'; m._auto = true; m._prevSt = prev[t.id]; }
+          else if (prev[t.id] === 'backlog' && t.status === 'in-progress') { m.rec = true; m.recWhy = 'Agent started task \u2192 approve?'; m._auto = true; m._prevSt = prev[t.id]; }
         }
         return m;
       });
@@ -507,54 +596,85 @@ AMC.Data = {
       s.done = s.tasks.filter(function(t){ return t.status === 'done'; }).length;
       s.total = s.tasks.length;
     }
-    if (d.events) {
-      s.events = d.events.map(function(ev) {
-        return {agent:ev.agent||'', type:ev.type||'message',
-          text:(ev.text||'').replace(/<[^>]*>/g,''), timestamp:ev.timestamp||ts()};
-      });
-    }
+    if (d.events.length) s.events = d.events;
     AMC.Render.render();
   },
 
-  /* Try agent_state.json; if found, add file-watch session alongside sims */
   autoDetect: function(path) {
     var self = this;
     fetch((path||'agent_state.json') + '?_t=' + Date.now())
       .then(function(r){ if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
-      .then(function(data){
-        /* File found — start live session */
+      .then(function(raw){
+        AMC.Data.validateState(raw); // schema check
         self.startFileWatch(path || 'agent_state.json');
         var btn = document.getElementById('fw-toggle');
         var stEl = document.getElementById('fw-status');
         if (btn) { btn.textContent = 'STOP'; btn.className = 'fw-btn fw-btn-stop'; }
         if (stEl) stEl.textContent = 'Watching\u2026';
       })
-      .catch(function(){
-        /* No file — simulation already running, nothing to do */
-      });
+      .catch(function(){ /* no file — stay empty */ });
   }
 };
 
-/* --------------------------------------------------------
-   AMC.Render  — All rendering
-   -------------------------------------------------------- */
+/* ════════════════════════════════════════════════════════
+   AMC.Render  —  All rendering
+   ════════════════════════════════════════════════════════ */
 AMC.Render = {
   render: function() {
     this.renderTabs();
     this.renderScreenPicker();
     this.renderTilePicker();
     this.renderWorkspace();
+    this.renderCostWidget();
+  },
+
+  /* F-062: connection status helper */
+  _connStatus: function(sess) {
+    if (!sess._lastUpdate) return 'unknown';
+    var ms = Date.now() - sess._lastUpdate;
+    if (ms < 30000) return 'connected';
+    if (ms < 60000) return 'stale';
+    return 'disconnected';
+  },
+
+  /* F-064: cost widget */
+  renderCostWidget: function() {
+    var widget = document.getElementById('cost-widget');
+    if (!widget) return;
+    var total = 0;
+    AMC.State.order.forEach(function(sid) {
+      var sess = AMC.State.sessions[sid];
+      if (!sess || !sess.agents) return;
+      sess.agents.forEach(function(ag) {
+        var c = parseFloat(((ag.m || ag.metrics || {}).cost || '0').replace(/[^0-9.]/g,''));
+        if (!isNaN(c)) total += c;
+      });
+    });
+    if (total > 0) {
+      widget.style.display = 'flex';
+      clear(widget);
+      widget.appendChild(txt('$'));
+      widget.appendChild(h('span', {cls:'cost-val', text:total.toFixed(2)}));
+    } else {
+      widget.style.display = 'none';
+    }
   },
 
   renderTabs: function() {
     var c = document.getElementById('session-tabs');
     if (!c || _dropdownOpen) return;
     clear(c);
+    var self = this;
     AMC.State.order.forEach(function(sid, i) {
       var sess = AMC.State.sessions[sid];
+      var status = self._connStatus(sess);
       var tab = h('div', {cls:'session-tab'+(sid===AMC.State.active?' active':''),
         onclick: function(){ AMC.State.active = sid; AMC.State.fixPanes(); AMC.Render.render(); }});
-      tab.appendChild(h('span', {text:'\u25CF ', style:{color:ACCENT_CYCLE[i%ACCENT_CYCLE.length],fontSize:'0.7em'}}));
+      /* F-062: colored status dot */
+      var dot = h('span', {cls:'conn-dot '+(status==='unknown'?'unknown':status),
+        title:'Data source: '+status+(sess._lastUpdate ? ' ('+timeSince(new Date(sess._lastUpdate))+')' : '')});
+      tab.appendChild(dot);
+      tab.appendChild(h('span', {text:'\u25CF ', style:{color:ACCENT_CYCLE[i%ACCENT_CYCLE.length],fontSize:'0.65em'}}));
       tab.appendChild(txt(sess.name));
       if (AMC.State.order.length > 1 || sid === 'filewatch') {
         var cl = h('span', {cls:'tab-close', text:'\u00D7',
@@ -579,12 +699,10 @@ AMC.Render = {
     var mx = AMC.State.maxPanes[AMC.State.screen];
     for (var i=1; i<=4; i++) {
       (function(n){
-        var disabled = n > mx;
-        c.appendChild(h('div', {cls:'picker-btn'+(AMC.State.tiles===n?' active':'')+(disabled?' disabled':''),
+        var dis = n > mx;
+        c.appendChild(h('div', {cls:'picker-btn'+(AMC.State.tiles===n?' active':'')+(dis?' disabled':''),
           text:'|'.repeat(n),
-          onclick: disabled ? null : function(){
-            AMC.State.setTiles(n); AMC.Render.render();
-          }}));
+          onclick: dis ? null : function(){ AMC.State.setTiles(n); AMC.Render.render(); }}));
       })(i);
     }
   },
@@ -592,24 +710,21 @@ AMC.Render = {
   renderWorkspace: function() {
     var ws = document.getElementById('workspace'); clear(ws);
     if (!AMC.State.order.length) {
-      var empty = h('div', {style:{display:'flex',alignItems:'center',justifyContent:'center',flex:'1',
-        flexDirection:'column',gap:'12px',color:'var(--text-4)',fontFamily:'var(--mono)',fontSize:'var(--font-xs)'}});
-      empty.appendChild(h('div', {text:'\u25C7', style:{fontSize:'2em',color:'var(--border-3)'}}));
-      empty.appendChild(h('div', {text:'No sessions. Click \u201C+ Add\u201D to load a project.'}));
+      var empty = h('div', {cls:'empty-state',style:{flex:'1',display:'flex'}});
+      empty.appendChild(h('div', {cls:'empty-state-icon', text:'\u25C7'}));
+      empty.appendChild(h('div', {text:'No sessions. Click \u201C+ Add\u201D or start File Watch.'}));
       ws.appendChild(empty);
       return;
     }
     AMC.State.panes.forEach(function(pane, idx) {
       var p = h('div', {cls:'pane'});
       var hdr = h('div', {cls:'pane-header'});
-      /* Session selector */
       var sSel = h('select', {onchange:function(e){ AMC.State.panes[idx].sid = e.target.value; AMC.Render.render(); }});
       AMC.State.order.forEach(function(sid){
         var o = h('option', {text:AMC.State.sessions[sid].name}); o.value = sid;
         if (sid === pane.sid) o.selected = true;
         sSel.appendChild(o);
       });
-      /* View selector */
       var vSel = h('select', {onchange:function(e){ AMC.State.panes[idx].view = e.target.value; AMC.Render.render(); }});
       [{v:'agents',l:'\u25CE Agents'},{v:'kanban',l:'\u25A6 Kanban'}].forEach(function(x){
         var o = h('option', {text:x.l}); o.value = x.v;
@@ -634,35 +749,36 @@ AMC.Render = {
     var pct = sess.total > 0 ? Math.round((sess.done / sess.total) * 100) : 0;
     var banner = h('div', {cls:'build-banner'});
     var ring = h('div', {cls:'progress-ring'});
-    var r = 22, circ = 2 * Math.PI * r, off = circ - (pct/100) * circ;
+    var r = 22, circ = 2*Math.PI*r, off = circ*(1 - pct/100);
     var sv = svgNS('svg', {viewBox:'0 0 56 56'});
     sv.appendChild(svgNS('circle', {cx:'28',cy:'28',r:String(r),'class':'ring-bg'}));
     sv.appendChild(svgNS('circle', {cx:'28',cy:'28',r:String(r),'class':'ring-fg',
-      'stroke-dasharray':String(circ.toFixed(2)),'stroke-dashoffset':String(off.toFixed(2))}));
+      'stroke-dasharray':circ.toFixed(2),'stroke-dashoffset':off.toFixed(2)}));
     ring.appendChild(sv);
     ring.appendChild(h('div', {cls:'progress-pct', text:pct+'%'}));
     banner.appendChild(ring);
     var stats = h('div', {cls:'build-stats'});
-    stats.appendChild(h('div', {cls:'build-project', text:sess.project}));
-    stats.appendChild(h('div', {cls:'build-detail',
-      text:'Stage '+(sess.stageIdx+1)+'/'+STAGES.length+' \u2022 '+sess.done+'/'+sess.total+' tasks'}));
-    var metrics = h('div', {cls:'build-metrics'});
-    var activeAgents = sess.agents.filter(function(a){ return a.status === 'working' || a.status === 'leader'; });
-    var inProgress = sess.tasks.filter(function(t){ return t.status === 'in-progress'; }).length;
-    var pending = sess.tasks.filter(function(t){ return t.status !== 'done'; }).length;
-    [[String(activeAgents.length),'Active'],[String(inProgress),'In Progress'],[String(pending),'Remaining']].forEach(function(pair){
+    var activeSt = (sess.stages && sess.stages[sess.stageIdx]) ? sess.stages[sess.stageIdx] : null;
+    stats.appendChild(h('div', {cls:'build-project', text:sess.project || sess.name}));
+    if (activeSt) stats.appendChild(h('div', {cls:'build-stage', text:activeSt.name}));
+    stats.appendChild(h('div', {cls:'build-detail', text:'Stage '+(sess.stageIdx+1)+'/8 \u00B7 '+sess.done+'/'+sess.total+' tasks'}));
+    var mRow = h('div', {cls:'build-metrics'});
+    var activeCount = (sess.agents||[]).filter(function(a){ return a.status==='working'||a.status==='leader'; }).length;
+    var inProg = (sess.tasks||[]).filter(function(t){ return t.status==='in-progress'; }).length;
+    var remaining = (sess.tasks||[]).filter(function(t){ return t.status!=='done'; }).length;
+    [[String(activeCount),'Active'],[String(inProg),'In Progress'],[String(remaining),'Remaining']].forEach(function(p){
       var m = h('div', {cls:'build-metric'});
-      m.appendChild(h('div', {cls:'build-metric-val', text:pair[0]}));
-      m.appendChild(h('div', {cls:'build-metric-lbl', text:pair[1]}));
-      metrics.appendChild(m);
+      m.appendChild(h('div', {cls:'build-metric-val', text:p[0]}));
+      m.appendChild(h('div', {cls:'build-metric-lbl', text:p[1]}));
+      mRow.appendChild(m);
     });
-    stats.appendChild(metrics);
+    stats.appendChild(mRow);
     banner.appendChild(stats);
     container.appendChild(banner);
 
     /* Pipeline */
     var pipe = h('div', {cls:'pipeline'});
-    sess.stages.forEach(function(st){
+    (sess.stages || []).forEach(function(st){
       var pill = h('div', {cls:'stage-pill '+(st.status||'pending')});
       pill.appendChild(h('span', {cls:'stage-dot'}));
       pill.appendChild(txt(' '+st.name));
@@ -672,39 +788,50 @@ AMC.Render = {
 
     /* Agent Cards */
     var grid = h('div', {cls:'agents-grid'});
-    sess.agents.forEach(function(ag){
+    (sess.agents || []).forEach(function(ag){
+      var m = ag.m || ag.metrics || {};
       var card = h('div', {cls:'agent-card status-'+ag.status});
       var top = h('div', {cls:'agent-top'});
-      top.appendChild(h('span', {cls:'agent-icon', text:ag.icon}));
+      top.appendChild(h('span', {cls:'agent-icon', text:ag.icon||'⚙️'}));
       var info = h('div', {cls:'agent-info'});
       info.appendChild(h('div', {cls:'agent-name', text:ag.name}));
       info.appendChild(h('div', {cls:'agent-role', text:ag.role}));
       top.appendChild(info);
       var stEl = h('span', {cls:'agent-status '+ag.status, text:ag.status});
-      if (ag.status === 'working' || ag.status === 'thinking') {
+      if (ag.status==='working'||ag.status==='thinking') {
         var dots = h('span', {cls:'typing-dots'});
-        dots.appendChild(h('span',{text:'.'})); dots.appendChild(h('span',{text:'.'})); dots.appendChild(h('span',{text:'.'}));
+        ['.','.','.'].forEach(function(d){ dots.appendChild(h('span',{text:d})); });
         stEl.appendChild(dots);
       }
       top.appendChild(stEl);
       card.appendChild(top);
-      var taskText = ag.task;
-      if (ag.taskId) {
+      var taskText = ag.task || '';
+      if (ag.taskId && sess.tasks) {
         for (var ti=0; ti<sess.tasks.length; ti++) {
           if (sess.tasks[ti].id === ag.taskId) { taskText = sess.tasks[ti].title; break; }
         }
       }
       card.appendChild(h('div', {cls:'agent-task', text:taskText}));
       var met = h('div', {cls:'agent-metrics'});
-      met.appendChild(h('span', {text:'CTX '+ag.m.ctx}));
-      met.appendChild(h('span', {text:ag.m.cost}));
-      met.appendChild(h('span', {text:ag.m.msgs+' msgs'}));
+      met.appendChild(h('span', {text:'CTX '+m.ctx}));
+      met.appendChild(h('span', {cls:'agent-metric-cost', text:m.cost}));
+      met.appendChild(h('span', {text:(m.msgs||0)+' msgs'}));
       card.appendChild(met);
+      /* F-063: heartbeat indicator */
+      var hbTs = ag.lastHeartbeat || (sess._lastUpdate || null);
+      if (hbTs) {
+        var elapsed = Date.now() - hbTs;
+        var hbCls = elapsed < 30000 ? 'fresh' : elapsed < 60000 ? 'stale' : 'dead';
+        var hbLabel = elapsed < 30000 ? 'Live' : elapsed < 60000 ? Math.round(elapsed/1000)+'s ago' : 'Offline';
+        var hbRow = h('div', {cls:'agent-heartbeat'});
+        hbRow.appendChild(h('span', {cls:'hb-dot '+hbCls}));
+        hbRow.appendChild(txt(hbLabel));
+        card.appendChild(hbRow);
+      }
       grid.appendChild(card);
     });
     container.appendChild(grid);
 
-    /* Feed */
     AMC.Render.renderFeed(container, sess);
   },
 
@@ -724,9 +851,10 @@ AMC.Render = {
     var evts = sess.feedFilter === 'all'
       ? sess.events
       : sess.events.filter(function(e){ return e.type === sess.feedFilter; });
-    evts.slice(-50).reverse().forEach(function(ev){
+    evts.slice(-100).reverse().forEach(function(ev){
       var item = h('div', {cls:'feed-item feed-type-'+ev.type});
       item.appendChild(h('span', {cls:'feed-time', text:ev.timestamp||''}));
+      item.appendChild(h('span', {cls:'feed-icon', text:FEED_ICONS[ev.type]||'·'}));
       item.appendChild(h('span', {cls:'feed-agent', text:ev.agent}));
       item.appendChild(h('span', {cls:'feed-text', text:ev.text}));
       list.appendChild(item);
@@ -739,7 +867,7 @@ AMC.Render = {
     var kb = h('div', {cls:'kanban'});
     COLS.forEach(function(col){
       var colEl = h('div', {cls:'kanban-col'});
-      var tasks = sess.tasks.filter(function(t){ return t.status === col; });
+      var tasks = (sess.tasks||[]).filter(function(t){ return t.status===col; });
       var colHdr = h('div', {cls:'kanban-col-header'});
       colHdr.appendChild(h('span', {text:COL_LABELS[col]}));
       colHdr.appendChild(h('span', {cls:'kanban-count', text:String(tasks.length)}));
@@ -751,28 +879,25 @@ AMC.Render = {
         e.preventDefault(); this.classList.remove('drag-over');
         var tid = e.dataTransfer.getData('text/plain');
         var srcSid = e.dataTransfer.getData('session');
-        if (srcSid !== sess.id) return; /* cross-session drop blocked */
+        if (srcSid !== sess.id) return;
         var task = null;
-        for (var i=0; i<sess.tasks.length; i++) { if (sess.tasks[i].id === tid) { task = sess.tasks[i]; break; } }
+        for (var i=0; i<sess.tasks.length; i++) { if (sess.tasks[i].id===tid) { task=sess.tasks[i]; break; } }
         if (!task) return;
         var old = task.status; task.status = col;
-        if (col === 'done' && old !== 'done') sess.done++;
-        if (old === 'done' && col !== 'done') sess.done--;
-        if (col === 'in-progress' && old === 'backlog') pullDependencies(sess, task);
+        if (col==='done'&&old!=='done') sess.done++;
+        if (old==='done'&&col!=='done') sess.done--;
+        if (col==='in-progress'&&old==='backlog') pullDependencies(sess, task);
         syncAgentStatus(sess);
         AMC.State.logEvent(sess.id, {agent:'You', type:'task', text:'Moved "'+task.title+'" \u2192 '+COL_LABELS[col], timestamp:ts()});
         AMC.Render.render();
       });
       tasks.forEach(function(task){
         var activeAg = null;
-        for (var ai=0; ai<sess.agents.length; ai++) { if (sess.agents[ai].taskId === task.id) { activeAg = sess.agents[ai]; break; } }
-        var isAuto = task._auto;
-        var isDep = task.depOf;
+        for (var ai=0; ai<(sess.agents||[]).length; ai++) { if (sess.agents[ai].taskId===task.id) { activeAg=sess.agents[ai]; break; } }
+        var isAuto = task._auto, isDep = task.depOf;
         var cls = 'kanban-card'
-          + (task.rec && !isAuto ? ' recommended' : '')
-          + (task.rec && isAuto ? ' transition' : '')
-          + (isDep && !task.rec ? ' dependency' : '')
-          + (activeAg ? ' agent-active' : '');
+          +(task.rec&&!isAuto?' recommended':'')+(task.rec&&isAuto?' transition':'')
+          +(isDep&&!task.rec?' dependency':'')+(activeAg?' agent-active':'');
         var card = h('div', {cls:cls, draggable:true, data:{taskId:task.id}});
         card.addEventListener('dragstart', function(e){
           e.dataTransfer.setData('text/plain', task.id);
@@ -783,7 +908,7 @@ AMC.Render = {
         card.appendChild(h('div', {cls:'kanban-card-title', text:task.title}));
         var meta = h('div', {cls:'kanban-card-meta'});
         meta.appendChild(h('span', {cls:'kanban-card-assignee', text:task.assignee}));
-        var pc = task.priority==='high' ? 'priority-high' : task.priority==='medium' ? 'priority-medium' : 'priority-low';
+        var pc = task.priority==='high'?'priority-high':task.priority==='medium'?'priority-medium':'priority-low';
         meta.appendChild(h('span', {cls:'kanban-card-priority '+pc, text:task.priority.toUpperCase()}));
         card.appendChild(meta);
         if (activeAg) {
@@ -795,76 +920,68 @@ AMC.Render = {
         if (task.deps && task.deps.length) {
           var depTags = h('div', {cls:'kanban-card-deps'});
           task.deps.forEach(function(depId){
-            var dep = sess.tasks.filter(function(t2){ return t2.id===depId; })[0];
+            var dep = (sess.tasks||[]).filter(function(t2){ return t2.id===depId; })[0];
             if (dep) depTags.appendChild(h('span', {cls:'dep-tag', text:'\u2190 '+dep.title}));
           });
           card.appendChild(depTags);
         }
-        /* Dependency pull badge */
         if (isDep && !task.rec) {
           card.appendChild(h('div', {cls:'dep-badge', text:'\uD83D\uDD17 Required for: '+isDep}));
           var btns = h('div', {cls:'approval-btns'});
           (function(t, s){
             btns.appendChild(h('button', {cls:'btn-approve', text:'\u2713 Allow', onclick:function(e){
-              e.stopPropagation(); t.depOf = null; t.status = 'in-progress';
-              if (s._prev) s._prev[t.id] = t.status;
-              if (s._approved) s._approved[t.id+'_'+t.status] = true;
+              e.stopPropagation(); t.depOf=null; t.status='in-progress';
+              if (s._prev) s._prev[t.id]=t.status;
+              if (s._approved) s._approved[t.id+'_'+t.status]=true;
               syncAgentStatus(s);
-              AMC.State.logEvent(s.id, {agent:'You', type:'task', text:'Allowed: '+t.title+' \u2192 In Progress (dependency)', timestamp:ts()});
+              AMC.State.logEvent(s.id, {agent:'You', type:'task', text:'Allowed: '+t.title+' \u2192 In Progress (dep)', timestamp:ts()});
               AMC.Render.render();
             }}));
             btns.appendChild(h('button', {cls:'btn-reject', text:'\u2717 Deny', onclick:function(e){
-              e.stopPropagation(); t.depOf = null;
+              e.stopPropagation(); t.depOf=null;
               AMC.State.logEvent(s.id, {agent:'You', type:'task', text:'Denied dependency pull: '+t.title, timestamp:ts()});
               AMC.Render.render();
             }}));
           })(task, sess);
           card.appendChild(btns);
         }
-        /* Claude permission / transition badge */
         if (task.rec) {
-          var badge = isAuto
+          var badge = task._auto
             ? h('div', {cls:'transition-badge', text:'\uD83D\uDD04 Transition: '+task.recWhy})
             : h('div', {cls:'recommend-badge', text:'\u26A1 Permission: '+task.recWhy});
           card.appendChild(badge);
           var btns2 = h('div', {cls:'approval-btns'});
           (function(t, s){
-            btns2.appendChild(h('button', {cls:'btn-approve', text:'\u2713 '+(isAuto?'Confirm':'Allow'), onclick:function(e){
+            btns2.appendChild(h('button', {cls:'btn-approve', text:'\u2713 '+(t._auto?'Confirm':'Allow'), onclick:function(e){
               e.stopPropagation();
               if (t._auto) {
-                t.rec = false; t._auto = false;
-                if (s._approved) s._approved[t.id+'_'+t.status] = true;
-                if (s._prev) s._prev[t.id] = t.status;
+                t.rec=false; t._auto=false;
+                if (s._approved) s._approved[t.id+'_'+t.status]=true;
+                if (s._prev) s._prev[t.id]=t.status;
                 syncAgentStatus(s);
                 AMC.State.logEvent(s.id, {agent:'You', type:'task', text:'Confirmed: '+t.title+' \u2192 '+COL_LABELS[t.status], timestamp:ts()});
               } else {
-                t.rec = false;
-                if (s._approved) s._approved[t.id+'_'+t.status] = true;
-                var ci = COLS.indexOf(t.status);
-                if (ci < COLS.length-1) {
-                  if (t.status==='done') s.done--;
-                  t.status = COLS[ci+1];
-                  if (t.status==='done') s.done++;
-                }
-                if (s._prev) s._prev[t.id] = t.status;
-                if (s._approved) s._approved[t.id+'_'+t.status] = true;
+                t.rec=false;
+                if (s._approved) s._approved[t.id+'_'+t.status]=true;
+                var ci=COLS.indexOf(t.status);
+                if (ci<COLS.length-1) { if(t.status==='done')s.done--; t.status=COLS[ci+1]; if(t.status==='done')s.done++; }
+                if (s._prev) s._prev[t.id]=t.status;
+                if (s._approved) s._approved[t.id+'_'+t.status]=true;
                 syncAgentStatus(s);
                 AMC.State.logEvent(s.id, {agent:'You', type:'task', text:'Allowed: '+t.title+' \u2192 '+COL_LABELS[t.status], timestamp:ts()});
               }
               AMC.Render.render();
             }}));
-            btns2.appendChild(h('button', {cls:'btn-reject', text:'\u2717 '+(isAuto?'Revert':'Deny'), onclick:function(e){
+            btns2.appendChild(h('button', {cls:'btn-reject', text:'\u2717 '+(t._auto?'Revert':'Deny'), onclick:function(e){
               e.stopPropagation();
-              if (t._auto && t._prevSt) {
-                if (t.status==='done') s.done--;
-                t.status = t._prevSt;
-                if (t.status==='done') s.done++;
-                t.rec = false; t._auto = false;
-                if (s._prev) s._prev[t.id] = t.status;
+              if (t._auto&&t._prevSt) {
+                if(t.status==='done')s.done--; t.status=t._prevSt; if(t.status==='done')s.done++;
+                t.rec=false; t._auto=false;
+                if(s._prev) s._prev[t.id]=t.status;
                 syncAgentStatus(s);
                 AMC.State.logEvent(s.id, {agent:'You', type:'task', text:'Reverted: '+t.title+' \u2192 '+COL_LABELS[t.status], timestamp:ts()});
               } else {
-                t.rec = false;
+                t.rec=false;
                 AMC.State.logEvent(s.id, {agent:'You', type:'task', text:'Denied: '+t.title, timestamp:ts()});
               }
               AMC.Render.render();
@@ -881,13 +998,15 @@ AMC.Render = {
   }
 };
 
-/* --------------------------------------------------------
-   AMC.UI  — UI chrome, modals, clock, keyboard
-   -------------------------------------------------------- */
+/* ════════════════════════════════════════════════════════
+   AMC.UI  —  Clock, keyboard, modals, error, help
+   ════════════════════════════════════════════════════════ */
 AMC.UI = {
   _clockIv: null,
+  _statusIv: null,
   _helpOpen: false,
   _pickedScreen: 'desktop',
+  _errTimer: null,
 
   pickScreen: function(el, screen) {
     this._pickedScreen = screen;
@@ -898,8 +1017,8 @@ AMC.UI = {
   confirmScreen: function() {
     AMC.State.setScreen(this._pickedScreen);
     document.getElementById('first-run-modal').style.display = 'none';
-    /* Auto-detect file watch after modal dismissed */
     AMC.Data.autoDetect('agent_state.json');
+    AMC.Render.render();
   },
 
   showError: function(msg) {
@@ -908,7 +1027,6 @@ AMC.UI = {
     if (!banner || !msgEl) return;
     msgEl.textContent = '\u26A0 ' + msg;
     banner.style.display = 'flex';
-    /* Auto-dismiss after 10s */
     var self = this;
     if (this._errTimer) clearTimeout(this._errTimer);
     this._errTimer = setTimeout(function(){ self.dismissError(); }, 10000);
@@ -929,40 +1047,36 @@ AMC.UI = {
   initClock: function() {
     function update() {
       var el = document.getElementById('clock');
-      if (!el) return;
-      el.textContent = new Date().toLocaleTimeString('en-GB', {hour12:false})
-        + ' \u00B7 '
-        + new Date().toLocaleDateString('en-GB', {day:'2-digit',month:'short',year:'numeric'});
+      if (el) el.textContent = new Date().toLocaleTimeString('en-GB',{hour12:false})
+        +' \u00B7 '+new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
     }
     update();
     this._clockIv = setInterval(update, 1000);
   },
 
+  /* F-062: refresh connection dots every 15s */
+  initConnectionStatusTimer: function() {
+    this._statusIv = setInterval(function(){
+      if (AMC.State.order.length) AMC.Render.renderTabs();
+    }, 15000);
+  },
+
   initKeyboard: function() {
     document.addEventListener('keydown', function(e) {
-      /* Skip if typing in an input/select */
       var tag = document.activeElement ? document.activeElement.tagName : '';
-      if (tag === 'INPUT' || tag === 'SELECT' || tag === 'TEXTAREA') return;
-      /* Skip if modal is open */
+      if (tag==='INPUT'||tag==='SELECT'||tag==='TEXTAREA') return;
       var modal = document.getElementById('first-run-modal');
       if (modal && modal.style.display !== 'none') return;
-
       switch (e.key) {
-        case '1': case '2': case '3': case '4':
-          var n = parseInt(e.key);
-          var mx = AMC.State.maxPanes[AMC.State.screen];
+        case '1':case '2':case '3':case '4':
+          var n = parseInt(e.key), mx = AMC.State.maxPanes[AMC.State.screen];
           if (n <= mx) { AMC.State.setTiles(n); AMC.Render.render(); }
           break;
-        case 'l': case 'L':
-          AMC.State.setScreen('laptop'); AMC.Render.render(); break;
-        case 'd': case 'D':
-          AMC.State.setScreen('desktop'); AMC.Render.render(); break;
-        case 'u': case 'U':
-          AMC.State.setScreen('ultrawide'); AMC.Render.render(); break;
-        case 'f': case 'F':
-          document.getElementById('filewatch-bar').classList.toggle('visible'); break;
-        case '?':
-          AMC.UI.toggleHelp(); break;
+        case 'l':case 'L': AMC.State.setScreen('laptop');    AMC.Render.render(); break;
+        case 'd':case 'D': AMC.State.setScreen('desktop');   AMC.Render.render(); break;
+        case 'u':case 'U': AMC.State.setScreen('ultrawide'); AMC.Render.render(); break;
+        case 'f':case 'F': document.getElementById('filewatch-bar').classList.toggle('visible'); break;
+        case '?': AMC.UI.toggleHelp(); break;
       }
     });
   },
@@ -973,14 +1087,12 @@ AMC.UI = {
       var stEl = document.getElementById('fw-status');
       var btn = document.getElementById('fw-toggle');
       if (AMC.Data._fwIv) {
-        /* Stop */
         AMC.Data.stopFileWatch();
         AMC.State.removeSession('filewatch');
         btn.textContent = 'START'; btn.className = 'fw-btn fw-btn-start';
         stEl.textContent = 'Idle';
         AMC.Render.render();
       } else {
-        /* Start */
         btn.textContent = 'STOP'; btn.className = 'fw-btn fw-btn-stop';
         stEl.textContent = 'Watching\u2026';
         AMC.Data.startFileWatch(path);
@@ -988,29 +1100,27 @@ AMC.UI = {
     });
     document.getElementById('error-dismiss').addEventListener('click', function(){ AMC.UI.dismissError(); });
     document.getElementById('help-btn').addEventListener('click', function(){ AMC.UI.toggleHelp(); });
-    /* Close help panel on outside click */
     document.addEventListener('click', function(e){
       if (!AMC.UI._helpOpen) return;
       var panel = document.getElementById('help-panel');
       var btn = document.getElementById('help-btn');
       if (panel && !panel.contains(e.target) && btn && !btn.contains(e.target)) {
-        AMC.UI._helpOpen = false;
-        panel.classList.remove('open');
+        AMC.UI._helpOpen = false; panel.classList.remove('open');
       }
     });
   }
 };
 
-/* --------------------------------------------------------
-   Shared helpers (dependency pull, agent sync)
-   -------------------------------------------------------- */
+/* ════════════════════════════════════════════════════════
+   SHARED HELPERS
+   ════════════════════════════════════════════════════════ */
 function pullDependencies(sess, movedTask) {
   if (!movedTask.deps || !movedTask.deps.length) return;
   var pulled = [];
   movedTask.deps.forEach(function(depId){
     for (var i=0; i<sess.tasks.length; i++) {
       var dep = sess.tasks[i];
-      if (dep.id === depId && dep.status === 'backlog') { dep.depOf = movedTask.title; pulled.push(dep); break; }
+      if (dep.id===depId && dep.status==='backlog') { dep.depOf=movedTask.title; pulled.push(dep); break; }
     }
   });
   if (pulled.length) {
@@ -1021,23 +1131,23 @@ function pullDependencies(sess, movedTask) {
 }
 
 function syncAgentStatus(sess) {
-  sess.agents.forEach(function(ag){
-    if (ag.type === 'leader') return;
-    var myTasks = sess.tasks.filter(function(t){ return t.assignee === ag.name; });
-    if (!myTasks.length) { ag.status = 'idle'; return; }
+  (sess.agents||[]).forEach(function(ag){
+    if (ag.type==='leader') return;
+    var myTasks = (sess.tasks||[]).filter(function(t){ return t.assignee===ag.name; });
+    if (!myTasks.length) { ag.status='idle'; return; }
     var inProg = myTasks.filter(function(t){ return t.status==='in-progress'; });
-    var inReview = myTasks.filter(function(t){ return t.status==='review'; });
+    var inRev  = myTasks.filter(function(t){ return t.status==='review'; });
     var allDone = myTasks.every(function(t){ return t.status==='done'; });
-    if (inProg.length) { ag.status = 'working'; ag.task = inProg[0].title; }
-    else if (inReview.length) { ag.status = 'thinking'; ag.task = 'Reviewing: '+inReview[0].title; }
-    else if (allDone) { ag.status = 'idle'; ag.task = 'All tasks completed'; }
-    else { ag.status = 'idle'; ag.task = 'Waiting for tasks to start'; }
+    if (inProg.length) { ag.status='working'; ag.task=inProg[0].title; }
+    else if (inRev.length) { ag.status='thinking'; ag.task='Reviewing: '+inRev[0].title; }
+    else if (allDone) { ag.status='idle'; ag.task='All tasks completed'; }
+    else { ag.status='idle'; ag.task='Waiting for tasks'; }
   });
 }
 
-/* --------------------------------------------------------
-   Session Dropdown (+ Add button)
-   -------------------------------------------------------- */
+/* ════════════════════════════════════════════════════════
+   SESSION DROPDOWN  (+ Add button)
+   ════════════════════════════════════════════════════════ */
 var _dropdownOpen = false;
 
 function openDropdown(e) {
@@ -1050,13 +1160,13 @@ function openDropdown(e) {
   var addBtn = document.querySelector('.add-session-btn');
   if (addBtn) {
     var rect = addBtn.getBoundingClientRect();
-    dd.style.top = (rect.bottom + 6) + 'px';
+    dd.style.top  = (rect.bottom + 6) + 'px';
     dd.style.right = (window.innerWidth - rect.right) + 'px';
   }
   document.body.appendChild(dd);
   setTimeout(function(){ document.addEventListener('click', _closeOnDocClick, true); }, 0);
   fetch('available_sessions.json')
-    .then(function(r){ if (!r.ok) throw new Error('Run discover_sessions.sh first'); return r.json(); })
+    .then(function(r){ if (!r.ok) throw new Error('Run discover_sessions.sh'); return r.json(); })
     .then(function(list){
       clear(dd);
       dd.appendChild(h('div', {cls:'session-dropdown-header', text:'Claude Code Sessions'}));
@@ -1067,16 +1177,14 @@ function openDropdown(e) {
         return;
       }
       available.forEach(function(s){
-        var alreadyAdded = AMC.State.order.some(function(sid){ return AMC.State.sessions[sid] && AMC.State.sessions[sid].name === s.name; });
+        var alreadyAdded = AMC.State.order.some(function(sid){ return AMC.State.sessions[sid] && AMC.State.sessions[sid].name===s.name; });
         var item = h('div', {cls:'session-dropdown-item'+(alreadyAdded?' disabled':'')});
         item.appendChild(h('span', {cls:'sdi-icon', text:'\uD83D\uDCC2'}));
         var info = h('div', {cls:'sdi-info'});
         info.appendChild(h('div', {cls:'sdi-name', text:s.name}));
         var meta = h('div', {cls:'sdi-meta'});
         meta.appendChild(h('span', {text:(s.conversations||0)+' conversations'}));
-        if (s.lastActive) {
-          meta.appendChild(h('span', {text:timeSince(new Date(s.lastActive))}));
-        }
+        if (s.lastActive) meta.appendChild(h('span', {text:timeSince(new Date(s.lastActive))}));
         if (alreadyAdded) meta.appendChild(h('span', {text:'\u2713 added', style:{color:'var(--green)'}}));
         info.appendChild(meta);
         item.appendChild(info);
@@ -1108,15 +1216,14 @@ function selectSession(s) {
   closeDropdown();
   var id = 'custom-' + Date.now();
   var sess = {
-    id: id, name: s.name, project: s.name,
-    stageIdx: 0, total: 0, done: 0,
-    stages: STAGES.map(function(st){ return {name:st, status:'pending'}; }),
-    agents: [{id:id+'-lead', name:'Lead Agent', role:'Project Lead', type:'leader',
+    id:id, name:s.name, project:s.name,
+    stageIdx:0, total:0, done:0,
+    stages:STAGES.map(function(st){ return {name:st, status:'pending'}; }),
+    agents:[{id:id+'-lead', name:'Lead Agent', role:'Project Lead', type:'leader',
       status:'leader', icon:'\uD83D\uDC51', task:'Monitoring project progress',
-      taskId: null, m:{ctx:'0%',cost:'$0.00',msgs:0}}],
-    tasks: [],
-    events: [{agent:'Lead Agent', type:'message', text:'Session added to Mission Control', timestamp:ts()}],
-    feedFilter: 'all', _prev: {}, _approved: {}
+      taskId:null, m:{ctx:'0%',cost:'$0.00',msgs:0}}],
+    tasks:[], events:[{agent:'Lead Agent', type:'message', text:'Session added to Mission Control', timestamp:ts()}],
+    feedFilter:'all', _prev:{}, _approved:{}, _lastUpdate:null
   };
   AMC.State.addSession(sess);
   AMC.State.panes[0].sid = id;
@@ -1124,7 +1231,7 @@ function selectSession(s) {
 }
 
 function timeSince(date) {
-  var secs = Math.floor((new Date() - date) / 1000);
+  var secs = Math.floor((new Date()-date)/1000);
   if (secs < 60) return 'just now';
   var mins = Math.floor(secs/60); if (mins < 60) return mins+'m ago';
   var hrs = Math.floor(mins/60); if (hrs < 24) return hrs+'h ago';
@@ -1132,26 +1239,21 @@ function timeSince(date) {
   return Math.floor(days/30)+'mo ago';
 }
 
-/* ========================================================
+/* ════════════════════════════════════════════════════════
    INIT
-   ======================================================== */
+   ════════════════════════════════════════════════════════ */
 (function init() {
   AMC.State.screen = 'desktop';
   AMC.State.tiles = 1;
   AMC.State.panes = [{sid:'', view:'agents'}];
 
-  /* Wire up UI */
   AMC.UI.initClock();
   AMC.UI.initKeyboard();
   AMC.UI.initFileWatchBar();
+  AMC.UI.initConnectionStatusTimer();
 
-  /* Show file watch bar by default */
   document.getElementById('filewatch-bar').classList.add('visible');
-
-  /* First render */
   AMC.Render.render();
-
-  /* Show first-run screen modal */
   document.getElementById('first-run-modal').style.display = 'flex';
 })();
 </script>
