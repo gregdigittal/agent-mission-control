@@ -76,7 +76,7 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;b
 
 /* ── Session Dropdown ─────────────────────────────────────────────────────── */
 .session-dropdown{position:fixed;min-width:300px;max-height:340px;overflow-y:auto;background:var(--bg-2);border:1px solid var(--border-1);border-radius:8px;box-shadow:0 8px 32px rgba(0,0,0,.5);z-index:200;padding:6px}
-.session-dropdown-item{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:6px;cursor:pointer;transition:all .12s;border:1px solid transparent}
+.session-dropdown-item{display:flex;align-items:center;gap:var(--density-gap);padding:var(--density-gap) var(--density-pad);border-radius:6px;cursor:pointer;transition:all .12s;border:1px solid transparent}
 .session-dropdown-item:hover{background:var(--bg-3);border-color:var(--border-1)}
 .session-dropdown-item .sdi-icon{font-size:1.2em;flex-shrink:0}
 .session-dropdown-item .sdi-info{flex:1;min-width:0}
@@ -124,14 +124,14 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;b
 
 /* ── Agent Cards ──────────────────────────────────────────────────────────── */
 .agents-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:var(--density-gap);margin-bottom:var(--density-gap)}
-.agent-card{background:var(--bg-2);border:1px solid var(--border-0);border-radius:8px;padding:var(--card-pad);display:flex;flex-direction:column;gap:7px;transition:all .15s}
+.agent-card{background:var(--bg-2);border:1px solid var(--border-0);border-radius:8px;padding:var(--card-pad);display:flex;flex-direction:column;gap:var(--density-gap);transition:all .15s}
 .agent-card:hover{border-color:var(--border-1);transform:translateY(-1px)}
 .agent-card.status-working{border-left:2px solid var(--cyan)}
 .agent-card.status-thinking{border-left:2px solid var(--violet)}
 .agent-card.status-idle{border-left:2px solid var(--text-3)}
 .agent-card.status-error{border-left:2px solid var(--red)}
 .agent-card.status-leader{border-left:2px solid var(--amber)}
-.agent-top{display:flex;align-items:center;gap:8px}
+.agent-top{display:flex;align-items:center;gap:var(--density-gap)}
 .agent-icon{font-size:1.3em}
 .agent-info{flex:1;min-width:0}
 .agent-name{font-family:var(--mono);font-size:var(--font-sm);font-weight:600;color:var(--text-0);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -143,7 +143,7 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;b
 .agent-status.error{color:var(--red);background:rgba(248,113,113,.1)}
 .agent-status.leader{color:var(--amber);background:rgba(251,191,36,.1)}
 .agent-task{font-family:var(--mono);font-size:var(--font-xs);color:var(--text-1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.agent-metrics{display:flex;gap:8px;font-family:var(--mono);font-size:var(--font-xxs);color:var(--text-3)}
+.agent-metrics{display:flex;gap:var(--density-gap);font-family:var(--mono);font-size:var(--font-xxs);color:var(--text-3)}
 .agent-metric-cost{color:var(--amber)}
 .typing-dots span{animation:typingDot .8s infinite;opacity:.3}
 .typing-dots span:nth-child(2){animation-delay:.15s}
@@ -157,13 +157,13 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;b
 
 /* ── Activity Feed ────────────────────────────────────────────────────────── */
 .feed-section{margin-top:var(--density-gap)}
-.feed-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;font-family:var(--mono);font-size:var(--font-xs);color:var(--text-2)}
+.feed-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--density-gap);font-family:var(--mono);font-size:var(--font-xs);color:var(--text-2)}
 .feed-filters{display:flex;gap:3px}
 .feed-filter-btn{padding:2px 7px;border-radius:4px;cursor:pointer;font-family:var(--mono);font-size:var(--font-xxs);color:var(--text-3);background:transparent;border:1px solid transparent;transition:all .15s}
 .feed-filter-btn:hover{color:var(--text-2)}
 .feed-filter-btn.active{color:var(--cyan);background:rgba(34,211,238,.06);border-color:var(--border-1)}
 .feed-list{display:flex;flex-direction:column;gap:2px;max-height:280px;overflow-y:auto}
-.feed-item{display:flex;gap:7px;padding:4px 6px;border-radius:4px;font-size:var(--font-xs);animation:feedIn .3s ease-out}
+.feed-item{display:flex;gap:var(--density-gap);padding:4px 6px;border-radius:4px;font-size:var(--font-xs);animation:feedIn .3s ease-out}
 .feed-time{font-family:var(--mono);font-size:var(--font-xxs);color:var(--text-3);white-space:nowrap;min-width:52px}
 .feed-icon{font-size:.85em;flex-shrink:0}
 .feed-agent{font-family:var(--mono);font-size:var(--font-xxs);color:var(--cyan);white-space:nowrap;min-width:72px;overflow:hidden;text-overflow:ellipsis}
@@ -178,7 +178,7 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;b
 .kanban-col{min-width:var(--kb-col-w);width:var(--kb-col-w);background:var(--bg-2);border:1px solid var(--border-0);border-radius:8px;display:flex;flex-direction:column;flex-shrink:0}
 .kanban-col-header{padding:var(--density-gap) var(--density-pad);border-bottom:1px solid var(--border-0);display:flex;align-items:center;justify-content:space-between;font-family:var(--mono);font-size:var(--font-xs);font-weight:600;color:var(--text-1)}
 .kanban-count{background:var(--bg-4);padding:1px 7px;border-radius:10px;font-size:var(--font-xxs);color:var(--text-2);font-weight:400}
-.kanban-cards{flex:1;padding:7px;display:flex;flex-direction:column;gap:5px;overflow-y:auto;min-height:40px}
+.kanban-cards{flex:1;padding:var(--density-gap);display:flex;flex-direction:column;gap:var(--density-gap);overflow-y:auto;min-height:40px}
 .kanban-cards.drag-over{background:rgba(34,211,238,.04);outline:1px dashed rgba(34,211,238,.2);border-radius:4px}
 .kanban-card{background:var(--bg-3);border:1px solid var(--border-0);border-radius:6px;padding:var(--card-pad);cursor:grab;transition:all .15s;user-select:none}
 .kanban-card:hover{border-color:var(--border-1);transform:translateY(-1px)}
@@ -451,7 +451,9 @@ AMC.Data = {
   _fwIv: null,
   _fwRemoved: false,
   _errTimer: null,
+  _fwErrCount: 0,   /* F-003: backoff state */
   _sbIv: null, _sbUrl: '', _sbKey: '', _sbActive: false,
+  _sbErrCount: 0,   /* F-003: backoff state for Supabase */
 
   /* F-060: validate + normalise incoming state JSON */
   validateState: function(d) {
@@ -538,18 +540,36 @@ AMC.Data = {
     var self = this;
     if (this._fwIv) { clearInterval(this._fwIv); }
     this._fwRemoved = false;
+    this._fwErrCount = 0;
+    function scheduleNext() {
+      if (self._fwRemoved) return;
+      /* F-003: exponential backoff — 3s, 6s, 12s, 24s … max 60s */
+      var delay = Math.min(3000 * Math.pow(2, self._fwErrCount), 60000);
+      self._fwIv = setTimeout(poll, delay);
+    }
     function poll() {
+      if (self._fwRemoved) return;
       self.fetchState(path)
-        .then(function(data){ self.mergeState(data); AMC.UI.dismissError(); })
-        .catch(function(err){ AMC.UI.showError('File watch: ' + err.message + ' — retrying\u2026'); });
+        .then(function(data) {
+          self._fwErrCount = 0;
+          self.mergeState(data);
+          AMC.UI.dismissError();
+          scheduleNext();
+        })
+        .catch(function(err) {
+          self._fwErrCount++;
+          var delay = Math.min(3 * Math.pow(2, self._fwErrCount), 60);
+          AMC.UI.showError('File watch: ' + err.message + ' — retrying in ' + delay + 's\u2026');
+          scheduleNext();
+        });
     }
     poll();
-    this._fwIv = setInterval(poll, 3000);
   },
 
   stopFileWatch: function() {
     this._fwRemoved = true;
-    if (this._fwIv) { clearInterval(this._fwIv); this._fwIv = null; }
+    if (this._fwIv) { clearTimeout(this._fwIv); this._fwIv = null; }
+    this._fwErrCount = 0;
   },
 
   fetchState: function(path) {
@@ -633,19 +653,26 @@ AMC.Data = {
     this._sbUrl = url.replace(/\/$/, '');
     this._sbKey = key;
     this._sbActive = true;
-    this._fetchSessions();
-    this._sbIv = setInterval(function() { self._fetchSessions(); }, 3000);
+    this._sbErrCount = 0;
+    function scheduleNext() {
+      if (!self._sbActive) return;
+      /* F-003: exponential backoff — 3s, 6s, 12s, 24s … max 60s */
+      var delay = Math.min(3000 * Math.pow(2, self._sbErrCount), 60000);
+      self._sbIv = setTimeout(function() { self._fetchSessions(scheduleNext); }, delay);
+    }
+    this._fetchSessions(scheduleNext);
   },
 
   stopSupabase: function() {
     this._sbActive = false;
-    if (this._sbIv) { clearInterval(this._sbIv); this._sbIv = null; }
+    if (this._sbIv) { clearTimeout(this._sbIv); this._sbIv = null; }
+    this._sbErrCount = 0;
     AMC.State.order.slice().forEach(function(sid) {
       if (sid.indexOf('sb-') === 0) AMC.State.removeSession(sid);
     });
   },
 
-  _fetchSessions: function() {
+  _fetchSessions: function(scheduleNext) {
     if (!this._sbActive) return;
     var self = this;
     var cutoff = new Date(Date.now() - 60 * 60 * 1000).toISOString();
@@ -656,6 +683,7 @@ AMC.Data = {
     .then(function(r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
     .then(function(rows) {
       if (!Array.isArray(rows)) return;
+      self._sbErrCount = 0;
       if (stEl) stEl.textContent = rows.length + ' session' + (rows.length !== 1 ? 's' : '') + ' live';
       AMC.UI.dismissError();
       rows.forEach(function(row) {
@@ -665,8 +693,14 @@ AMC.Data = {
         self._mergeSessionData('sb-' + row.id, raw, ts);
       });
       AMC.Render.render();
+      if (scheduleNext) scheduleNext();
     })
-    .catch(function(err) { AMC.UI.showError('Supabase: ' + err.message + ' \u2014 retrying\u2026'); });
+    .catch(function(err) {
+      self._sbErrCount++;
+      var delaySec = Math.min(3 * Math.pow(2, self._sbErrCount), 60);
+      AMC.UI.showError('Supabase: ' + err.message + ' \u2014 retrying in ' + delaySec + 's\u2026');
+      if (scheduleNext) scheduleNext();
+    });
   }
 };
 

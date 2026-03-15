@@ -14,8 +14,8 @@
 
 | ID | Feature | Status | Notes |
 |----|---------|--------|-------|
-| F-060 | Input sanitization / XSS validation on agent_state.json | ❌ | Validate shape before render; escape agent-supplied text |
-| F-070 | MCP server auth — Bearer token on write endpoints | ❌ | CRITICAL security gap; rate limit 60 req/min/key |
+| F-060 | Input sanitization / XSS validation on agent_state.json | ✅ | Already implemented: validateState() with enum checks, safeStr, array limits, no innerHTML anywhere |
+| F-070 | MCP server auth — Bearer token on write endpoints | ✅ | Token validation against AMC_WRITE_SECRET (or anon key fallback), 60 req/min rate limit, 128KB payload cap, content-type guard. **Deploy:** `supabase functions deploy ingest-state --project-ref zpsnbogldtepmfwgqarz` then `supabase secrets set AMC_WRITE_SECRET=<secret> --project-ref zpsnbogldtepmfwgqarz` |
 
 ---
 
@@ -26,8 +26,8 @@
 | F-004 | First-run screen profile modal | ❌ | Centered overlay on first load; Laptop/Desktop/Ultrawide cards |
 | F-005 | Keyboard shortcuts (1-4 layouts, L/D/U profiles) | ❌ | Guard with activeElement check |
 | F-051 | Custom scrollbars | ❌ | 5px via `::-webkit-scrollbar`; `scrollbar-width: thin` Firefox |
-| F-002 | CSS variable audit — sweep remaining hardcoded px | ⚠️ | Vars used but no exhaustive audit done |
-| F-003 | Error handling — inline banners + exponential backoff | ⚠️ | Basic fetch wrapping exists; backoff + banner UI missing |
+| F-002 | CSS variable audit — sweep remaining hardcoded px | ✅ | Agent card, agent-top, agent-metrics, kanban-cards, feed-header, feed-item, session-dropdown-item gaps/padding now use --density-gap/--density-pad. Fixed indicator sizes (5-6px dots, scrollbar) remain intentionally hardcoded. |
+| F-003 | Error handling — inline banners + exponential backoff | ✅ | Inline banner exists; exponential backoff added to both file watch and Supabase polling (3s→6s→12s…max 60s); retry countdown shown in banner |
 | F-042 | README — user-facing setup guide | ⚠️ | CLAUDE.md is dev guide; needs user quickstart, schema ref, troubleshooting |
 
 ---
