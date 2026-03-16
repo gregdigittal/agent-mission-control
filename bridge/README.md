@@ -89,6 +89,75 @@ Edit `~/.agent-mc/config.json`:
 | `agent_roles` | See config | Per-role tool allowlists and directory scopes |
 | `budget.session_limit_cents` | null | Session-wide budget cap |
 | `budget.agent_limit_cents` | null | Per-agent budget cap |
+| `worktreeSync.mode` | `none` | Worktree sync mode: `none`, `shared_remote`, or `rsync` |
+
+### Worktree Sync
+
+The bridge can optionally sync agent worktree state to a remote after each aggregation cycle. Set `worktreeSync.mode` in `config.json` to activate.
+
+**Mode: `none` (default)**
+
+No sync is performed. This is the correct setting for single-VPS deployments.
+
+```json
+{
+  "worktreeSync": {
+    "mode": "none"
+  }
+}
+```
+
+**Mode: `shared_remote`**
+
+Each agent worktree pushes its HEAD to a dedicated branch on a shared remote: `refs/heads/agent/{agentKey}`. This lets multiple agents work concurrently, each on an isolated branch. A bridge lead (or CI job) can then aggregate branches with a merge step.
+
+```json
+{
+  "worktreeSync": {
+    "mode": "shared_remote",
+    "shared_remote": {
+      "remote": "origin",
+      "baseBranch": "main"
+    }
+  }
+}
+```
+
+| Key | Description |
+|-----|-------------|
+| `remote` | Git remote name to push to (e.g. `origin`) |
+| `baseBranch` | Base branch name (informational — records intent for the merge step) |
+
+Each push targets `refs/heads/agent/{agentKey}` on the configured remote.
+
+**Mode: `rsync`**
+
+Syncs the bridge state directory (`~/.agent-mc/state/`) to a remote VPS node over SSH using `rsync`. Useful for multi-VPS setups where the dashboard runs on a different machine from the bridge.
+
+```json
+{
+  "worktreeSync": {
+    "mode": "rsync",
+    "rsync": {
+      "remoteHost": "user@vps2.example.com",
+      "remotePath": "/home/user/.agent-mc/state",
+      "sshKey": "/home/user/.ssh/id_rsa"
+    }
+  }
+}
+```
+
+| Key | Description |
+|-----|-------------|
+| `remoteHost` | SSH destination in `user@host` format |
+| `remotePath` | Absolute path on the remote host to sync state into |
+| `sshKey` | *(Optional)* Path to SSH private key. Omit if your default key is already configured |
+
+Requires `rsync` and `ssh` to be installed and `remoteHost` to be reachable from the bridge machine. Sync failures are logged but do not halt the main loop.
+
+**Required env var (decompose feature)**
+
+`ANTHROPIC_API_KEY` — required only if the `decompose_objective` command is used. Not needed for worktree sync itself.
 
 ## Security
 
