@@ -1,6 +1,9 @@
 import { audit } from '../audit/logger.js';
 import { decompose } from './decompose.js';
+import { assignTask } from '../assign/assigner.js';
+import { agentProcesses } from '../commands/spawn.js';
 import type { DecomposeRequest, DecomposeResult, Subtask } from './types.js';
+import type { KanbanTask } from '../assign/assigner.js';
 
 /**
  * Handle a decompose_objective command.
@@ -23,10 +26,30 @@ export async function handleDecomposeObjective(payload: DecomposeRequest): Promi
 
   const result = await decompose(payload);
 
-  // Register each subtask via audit — provides a durable record that the
-  // dashboard and Supabase sync can consume.
-  for (const subtask of result.subtasks) {
-    await registerSubtask(payload.sessionId, payload.agentKey, subtask);
+  // Build a KanbanTask list from the decomposed subtasks so the assigner can
+  // calculate relative load. None of these have an assigned agent yet.
+  const kanbanTasks: KanbanTask[] = result.subtasks.map(s => ({
+    id: s.id,
+    title: s.title,
+    tags: [],           // decomposed subtasks carry no tags yet — the UI may enrich later
+    assignedAgentKey: undefined,
+  }));
+
+  // Auto-assign each subtask to the best available agent (if one is running).
+  const allAgents = Array.from(agentProcesses.values());
+
+  for (let i = 0; i < result.subtasks.length; i++) {
+    const subtask = result.subtasks[i];
+    const kanbanTask = kanbanTasks[i];
+
+    // Attempt assignment
+    const assigned = await assignTask(kanbanTask, allAgents, kanbanTasks);
+    if (assigned) {
+      // Update the kanban task list so subsequent iterations see updated load
+      kanbanTask.assignedAgentKey = assigned.agentKey;
+    }
+
+    await registerSubtask(payload.sessionId, payload.agentKey, subtask, assigned?.agentKey);
   }
 
   console.log(
@@ -40,6 +63,7 @@ async function registerSubtask(
   sessionId: string,
   agentKey: string,
   subtask: Subtask,
+  assignedAgentKey?: string,
 ): Promise<void> {
   await audit('subtask_registered', {
     sessionId,
@@ -50,5 +74,6 @@ async function registerSubtask(
     estimatedTurns: subtask.estimatedTurns,
     dependsOn: subtask.dependsOn,
     status: 'backlog',
+    assignedAgentKey: assignedAgentKey ?? null,
   });
 }
