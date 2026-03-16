@@ -95,7 +95,7 @@ VITE_SUPABASE_ANON_KEY=<your-anon-key>
 
 ## Known Issues / Flags
 
-- `dashboard/index.html` lines 478-479: Supabase URL and anon key are hardcoded (MVP grandfathered). React app (`app/`) must use env vars exclusively.
+- `dashboard/index.html` contains TODO placeholder values for `SUPABASE_URL` and `SUPABASE_ANON_KEY` — edit these before deploying (Settings → API in the Supabase dashboard). Both the dashboard and React app (`app/`) must use project-specific values; no credentials are committed to source.
 - No test suite exists yet (TD-002, TD-003 in backlog).
 - No CI/CD pipeline (TD-004 in backlog).
 

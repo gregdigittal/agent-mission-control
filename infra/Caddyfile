@@ -1,0 +1,59 @@
+# =============================================================================
+# Caddyfile — Agent Mission Control
+# =============================================================================
+#
+# Terminates TLS for the MVP dashboard (served from port 8090) and optionally
+# proxies the React app (served from Vercel or a local Vite dev server).
+#
+# Replace YOURDOMAIN.COM with your actual domain before use.
+# Caddy provisions and renews Let's Encrypt certificates automatically.
+#
+# Usage:
+#   sudo caddy run --config Caddyfile
+#   sudo caddy reload --config Caddyfile   # hot-reload after edits
+#
+# Install: https://caddyserver.com/docs/install
+# =============================================================================
+
+
+# ---------------------------------------------------------------------------
+# MVP Dashboard — terminates TLS, proxies to dashboard served on port 8090
+# ---------------------------------------------------------------------------
+YOURDOMAIN.COM {
+  # Reverse-proxy to the HTML dashboard (served by: python3 -m http.server 8090)
+  reverse_proxy localhost:8090
+
+  # Security headers
+  header {
+    Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+    X-Content-Type-Options "nosniff"
+    X-Frame-Options "DENY"
+    Referrer-Policy "strict-origin-when-cross-origin"
+    -Server
+  }
+
+  # Logging
+  log {
+    output file /var/log/caddy/agent-mission-control.log
+    format json
+  }
+}
+
+
+# ---------------------------------------------------------------------------
+# React App (optional) — uncomment and set a subdomain if self-hosting app/
+# ---------------------------------------------------------------------------
+# app.YOURDOMAIN.COM {
+#   reverse_proxy localhost:5173   # Vite dev server
+#   # For production: serve from dist/
+#   # root * /home/gregmorris/agent-mission-control/app/dist
+#   # file_server
+#
+#   header {
+#     Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+#     X-Content-Type-Options "nosniff"
+#     X-Frame-Options "DENY"
+#     Referrer-Policy "strict-origin-when-cross-origin"
+#     -Server
+#   }
+# }

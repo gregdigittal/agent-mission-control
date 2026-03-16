@@ -475,8 +475,12 @@ html.screen-mobile .ptr-indicator.visible{display:block}
 
 <script>
 // === CONFIG ===
-const SUPABASE_URL = 'https://zpsnbogldtepmfwgqarz.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpwc25ib2dsZHRlcG1md2dxYXJ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMwODI5MjgsImV4cCI6MjA4ODY1ODkyOH0.5JVA7ZBNYMvraIRVlHN_dwn31kleTnRSD-RNBis7bPs';
+// Edit SUPABASE_URL and SUPABASE_ANON_KEY below before deploying.
+// Find these values in your Supabase project:
+//   Settings → API → Project URL  (SUPABASE_URL)
+//   Settings → API → anon / public key  (SUPABASE_ANON_KEY)
+const SUPABASE_URL = 'https://YOUR_PROJECT_REF.supabase.co';  // TODO: replace with your Supabase project URL
+const SUPABASE_ANON_KEY = 'YOUR_ANON_KEY';  // TODO: replace with your anon key (Settings → API)
 const FILE_POLL_INTERVAL = 3000;
 
 const STAGES = ['Planning','Scaffolding','Backend','Frontend','Integration','Testing','Optimization','Review'];

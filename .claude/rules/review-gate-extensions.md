@@ -10,7 +10,7 @@ Check ALL of the following on every task completion, before marking done.
 ### No inline credentials
 - FAIL if `SUPABASE_URL` or `SUPABASE_ANON_KEY` (or any key matching `/eyJ[a-zA-Z0-9_-]+\.[a-zA-Z0-9_-]+\.[a-zA-Z0-9_-]+/`) is hardcoded in `dashboard/index.html`
 - Keys must come from a config block the user edits, with a clear `// TODO: replace with your values` comment — NOT committed values
-- The existing hardcoded values in `dashboard/index.html` lines 478-479 are known and grandfathered for the MVP; the React app (`app/`) must use `.env` only
+- `dashboard/index.html` now uses TODO placeholders; no grandfathered exception applies
 
 ### No hardcoded URLs
 - No absolute URLs hardcoded in JS outside of the user-editable config block

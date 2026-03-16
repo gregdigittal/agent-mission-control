@@ -1,0 +1,26 @@
+[Unit]
+Description=Agent Mission Control — Bridge Daemon
+Documentation=https://github.com/gregmorris/agent-mission-control
+After=network.target
+
+[Service]
+Type=simple
+User=gregmorris
+WorkingDirectory=/home/gregmorris/agent-mission-control/bridge
+ExecStart=node dist/index.js
+Restart=always
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=agent-bridge
+
+# Ensure clean shutdown of child processes
+KillMode=control-group
+KillSignal=SIGTERM
+TimeoutStopSec=30
+
+# Environment (override per deployment)
+Environment=NODE_ENV=production
+
+[Install]
+WantedBy=multi-user.target

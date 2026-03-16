@@ -114,3 +114,47 @@ Set in `config.json`:
 ```
 
 The bridge works fully offline without Supabase — filesystem IPC is always the primary channel.
+
+## Running in Production
+
+For long-running deployments you should run the bridge as a managed service so it restarts automatically on crash or reboot.
+
+### Option A — systemd (recommended on Ubuntu/Debian/RHEL)
+
+A unit file is included at `bridge/agent-bridge.service`.
+
+```bash
+# Copy to systemd and enable
+sudo cp agent-bridge.service /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl enable agent-bridge    # start on boot
+sudo systemctl start agent-bridge
+
+# Check status / logs
+sudo systemctl status agent-bridge
+sudo journalctl -u agent-bridge -f
+```
+
+The unit runs as `User=gregmorris`. If you deploy under a different user, edit the `User=` and `WorkingDirectory=` lines before copying.
+
+### Option B — PM2
+
+A PM2 ecosystem config is included at `bridge/pm2.config.js`.
+
+```bash
+# Install PM2 globally (once)
+npm install -g pm2
+
+# Start the bridge
+pm2 start pm2.config.js
+
+# Persist across reboots
+pm2 save
+pm2 startup   # follow the printed command
+
+# Monitor
+pm2 status
+pm2 logs agent-bridge
+```
+
+PM2 logs are written to `~/.agent-mc/logs/pm2-out.log` and `pm2-err.log` by default. Adjust the `out_file` / `error_file` paths in `pm2.config.js` if your data directory differs.
