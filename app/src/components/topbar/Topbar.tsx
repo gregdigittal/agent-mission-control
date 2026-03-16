@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { LiveClock } from './LiveClock';
 import { SessionTabs } from './SessionTabs';
 import { TilePicker } from './TilePicker';
@@ -13,6 +14,7 @@ interface Props {
 export function Topbar({ onAddSession, isOnline }: Props) {
   const { screenProfile } = useSessionStore();
   const isMobile = screenProfile === 'mobile';
+  const { t } = useTranslation();
 
   return (
     <header style={{
@@ -30,7 +32,7 @@ export function Topbar({ onAddSession, isOnline }: Props) {
       {/* Live badge */}
       <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 'var(--font-xxs)', color: isOnline ? 'var(--green)' : 'var(--text-3)', textTransform: 'uppercase', letterSpacing: '1px' }}>
         <span style={{ width: 6, height: 6, borderRadius: '50%', background: isOnline ? 'var(--green)' : 'var(--text-3)', animation: isOnline ? 'pulse 2s infinite' : 'none' }} />
-        {isOnline ? 'Live' : 'Local'}
+        {isOnline ? t('topbar.status.live') : t('topbar.status.local')}
       </span>
 
       {/* Session tabs */}

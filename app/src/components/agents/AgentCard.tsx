@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { StatusBadge } from '../shared/StatusBadge';
 import { ProgressRing } from '../shared/ProgressRing';
 import { formatCost, getProviderLabel } from '../../lib/cost';
@@ -18,6 +19,7 @@ interface Props {
 }
 
 export function AgentCard({ agent, onSelect, selected }: Props) {
+  const { t } = useTranslation();
   const contextPct = agent.contextUsagePct
     ?? (agent.contextLimit > 0 ? Math.round((agent.contextUsed / agent.contextLimit) * 100) : 0);
   const color = PROVIDER_COLORS[agent.provider] ?? 'var(--cyan)';
@@ -27,7 +29,7 @@ export function AgentCard({ agent, onSelect, selected }: Props) {
     <div
       role={onSelect ? 'button' : undefined}
       tabIndex={onSelect ? 0 : undefined}
-      aria-label={onSelect ? `Select agent ${agent.name}` : undefined}
+      aria-label={onSelect ? t('agent.card.selectAriaLabel', { name: agent.name }) : undefined}
       aria-pressed={onSelect ? selected : undefined}
       onClick={() => onSelect?.(agent.id)}
       onKeyDown={(e) => { if (onSelect && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); onSelect(agent.id); } }}
@@ -56,12 +58,12 @@ export function AgentCard({ agent, onSelect, selected }: Props) {
             </span>
             {contextPct >= 80 && (
               <span style={{ fontSize: 'var(--font-xxs)', color: 'var(--rose)', background: 'var(--rose)22', borderRadius: 3, padding: '1px 5px', fontWeight: 600 }}>
-                ⚠ compact now
+                {t('agent.card.compactNow')}
               </span>
             )}
             {contextPct >= 60 && contextPct < 80 && (
               <span style={{ fontSize: 'var(--font-xxs)', color: 'var(--amber)', background: 'var(--amber)22', borderRadius: 3, padding: '1px 5px' }}>
-                ctx {contextPct}%
+                {t('agent.card.contextPct', { pct: contextPct })}
               </span>
             )}
           </div>

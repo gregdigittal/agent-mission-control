@@ -1,0 +1,68 @@
+{
+  "topbar": {
+    "logo": "AGENT/MC",
+    "status": {
+      "live": "Live",
+      "local": "Local"
+    },
+    "session": {
+      "add": "Add session",
+      "ariaLabel": "Sessions"
+    },
+    "screen": {
+      "mobile": "Mobile layout",
+      "laptop": "Laptop layout",
+      "desktop": "Desktop layout",
+      "ultrawide": "Ultrawide layout"
+    },
+    "pane": {
+      "count": "{{count}} pane",
+      "count_plural": "{{count}} panes"
+    }
+  },
+  "nav": {
+    "agents": "Agents",
+    "kanban": "Kanban",
+    "costs": "Costs",
+    "approvals": "Approvals",
+    "settings": "Settings",
+    "approvalsWithCount": "Approvals ({{count}} pending)"
+  },
+  "agent": {
+    "card": {
+      "compactNow": "compact now",
+      "contextPct": "ctx {{pct}}%",
+      "selectAriaLabel": "Select agent {{name}}"
+    },
+    "status": {
+      "idle": "Idle",
+      "running": "Running",
+      "waiting_approval": "Waiting",
+      "paused": "Paused",
+      "error": "Error",
+      "complete": "Complete"
+    },
+    "stats": {
+      "tokensIn": "in",
+      "tokensOut": "out",
+      "cost": "cost"
+    }
+  },
+  "actions": {
+    "approve": "Approve",
+    "reject": "Reject",
+    "edit": "Edit",
+    "delete": "Delete",
+    "cancel": "Cancel",
+    "save": "Save",
+    "confirm": "Confirm",
+    "close": "Close"
+  },
+  "errors": {
+    "failedToLoad": "Failed to load",
+    "noData": "No data",
+    "connectionFailed": "Connection failed",
+    "unauthorized": "Unauthorized",
+    "tryAgain": "Try again"
+  }
+}
