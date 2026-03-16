@@ -9,6 +9,7 @@ interface SessionState {
   paneCount: PaneCount;
   activePane: string | null;
   screenProfile: ScreenProfile;
+  workspaceId: string | null;
 
   setSessions: (sessions: Session[]) => void;
   addSession: (session: Session) => void;
@@ -20,6 +21,8 @@ interface SessionState {
   setActivePane: (paneId: string) => void;
 
   setScreenProfile: (profile: ScreenProfile) => void;
+
+  setWorkspaceId: (id: string | null) => void;
 
   nextSessionColor: () => SessionColor;
 }
@@ -42,6 +45,7 @@ export const useSessionStore = create<SessionState>((set, get) => ({
   paneCount: 1,
   activePane: 'pane-1',
   screenProfile: 'desktop',
+  workspaceId: null,
 
   setSessions: (sessions) => set({ sessions }),
 
@@ -81,6 +85,8 @@ export const useSessionStore = create<SessionState>((set, get) => ({
     document.documentElement.classList.add(`screen-${profile}`);
     set({ screenProfile: profile });
   },
+
+  setWorkspaceId: (id) => set({ workspaceId: id }),
 
   nextSessionColor: () => {
     const used = get().sessions.map((s) => s.color);

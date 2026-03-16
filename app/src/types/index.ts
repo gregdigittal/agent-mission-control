@@ -34,7 +34,7 @@ export interface Pane {
   activeTab: PaneTab;
 }
 
-export type PaneTab = 'agents' | 'kanban' | 'costs' | 'approvals';
+export type PaneTab = 'agents' | 'kanban' | 'costs' | 'approvals' | 'dag';
 
 // === Agents =================================================
 
@@ -118,6 +118,7 @@ export interface KanbanTask {
   recommendedByAgent?: string;
   approvalRequired: boolean;
   approvedAt?: string;
+  dependsOn?: string[];  // task ids this task depends on (for DAG visualisation)
   createdAt: string;
   updatedAt: string;
 }

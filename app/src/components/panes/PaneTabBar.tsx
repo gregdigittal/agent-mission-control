@@ -2,10 +2,11 @@ import { useSessionStore } from '../../stores/sessionStore';
 import type { PaneTab } from '../../types';
 
 const TABS: { id: PaneTab; label: string; icon: string }[] = [
-  { id: 'agents',    label: 'Agents',    icon: '◈' },
-  { id: 'kanban',    label: 'Kanban',    icon: '⊞' },
-  { id: 'costs',     label: 'Costs',     icon: '◎' },
-  { id: 'approvals', label: 'Approvals', icon: '◉' },
+  { id: 'agents',    label: 'Agents',     icon: '◈' },
+  { id: 'kanban',    label: 'Kanban',     icon: '⊞' },
+  { id: 'dag',       label: 'Task Graph', icon: '⬡' },
+  { id: 'costs',     label: 'Costs',      icon: '◎' },
+  { id: 'approvals', label: 'Approvals',  icon: '◉' },
 ];
 
 interface Props {

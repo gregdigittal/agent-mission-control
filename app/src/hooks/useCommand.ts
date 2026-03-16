@@ -18,7 +18,8 @@ export type CommandType =
   | 'review_loop_agent'
   | 'create_branch'
   | 'switch_branch'
-  | 'merge_branch';
+  | 'merge_branch'
+  | 'create_pr';
 
 export interface BridgeCommand {
   type: CommandType;

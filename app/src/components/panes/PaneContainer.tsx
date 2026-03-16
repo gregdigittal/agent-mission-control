@@ -1,18 +1,21 @@
 import { PaneTabBar } from './PaneTabBar';
 import { AgentView } from '../agents/AgentView';
 import { KanbanBoard } from '../kanban/KanbanBoard';
+import { DagView } from '../dag/DagView';
 import { CostDashboard } from '../cost/CostDashboard';
 import { ApprovalQueue } from '../permissions/ApprovalQueue';
 import { useSessionStore } from '../../stores/sessionStore';
+import { useKanbanStore } from '../../stores/kanbanStore';
 
 interface Props {
   paneId: string;
 }
 
 export function PaneContainer({ paneId }: Props) {
-  const { panes, sessions, setActivePane } = useSessionStore();
+  const { panes, sessions, setActivePane, setPaneTab } = useSessionStore();
   const pane = panes.find((p) => p.id === paneId);
   const session = sessions.find((s) => s.id === pane?.sessionId);
+  const tasks = useKanbanStore((s) => s.tasks);
 
   function renderContent() {
     if (!pane?.sessionId || !session) {
@@ -28,9 +31,21 @@ export function PaneContainer({ paneId }: Props) {
       );
     }
 
+    const sessionTasks = tasks.filter((t) => t.sessionId === session.id);
+
     switch (pane.activeTab) {
       case 'agents':    return <AgentView sessionId={session.id} />;
       case 'kanban':    return <KanbanBoard sessionId={session.id} />;
+      case 'dag':       return (
+        <DagView
+          tasks={sessionTasks}
+          onTaskSelect={(id) => {
+            // Switch to kanban tab so user can act on the selected task
+            setPaneTab(paneId, 'kanban');
+            void id; // task selection forwarded via tab switch; detail panel is future work
+          }}
+        />
+      );
       case 'costs':     return <CostDashboard sessionId={session.id} />;
       case 'approvals': return <ApprovalQueue sessionId={session.id} />;
     }

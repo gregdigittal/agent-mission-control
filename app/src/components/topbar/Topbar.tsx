@@ -4,6 +4,7 @@ import { SessionTabs } from './SessionTabs';
 import { TilePicker } from './TilePicker';
 import { ScreenPicker } from './ScreenPicker';
 import { ProfileMenu } from '../auth/ProfileMenu';
+import { WorkspaceSwitcher } from '../workspace/WorkspaceSwitcher';
 import { useSessionStore } from '../../stores/sessionStore';
 
 interface Props {
@@ -46,6 +47,7 @@ export function Topbar({ onAddSession, isOnline }: Props) {
 
       {/* Right controls */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
+        {!isMobile && <WorkspaceSwitcher />}
         {!isMobile && <TilePicker />}
         {!isMobile && <ScreenPicker />}
         <LiveClock />
