@@ -24,6 +24,8 @@ export interface Session {
   projectId: string;
   vpsNodeId?: string;
   createdAt: string;
+  /** Conflicting file paths detected between agent worktrees in this session. */
+  conflictFiles?: string[];
 }
 
 export type SessionColor = 'cyan' | 'green' | 'violet' | 'amber' | 'rose' | 'blue';
@@ -34,7 +36,7 @@ export interface Pane {
   activeTab: PaneTab;
 }
 
-export type PaneTab = 'agents' | 'kanban' | 'costs' | 'approvals' | 'dag';
+export type PaneTab = 'agents' | 'kanban' | 'costs' | 'approvals' | 'dag' | 'replay';
 
 // === Agents =================================================
 
@@ -99,9 +101,24 @@ export type EventType =
   | 'approval_granted'
   | 'approval_rejected'
   | 'cost_alert'
+  | 'cost_milestone'
   | 'stage_change'
   | 'agent_start'
   | 'agent_stop';
+
+// SessionEvent — a timeline entry for the session replay view.
+// Extends AgentEvent with optional cumulative cost for the cost curve.
+export interface SessionEvent {
+  readonly id: string;
+  readonly sessionId: string;
+  readonly agentId?: string;
+  readonly type: EventType;
+  readonly message: string;
+  readonly ts: string;
+  readonly costUsd?: number;
+  /** Cumulative session cost at this point in time (USD). */
+  readonly cumulativeCostUsd?: number;
+}
 
 // === Kanban =================================================
 

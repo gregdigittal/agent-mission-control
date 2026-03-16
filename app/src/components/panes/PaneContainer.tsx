@@ -2,10 +2,14 @@ import { PaneTabBar } from './PaneTabBar';
 import { AgentView } from '../agents/AgentView';
 import { KanbanBoard } from '../kanban/KanbanBoard';
 import { DagView } from '../dag/DagView';
+import { SessionReplay } from '../replay/SessionReplay';
 import { CostDashboard } from '../cost/CostDashboard';
 import { ApprovalQueue } from '../permissions/ApprovalQueue';
 import { useSessionStore } from '../../stores/sessionStore';
 import { useKanbanStore } from '../../stores/kanbanStore';
+import { useAgentStore } from '../../stores/agentStore';
+import { useCostStore } from '../../stores/costStore';
+import type { SessionEvent } from '../../types';
 
 interface Props {
   paneId: string;
@@ -16,6 +20,8 @@ export function PaneContainer({ paneId }: Props) {
   const pane = panes.find((p) => p.id === paneId);
   const session = sessions.find((s) => s.id === pane?.sessionId);
   const tasks = useKanbanStore((s) => s.tasks);
+  const agentEvents = useAgentStore((s) => session ? s.eventsBySession(session.id) : []);
+  const sessionCostUsd = useCostStore((s) => session ? s.totalBySession(session.id) : 0);
 
   function renderContent() {
     if (!pane?.sessionId || !session) {
@@ -44,6 +50,13 @@ export function PaneContainer({ paneId }: Props) {
             setPaneTab(paneId, 'kanban');
             void id; // task selection forwarded via tab switch; detail panel is future work
           }}
+        />
+      );
+      case 'replay':    return (
+        <SessionReplay
+          sessionId={session.id}
+          events={agentEvents as SessionEvent[]}
+          costCents={sessionCostUsd * 100}
         />
       );
       case 'costs':     return <CostDashboard sessionId={session.id} />;
