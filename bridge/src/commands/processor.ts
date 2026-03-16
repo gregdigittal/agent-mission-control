@@ -10,6 +10,7 @@ import { handleApproval } from './approve.js';
 import { triggerReviewLoop } from './review.js';
 import { createBranch, switchBranch, mergeBranch } from './branch.js';
 import { handleDecomposeObjective } from '../decompose/handler.js';
+import { handleCreatePr } from './createPr.js';
 
 // Payload schemas for each command type
 const SpawnPayloadSchema = z.object({
@@ -71,13 +72,20 @@ const DecomposeObjectivePayloadSchema = z.object({
   agent_key: z.string(),
 });
 
+const CreatePrPayloadSchema = z.object({
+  sessionId: z.string(),
+  title: z.string(),
+  body: z.string(),
+  baseBranch: z.string(),
+});
+
 const CommandSchema = z.object({
   id: z.string(),
   type: z.enum([
     'spawn_agent', 'terminate_agent', 'approve_task', 'update_config',
     'pause_agent', 'resume_agent', 'review_loop_agent',
     'create_branch', 'switch_branch', 'merge_branch',
-    'decompose_objective',
+    'decompose_objective', 'create_pr',
   ]),
   timestamp: z.string(),
   session_token: z.string(),
@@ -207,6 +215,12 @@ async function executeCommand(cmd: Command): Promise<void> {
         sessionId: payload.session_id,
         agentKey: payload.agent_key,
       });
+      break;
+    }
+
+    case 'create_pr': {
+      const payload = CreatePrPayloadSchema.parse(cmd.payload);
+      await handleCreatePr(payload);
       break;
     }
 
