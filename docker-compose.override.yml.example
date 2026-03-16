@@ -1,0 +1,41 @@
+# docker-compose.override.yml.example
+#
+# Copy this file to docker-compose.override.yml to customise ports and
+# environment variables for your local or staging deployment.
+#
+# Docker Compose automatically merges docker-compose.override.yml with
+# docker-compose.selfhost.yml when both are present.
+#
+# Usage:
+#   cp docker-compose.override.yml.example docker-compose.override.yml
+#   # Edit as needed, then:
+#   docker compose -f docker-compose.selfhost.yml up -d
+
+version: "3.8"
+
+services:
+
+  # Override dashboard port (default: 8090)
+  dashboard:
+    ports:
+      - "8091:80"
+
+  # Override Supabase Studio port (default: 3000)
+  supabase-studio:
+    ports:
+      - "54323:3000"
+    environment:
+      # Provide real JWT keys for a production setup
+      SUPABASE_ANON_KEY: "your-anon-key-here"
+      SUPABASE_SERVICE_KEY: "your-service-key-here"
+
+  # Override Kong API gateway port (default: 8000)
+  supabase-kong:
+    ports:
+      - "54321:8000"
+
+  # Mount bridge state file for File Watch mode
+  # Adjust the host path to match your bridge output directory
+  # dashboard:
+  #   volumes:
+  #     - ~/.agent-mc/state/dashboard_state.json:/usr/share/nginx/html/agent_state.json:ro

@@ -100,6 +100,77 @@ To self-host the React app (`app/`) instead of deploying to Vercel, uncomment th
 
 ---
 
+## Self-Hosted with Docker
+
+`docker-compose.selfhost.yml` at the project root provides a fully self-hosted stack with four services:
+
+| Service | Image | Default Port | Purpose |
+|---------|-------|-------------|---------|
+| `dashboard` | `nginx:alpine` | 8090 | Serves `dashboard/index.html` |
+| `supabase-db` | `supabase/postgres:15` | — (internal) | PostgreSQL database |
+| `supabase-kong` | `kong:3.4-alpine` | 8000 | API gateway (routes `/rest/v1/`, `/auth/v1/`) |
+| `supabase-studio` | `supabase/studio:latest` | 3000 | Supabase Studio management UI |
+
+### Required Environment Variables
+
+Create a `.env` file in the project root (gitignored):
+
+```bash
+# Required
+POSTGRES_PASSWORD=your-strong-password-here
+
+# Optional — set to use Studio with JWT auth
+ANON_KEY=your-anon-key
+SERVICE_ROLE_KEY=your-service-role-key
+```
+
+### How to Run
+
+```bash
+# Start all services
+docker compose -f docker-compose.selfhost.yml up -d
+
+# Check service status
+docker compose -f docker-compose.selfhost.yml ps
+
+# View logs
+docker compose -f docker-compose.selfhost.yml logs -f
+
+# Stop services
+docker compose -f docker-compose.selfhost.yml down
+```
+
+### Accessing Services
+
+- **AMC Dashboard:** http://localhost:8090
+- **Supabase Studio:** http://localhost:3000
+- **Kong API Gateway:** http://localhost:8000
+
+### Customising Ports
+
+Copy the provided example override file and edit it:
+
+```bash
+cp docker-compose.override.yml.example docker-compose.override.yml
+# Edit ports, env vars, and volume mounts as needed
+```
+
+Docker Compose automatically merges `docker-compose.override.yml` when it is present.
+
+### Kong Configuration
+
+The API gateway uses a declarative config at `infra/kong.yml`. This file routes `/rest/v1/` and `/auth/v1/` to the appropriate backend services. Edit it to add authentication plugins, rate limiting, or additional routes for a production deployment.
+
+### Data Persistence
+
+PostgreSQL data is stored in a named Docker volume (`supabase-db-data`). This volume persists across container restarts. To reset the database:
+
+```bash
+docker compose -f docker-compose.selfhost.yml down -v
+```
+
+---
+
 ## Security Notes
 
 - Both configs apply security headers (HSTS, X-Frame-Options, X-Content-Type-Options).

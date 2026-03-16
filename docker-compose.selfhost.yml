@@ -1,0 +1,115 @@
+version: "3.8"
+
+# Agent Mission Control — Self-Hosted Stack
+#
+# Includes the dashboard, a local Supabase-compatible stack (Postgres + Kong + Studio),
+# for teams who want to run entirely on-premises rather than using hosted Supabase.
+#
+# Usage:
+#   docker compose -f docker-compose.selfhost.yml up -d
+#
+# Required environment variables (copy .env.example to .env):
+#   POSTGRES_PASSWORD   - Password for the postgres user
+#   AMC_WRITE_SECRET    - Shared secret for the bridge ingest endpoint
+#
+# Optional (override via docker-compose.override.yml):
+#   POSTGRES_DB         - Database name (default: postgres)
+#   STUDIO_PORT         - Port for Supabase Studio UI (default: 3000)
+#   DASHBOARD_PORT      - Port for AMC dashboard (default: 8090)
+
+services:
+
+  # ─────────────────────────────────────────────────────────────────────────
+  # AMC Dashboard
+  # Serves dashboard/index.html via nginx on port 8090 (or $DASHBOARD_PORT).
+  # Mount agent_state.json from the bridge output dir for File Watch mode.
+  # ─────────────────────────────────────────────────────────────────────────
+  dashboard:
+    image: nginx:alpine
+    ports:
+      - "${DASHBOARD_PORT:-8090}:80"
+    volumes:
+      - ./dashboard:/usr/share/nginx/html:ro
+      # If using File Watch mode, mount the bridge state file:
+      # - ./agent_state.json:/usr/share/nginx/html/agent_state.json:ro
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
+
+  # ─────────────────────────────────────────────────────────────────────────
+  # Supabase — Postgres
+  # Local PostgreSQL database compatible with the Supabase schema.
+  # Data is persisted in a named Docker volume.
+  # ─────────────────────────────────────────────────────────────────────────
+  supabase-db:
+    image: supabase/postgres:15.8.1.060
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+      POSTGRES_DB: ${POSTGRES_DB:-postgres}
+      POSTGRES_HOST: /var/run/postgresql
+    volumes:
+      - supabase-db-data:/var/lib/postgresql/data
+      # Mount custom init scripts if needed:
+      # - ./supabase/migrations:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d ${POSTGRES_DB:-postgres}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # ─────────────────────────────────────────────────────────────────────────
+  # Supabase — Kong API Gateway
+  # Routes /rest/v1/ and /auth/v1/ requests to the appropriate services.
+  # Declarative config from infra/kong.yml.
+  # ─────────────────────────────────────────────────────────────────────────
+  supabase-kong:
+    image: kong:3.4-alpine
+    environment:
+      KONG_DATABASE: "off"
+      KONG_DECLARATIVE_CONFIG: /etc/kong/kong.yml
+      KONG_DNS_ORDER: LAST,A,CNAME
+      KONG_PLUGINS: request-transformer,cors,key-auth,acl
+      KONG_NGINX_PROXY_PROXY_BUFFER_SIZE: 160k
+      KONG_NGINX_PROXY_PROXY_BUFFERS: "64 160k"
+    volumes:
+      - ./infra/kong.yml:/etc/kong/kong.yml:ro
+    ports:
+      - "${KONG_PORT:-8000}:8000"
+    depends_on:
+      supabase-db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "kong", "health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # ─────────────────────────────────────────────────────────────────────────
+  # Supabase Studio
+  # Web UI for managing the Supabase database, auth, and RLS policies.
+  # Access at http://localhost:3000 (or $STUDIO_PORT).
+  # ─────────────────────────────────────────────────────────────────────────
+  supabase-studio:
+    image: supabase/studio:latest
+    environment:
+      STUDIO_PG_META_URL: http://supabase-kong:8000/pg
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+      SUPABASE_URL: http://supabase-kong:8000
+      SUPABASE_REST_URL: ${PUBLIC_REST_URL:-http://localhost:${KONG_PORT:-8000}/rest/v1/}
+      SUPABASE_ANON_KEY: ${ANON_KEY:-}
+      SUPABASE_SERVICE_KEY: ${SERVICE_ROLE_KEY:-}
+    ports:
+      - "${STUDIO_PORT:-3000}:3000"
+    depends_on:
+      supabase-kong:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  supabase-db-data:
+    driver: local

@@ -1,0 +1,33 @@
+_format_version: "3.0"
+_transform: true
+
+# Kong declarative configuration for the Agent Mission Control self-hosted stack.
+#
+# This is a minimal routing config that forwards:
+#   /rest/v1/  → PostgREST (Supabase REST API)
+#   /auth/v1/  → GoTrue (Supabase Auth) — placeholder; add GoTrue service to compose if needed
+#
+# For production use, add authentication (key-auth or jwt plugin) and rate limiting.
+
+services:
+  - name: rest-v1
+    # PostgREST is not included in this minimal compose file.
+    # To enable the full REST API, add a postgrest service to docker-compose.selfhost.yml
+    # and point this URL at it: http://supabase-rest:3000
+    url: http://supabase-db:5432
+    routes:
+      - name: rest-v1-route
+        strip_path: true
+        paths:
+          - /rest/v1/
+
+  - name: auth-v1
+    # GoTrue auth service placeholder.
+    # To enable auth, add a GoTrue container to docker-compose.selfhost.yml
+    # and point this URL at it: http://supabase-auth:9999
+    url: http://localhost:9999
+    routes:
+      - name: auth-v1-route
+        strip_path: true
+        paths:
+          - /auth/v1/
