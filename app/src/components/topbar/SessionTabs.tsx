@@ -18,13 +18,16 @@ export function SessionTabs({ onAddSession }: Props) {
   const activeSession = panes.find((p) => p.id === activePane)?.sessionId;
 
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 2, overflowX: 'auto' }}>
+    <div role="tablist" aria-label="Sessions" style={{ display: 'flex', alignItems: 'center', gap: 2, overflowX: 'auto' }}>
       {sessions.map((s: Session) => {
         const color = COLOR_MAP[s.color] ?? 'var(--cyan)';
         const active = activeSession === s.id;
         return (
           <button
             key={s.id}
+            role="tab"
+            aria-selected={active}
+            aria-label={`Session: ${s.name}`}
             onClick={() => activePane && setPaneSession(activePane, s.id)}
             style={{
               padding: '2px 10px', borderRadius: 4, fontSize: 'var(--font-xs)',
@@ -43,6 +46,7 @@ export function SessionTabs({ onAddSession }: Props) {
       {onAddSession && (
         <button
           onClick={onAddSession}
+          aria-label="Add session"
           style={{
             width: 22, height: 22, borderRadius: 4, display: 'flex', alignItems: 'center',
             justifyContent: 'center', color: 'var(--text-3)', fontSize: 16,
@@ -50,7 +54,7 @@ export function SessionTabs({ onAddSession }: Props) {
           }}
           title="Add session"
         >
-          +
+          <span aria-hidden="true">+</span>
         </button>
       )}
     </div>

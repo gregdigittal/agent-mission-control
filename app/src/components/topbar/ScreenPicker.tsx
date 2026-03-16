@@ -1,11 +1,11 @@
 import { useSessionStore } from '../../stores/sessionStore';
 import type { ScreenProfile } from '../../types';
 
-const PROFILES: { value: ScreenProfile; label: string }[] = [
-  { value: 'mobile',     label: '📱' },
-  { value: 'laptop',     label: '💻' },
-  { value: 'desktop',    label: '🖥' },
-  { value: 'ultrawide',  label: '⬛' },
+const PROFILES: { value: ScreenProfile; label: string; ariaLabel: string }[] = [
+  { value: 'mobile',     label: '📱', ariaLabel: 'Mobile layout' },
+  { value: 'laptop',     label: '💻', ariaLabel: 'Laptop layout' },
+  { value: 'desktop',    label: '🖥',  ariaLabel: 'Desktop layout' },
+  { value: 'ultrawide',  label: '⬛', ariaLabel: 'Ultrawide layout' },
 ];
 
 export function ScreenPicker() {
@@ -13,11 +13,13 @@ export function ScreenPicker() {
 
   return (
     <div style={{ display: 'flex', gap: 2 }}>
-      {PROFILES.map(({ value, label }) => (
+      {PROFILES.map(({ value, label, ariaLabel }) => (
         <button
           key={value}
           onClick={() => setScreenProfile(value)}
-          title={value}
+          title={ariaLabel}
+          aria-label={ariaLabel}
+          aria-pressed={screenProfile === value}
           style={{
             width: 22, height: 22, borderRadius: 3, fontSize: 10,
             display: 'flex', alignItems: 'center', justifyContent: 'center',

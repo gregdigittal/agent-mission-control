@@ -32,6 +32,9 @@ export function BottomNav({ pendingApprovals = 0 }: Props) {
         return (
           <button
             key={id}
+            role="tab"
+            aria-selected={active}
+            aria-label={badge ? `${label} (${pendingApprovals} pending)` : label}
             onClick={() => pane && setPaneTab(pane.id, id)}
             style={{
               flex: 1, display: 'flex', flexDirection: 'column',
@@ -41,14 +44,17 @@ export function BottomNav({ pendingApprovals = 0 }: Props) {
               position: 'relative',
             }}
           >
-            <span style={{ fontSize: 16 }}>{icon}</span>
+            <span aria-hidden="true" style={{ fontSize: 16 }}>{icon}</span>
             <span style={{ fontSize: 'var(--font-xxs)', letterSpacing: '0.3px' }}>{label}</span>
             {badge && (
-              <span style={{
-                position: 'absolute', top: 8, right: '50%', marginRight: -14,
-                background: 'var(--amber)', borderRadius: '50%',
-                width: 8, height: 8,
-              }} />
+              <span
+                aria-hidden="true"
+                style={{
+                  position: 'absolute', top: 8, right: '50%', marginRight: -14,
+                  background: 'var(--amber)', borderRadius: '50%',
+                  width: 8, height: 8,
+                }}
+              />
             )}
           </button>
         );

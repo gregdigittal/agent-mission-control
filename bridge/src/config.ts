@@ -63,6 +63,26 @@ const BridgeConfigSchema = z.object({
     agent_limit_cents: z.number().nullable().default(null),
     alert_threshold_pct: z.number().default(80),
   }).default({}),
+  webhooks: z.array(z.object({
+    /** Unique label for logging/debugging. */
+    label: z.string(),
+    /** Full URL to POST to on matching events. */
+    url: z.string().url(),
+    /** Event name glob patterns — e.g. "agent_*", "loop_error", "*". Defaults to all events. */
+    events: z.array(z.string()).default(['*']),
+    /** HMAC-SHA256 signing secret. If provided, adds an X-Signature-256 header. */
+    secret: z.string().optional(),
+    /** Request timeout in milliseconds. */
+    timeout_ms: z.number().int().min(100).default(5000),
+  })).default([]),
+  review_loop: z.object({
+    /** Maximum times a single agent can be re-queued for review before the loop terminates. */
+    max_retries: z.number().int().min(0).default(3),
+    /** Prompt appended to each review-loop re-spawn to focus the agent on fixes. */
+    retry_prompt_suffix: z.string().default('Please review your previous output and fix any issues found.'),
+    /** Whether to auto-trigger a review loop when an agent exits with a non-zero code. */
+    auto_review_on_failure: z.boolean().default(false),
+  }).default({}),
 });
 
 export type BridgeConfig = z.infer<typeof BridgeConfigSchema>;

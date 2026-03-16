@@ -25,7 +25,12 @@ export function AgentCard({ agent, onSelect, selected }: Props) {
 
   return (
     <div
+      role={onSelect ? 'button' : undefined}
+      tabIndex={onSelect ? 0 : undefined}
+      aria-label={onSelect ? `Select agent ${agent.name}` : undefined}
+      aria-pressed={onSelect ? selected : undefined}
       onClick={() => onSelect?.(agent.id)}
+      onKeyDown={(e) => { if (onSelect && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); onSelect(agent.id); } }}
       style={{
         background: 'var(--bg-2)',
         border: `1px solid ${selected ? 'var(--cyan)' : 'var(--border-1)'}`,

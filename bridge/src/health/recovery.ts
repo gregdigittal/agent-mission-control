@@ -3,8 +3,6 @@ import { agentProcesses, spawnAgent } from '../commands/spawn.js';
 import { audit } from '../audit/logger.js';
 import type { HealthResult } from './checker.js';
 
-const MAX_RESTARTS = 3;
-
 export async function handleCrashedAgents(healthResults: HealthResult[]): Promise<void> {
   // Clean up agents that exited cleanly — they remain in the map forever otherwise
   const exited = healthResults.filter(r => r.status === 'exited');
@@ -21,6 +19,7 @@ export async function handleCrashedAgents(healthResults: HealthResult[]): Promis
   const config = await loadConfig();
   if (!config.auto_restart_on_crash) return;
 
+  const maxRestarts = config.review_loop.max_retries;
   const crashed = healthResults.filter(r => r.status === 'crashed');
 
   for (const result of crashed) {
@@ -36,18 +35,18 @@ export async function handleCrashedAgents(healthResults: HealthResult[]): Promis
     if (!agentEntry) continue;
     const [id, agent] = agentEntry;
 
-    if (agent.restartCount >= MAX_RESTARTS) {
+    if (agent.restartCount >= maxRestarts) {
       await audit('auto_restart_exhausted', {
         agentKey: agent.agentKey,
         restarts: agent.restartCount,
-        max: MAX_RESTARTS,
+        max: maxRestarts,
       });
-      console.warn(`[recovery] Agent ${agent.agentKey} exhausted ${MAX_RESTARTS} restart attempts`);
+      console.warn(`[recovery] Agent ${agent.agentKey} exhausted ${maxRestarts} restart attempts`);
       agentProcesses.delete(id);
       continue;
     }
 
-    console.log(`[recovery] Restarting crashed agent ${agent.agentKey} (attempt ${agent.restartCount + 1}/${MAX_RESTARTS})`);
+    console.log(`[recovery] Restarting crashed agent ${agent.agentKey} (attempt ${agent.restartCount + 1}/${maxRestarts})`);
 
     // Remove old entry
     agentProcesses.delete(id);
