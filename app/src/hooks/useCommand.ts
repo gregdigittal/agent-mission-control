@@ -19,7 +19,8 @@ export type CommandType =
   | 'create_branch'
   | 'switch_branch'
   | 'merge_branch'
-  | 'create_pr';
+  | 'create_pr'
+  | 'resolve_conflict';
 
 export interface BridgeCommand {
   type: CommandType;

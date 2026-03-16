@@ -1,7 +1,9 @@
 import { BuildBanner } from './BuildBanner';
 import { AgentCard } from './AgentCard';
 import { ActivityStream } from './ActivityStream';
+import { ConflictPanel } from '../git/ConflictPanel';
 import { useAgentStore } from '../../stores/agentStore';
+import { useSessionStore } from '../../stores/sessionStore';
 
 interface Props {
   sessionId: string;
@@ -10,10 +12,20 @@ interface Props {
 export function AgentView({ sessionId }: Props) {
   const agents = useAgentStore((s) => s.agentsBySession(sessionId));
   const { eventFilter, setEventFilter } = useAgentStore();
+  const session = useSessionStore((s) => s.sessions.find((sess) => sess.id === sessionId));
+
+  const conflictFiles = session?.conflictFiles ?? [];
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <BuildBanner sessionId={sessionId} />
+
+      {/* Conflict panel — shown only when conflicts exist */}
+      {conflictFiles.length > 0 && (
+        <div style={{ padding: '8px 8px 0' }}>
+          <ConflictPanel sessionId={sessionId} conflictFiles={conflictFiles} />
+        </div>
+      )}
 
       {/* Agent cards */}
       <div style={{
