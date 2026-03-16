@@ -21,11 +21,27 @@ const RoleSchema = z.object({
   directory_scope: z.array(z.string()),
 });
 
+const WorktreeSyncSchema = z.object({
+  mode: z.enum(['shared_remote', 'rsync', 'none']).default('none'),
+  rsync: z.object({
+    remoteHost: z.string(),
+    remotePath: z.string(),
+    sshKey: z.string().optional(),
+  }).optional(),
+  shared_remote: z.object({
+    remote: z.string(),
+    baseBranch: z.string(),
+  }).optional(),
+}).default({ mode: 'none' });
+
+export type WorktreeSyncConfig = z.infer<typeof WorktreeSyncSchema>;
+
 const BridgeConfigSchema = z.object({
   loop_interval_ms: z.number().default(2000),
   repo_path: z.string(),
   max_agents: z.number().default(5),
   auto_restart_on_crash: z.boolean().default(true),
+  worktreeSync: WorktreeSyncSchema,
   worktree_bootstrap: z.object({
     copy_files: z.array(z.string()).default(['.env', '.env.local']),
     run_commands: z.array(z.string()).default(['npm install --silent']),
@@ -122,6 +138,9 @@ export async function writeDefaultConfig(repoPath: string): Promise<void> {
     repo_path: repoPath,
     max_agents: 5,
     auto_restart_on_crash: true,
+    worktreeSync: {
+      mode: 'none',
+    },
     worktree_bootstrap: {
       copy_files: ['.env', '.env.local'],
       run_commands: ['npm install --silent'],

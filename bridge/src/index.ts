@@ -26,6 +26,7 @@ import { startHeartbeatMonitor, stopHeartbeatMonitor } from './vps/heartbeatMoni
 import { checkAndHandoff } from './handoff/manager.js';
 import { autoCommitAll } from './commands/commit.js';
 import { agentProcesses } from './commands/spawn.js';
+import { syncWorktree } from './worktree/sync.js';
 
 let running = true;
 let loopCount = 0;
@@ -86,6 +87,14 @@ async function loop(): Promise<void> {
 
     // 3. Status Aggregation
     const state = await aggregateState();
+
+    // 3a. Worktree Sync (shared_remote or rsync, if configured)
+    if (config.worktreeSync.mode !== 'none') {
+      for (const [, agent] of agentProcesses) {
+        await syncWorktree(agent.agentKey, agent.worktreePath, config.worktreeSync);
+      }
+    }
+
     await writeDashboardState(state);
     await writeHeartbeat();
 

@@ -84,6 +84,9 @@ if [ ! -f "$BASE_DIR/config.json" ]; then
     "session_limit_cents": null,
     "agent_limit_cents": null,
     "alert_threshold_pct": 80
+  },
+  "worktreeSync": {
+    "mode": "none"
   }
 }
 JSONEOF
