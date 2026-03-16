@@ -1,0 +1,123 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+# Security: github.workflow and github.ref are not user-controlled inputs —
+# they are safe to use in run-group keys. No untrusted user data is passed to
+# run: commands anywhere in this workflow.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  bridge:
+    name: Bridge — type-check, test, build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: bridge
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: bridge/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Type check
+        run: npx tsc --noEmit
+
+      - name: Security audit — no network listeners
+        run: |
+          if grep -r "http.createServer\|net.listen\|express()\|fastify\|app.listen" src/; then
+            echo "FAIL: network listener found in bridge/src/" && exit 1
+          fi
+          echo "PASS: no network listeners"
+
+      - name: Audit log safety check
+        run: |
+          if grep -r "writeFile\|unlink\|truncate" src/audit/logger.ts; then
+            echo "FAIL: destructive op in audit logger" && exit 1
+          fi
+          echo "PASS: audit logger clean"
+
+      - name: Run tests
+        run: npm test
+
+      - name: Build
+        run: npm run build
+
+  app:
+    name: App — type-check, test, build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: app
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: app/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci --legacy-peer-deps
+
+      - name: Type check
+        run: npx tsc --noEmit
+
+      - name: Credential safety check
+        run: |
+          if grep -rE "eyJ[a-zA-Z0-9_-]+\.[a-zA-Z0-9_-]+\.[a-zA-Z0-9_-]+" src/; then
+            echo "FAIL: hardcoded JWT/secret found" && exit 1
+          fi
+          echo "PASS: no hardcoded credentials"
+
+      - name: Run tests
+        run: npm test
+
+      - name: Build
+        run: npm run build
+        env:
+          VITE_SUPABASE_URL: https://placeholder.supabase.co
+          VITE_SUPABASE_ANON_KEY: placeholder-key-for-build
+
+  bridge-remote:
+    name: Bridge Remote — type-check, build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: bridge-remote
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: bridge-remote/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Type check
+        run: npx tsc --noEmit
+
+      - name: Build
+        run: npm run build

@@ -93,26 +93,26 @@
 
 | ID | Title | Priority | Effort | Deps | Status |
 |----|-------|----------|--------|------|--------|
-| M3-001 | Vite + React + TS project scaffold | P0 | M | — | 🔲 |
-| M3-002 | Tailwind CSS 4 + design system port | P0 | M | M3-001 | 🔲 |
-| M3-003 | Supabase Auth (email + GitHub) | P0 | L | M3-001 | 🔲 |
-| M3-004 | Zustand stores (session, agent, kanban, cost, vps, auth) | P0 | L | M3-001 | 🔲 |
-| M3-005 | Realtime subscriptions (agents, events, kanban, sessions) | P0 | L | M3-003 | 🔲 |
-| M3-006 | Topbar component suite | P0 | M | M3-002 | 🔲 |
-| M3-007 | Pane system (container, tab bar, session selector) | P0 | L | M3-002 | 🔲 |
-| M3-008 | Agent View components (banner, pipeline, cards, stream) | P0 | XL | M3-007 | 🔲 |
-| M3-009 | Kanban Board with @dnd-kit | P0 | L | M3-007 | 🔲 |
-| M3-010 | Mobile layout (bottom nav, swipe, pull-to-refresh) | P0 | L | M3-002 | 🔲 |
-| M3-011 | Cost Dashboard component | P0 | L | M3-004 | 🔲 |
-| M3-012 | Budget alerts + pause UI | P0 | M | M3-011 | 🔲 |
-| M3-013 | Graduated permissions UI (traffic light) | P0 | L | M3-004 | 🔲 |
-| M3-014 | Approval queue (sidebar desktop, tab mobile) | P0 | M | M3-013 | 🔲 |
-| M3-015 | Multi-model selector + provider badges | P1 | L | M3-004 | 🔲 |
-| M3-016 | Model config management UI | P1 | M | M3-015 | 🔲 |
-| M3-017 | VPS manager panel | P1 | L | M3-004 | 🔲 |
-| M3-018 | Offline/local-only fallback mode | P1 | M | M3-001 | 🔲 |
-| M3-019 | Vercel deployment config | P0 | S | M3-001 | 🔲 |
-| M3-020 | .env.example + README | P0 | S | — | 🔲 |
+| M3-001 | Vite + React + TS project scaffold | P0 | M | — | ✅ Done |
+| M3-002 | Tailwind CSS 4 + design system port | P0 | M | M3-001 | ✅ Done |
+| M3-003 | Supabase Auth (email + GitHub) | P0 | L | M3-001 | ✅ Done |
+| M3-004 | Zustand stores (session, agent, kanban, cost, vps, auth) | P0 | L | M3-001 | ✅ Done |
+| M3-005 | Realtime subscriptions (agents, events, kanban, sessions) | P0 | L | M3-003 | ✅ Done |
+| M3-006 | Topbar component suite | P0 | M | M3-002 | ✅ Done |
+| M3-007 | Pane system (container, tab bar, session selector) | P0 | L | M3-002 | ✅ Done |
+| M3-008 | Agent View components (banner, pipeline, cards, stream) | P0 | XL | M3-007 | ✅ Done |
+| M3-009 | Kanban Board with @dnd-kit | P0 | L | M3-007 | ✅ Done |
+| M3-010 | Mobile layout (bottom nav, swipe, pull-to-refresh) | P0 | L | M3-002 | ✅ Done (bottom nav; swipe/pull-to-refresh deferred to polish) |
+| M3-011 | Cost Dashboard component | P0 | L | M3-004 | ✅ Done |
+| M3-012 | Budget alerts + pause UI | P0 | M | M3-011 | ✅ Done |
+| M3-013 | Graduated permissions UI (traffic light) | P0 | L | M3-004 | ✅ Done |
+| M3-014 | Approval queue (sidebar desktop, tab mobile) | P0 | M | M3-013 | ✅ Done |
+| M3-015 | Multi-model selector + provider badges | P1 | L | M3-004 | ✅ Done |
+| M3-016 | Model config management UI | P1 | M | M3-015 | ✅ Done |
+| M3-017 | VPS manager panel | P1 | L | M3-004 | ✅ Done |
+| M3-018 | Offline/local-only fallback mode | P1 | M | M3-001 | ✅ Done |
+| M3-019 | Vercel deployment config | P0 | S | M3-001 | ✅ Done |
+| M3-020 | .env.example + README | P0 | S | — | ✅ Done |
 
 ---
 
@@ -123,15 +123,15 @@
 
 | ID | Title | Priority | Effort | Deps | Status |
 |----|-------|----------|--------|------|--------|
-| M4-001 | SSH wrapper module | P0 | M | M2-001 | 🔲 |
-| M4-002 | rsync state sync | P0 | M | M4-001 | 🔲 |
-| M4-003 | Remote bridge deployment script | P0 | L | M4-001 | 🔲 |
-| M4-004 | bridge-remote project (lightweight bridge) | P0 | L | M2-001 | 🔲 |
-| M4-005 | VPS registration interactive CLI | P0 | M | M4-001 | 🔲 |
-| M4-006 | Heartbeat monitoring + offline detection | P0 | M | M4-002 | 🔲 |
-| M4-007 | Load balancer (VPS selection for new agents) | P1 | M | M4-006 | 🔲 |
-| M4-008 | Git worktree sync strategy (shared_remote / rsync) | P1 | L | M4-002 | 🔲 |
-| M4-009 | Updated README with multi-VPS guide | P1 | M | — | 🔲 |
+| M4-001 | SSH wrapper module | P0 | M | M2-001 | ✅ Done |
+| M4-002 | rsync state sync | P0 | M | M4-001 | ✅ Done |
+| M4-003 | Remote bridge deployment script | P0 | L | M4-001 | ✅ Done |
+| M4-004 | bridge-remote project (lightweight bridge) | P0 | L | M2-001 | ✅ Done |
+| M4-005 | VPS registration interactive CLI | P0 | M | M4-001 | ✅ Done (dashboard registration form; bridge-side CLI TBD) |
+| M4-006 | Heartbeat monitoring + offline detection | P0 | M | M4-002 | ✅ Done |
+| M4-007 | Load balancer (VPS selection for new agents) | P1 | M | M4-006 | ✅ Done (selectVps in vpsRegistry.ts; least-loaded + round-robin; wired into spawn.ts) |
+| M4-008 | Git worktree sync strategy (shared_remote / rsync) | P1 | L | M4-002 | 🔲 (documented; impl deferred) |
+| M4-009 | Updated README with multi-VPS guide | P1 | M | — | ✅ Done (docs/multi-vps-architecture.md) |
 
 ---
 
@@ -142,15 +142,15 @@
 
 | ID | Title | Priority | Effort | Deps | Status |
 |----|-------|----------|--------|------|--------|
-| M5-001 | MCP server scaffold (stdio transport) | P0 | M | — | 🔲 |
-| M5-002 | Status tools (report_status, report_cost, get_team_status) | P0 | L | M5-001 | 🔲 |
-| M5-003 | Task tools (get_tasks, update_task) | P0 | M | M5-001 | 🔲 |
-| M5-004 | Approval tools (request_approval, check_approval) | P0 | L | M5-001 | 🔲 |
-| M5-005 | Event logging tool | P0 | S | M5-001 | 🔲 |
-| M5-006 | Messaging tools (send_message, read_messages) | P1 | M | M5-001 | 🔲 |
-| M5-007 | Filesystem state reader/writer | P0 | M | M5-001 | 🔲 |
-| M5-008 | Example .mcp.json config | P0 | S | — | 🔲 |
-| M5-009 | README + integration guide | P1 | M | — | 🔲 |
+| M5-001 | MCP server scaffold (stdio transport) | P0 | M | — | ✅ Done |
+| M5-002 | Status tools (report_status, report_cost, get_team_status) | P0 | L | M5-001 | ✅ Done |
+| M5-003 | Task tools (get_tasks, update_task) | P0 | M | M5-001 | ✅ Done |
+| M5-004 | Approval tools (request_approval, check_approval) | P0 | L | M5-001 | ✅ Done |
+| M5-005 | Event logging tool | P0 | S | M5-001 | ✅ Done |
+| M5-006 | Messaging tools (send_message, read_messages) | P1 | M | M5-001 | ✅ Done |
+| M5-007 | Filesystem state reader/writer | P0 | M | M5-001 | ✅ Done |
+| M5-008 | Example .mcp.json config | P0 | S | — | ✅ Done |
+| M5-009 | README + integration guide | P1 | M | — | ✅ Done |
 
 ---
 
@@ -164,8 +164,8 @@
 | M6-004 | Parallel exploration mode (competing approaches) | P2 | XL | M4-004 | 🔲 |
 | M6-005 | Review loop with configurable retry limits | P2 | L | M5-004 | 🔲 |
 | M6-006 | Session replay with cost annotation timeline | P2 | XL | M2-015 | 🔲 |
-| M6-007 | Context window compaction alerts | P1 | M | M5-002 | 🔲 |
-| M6-008 | Auto-handoff when context near full | P2 | L | M6-007 | 🔲 |
+| M6-007 | Context window compaction alerts | P1 | M | M5-002 | ✅ Done |
+| M6-008 | Auto-handoff when context near full | P2 | L | M6-007 | ✅ Done (handoff/manager.ts; spawns continuation agent at 80%; wired into main loop) |
 
 ---
 
@@ -173,11 +173,11 @@
 
 | ID | Title | Priority | Effort | Deps | Status |
 |----|-------|----------|--------|------|--------|
-| M7-001 | Visual diff preview component (full implementation) | P1 | L | M3-008 | 🔲 |
-| M7-002 | Auto-commit per agent action with meaningful messages | P1 | M | M2-012 | 🔲 |
+| M7-001 | Visual diff preview component (full implementation) | P1 | L | M3-008 | ✅ Done (DiffViewer.tsx + DiffModal.tsx; zero deps; unified diff parser) |
+| M7-002 | Auto-commit per agent action with meaningful messages | P1 | M | M2-012 | ✅ Done (commands/commit.ts; git add -u + commit; 30s cooldown; wired into main loop) |
 | M7-003 | Branch management UI (create, merge, rebase) | P2 | L | M3-001 | 🔲 |
 | M7-004 | Conflict detection and resolution workflow | P2 | XL | M7-003 | 🔲 |
-| M7-005 | Architectural ownership boundaries (agent X owns /src/db) | P1 | L | M2-014 | 🔲 |
+| M7-005 | Architectural ownership boundaries (agent X owns /src/db) | P1 | L | M2-014 | ✅ Done (ownership/registry.ts + enforcer.ts; conflict detection at spawn; register/release lifecycle) |
 | M7-006 | PR creation from session (aggregate agent changes) | P2 | L | M7-002 | 🔲 |
 
 ---
@@ -190,11 +190,11 @@
 | M8-002 | SSO integration (SAML, OIDC) | P3 | L | M8-001 | 🔲 |
 | M8-003 | Centralized billing dashboard | P2 | L | M3-011 | 🔲 |
 | M8-004 | Admin controls (org budgets, model restrictions) | P3 | L | M8-001 | 🔲 |
-| M8-005 | Export session data (JSON, CSV) | P2 | M | M3-004 | 🔲 |
+| M8-005 | Export session data (JSON, CSV) | P2 | M | M3-004 | ✅ Done (app/src/lib/export.ts; single session + all sessions; JSON + CSV download) |
 | M8-006 | API access for CI/CD integration | P2 | L | M3-001 | 🔲 |
 | M8-007 | GitHub Actions integration (agent on PR) | P2 | L | M8-006 | 🔲 |
 | M8-008 | Webhook support for external integrations | P2 | M | M8-006 | 🔲 |
-| M8-009 | Browser push notifications for approvals | P1 | M | M3-014 | 🔲 |
+| M8-009 | Browser push notifications for approvals | P1 | M | M3-014 | ✅ Done (useNotifications.ts hook; integrated into ApprovalQueue.tsx) |
 
 ---
 
@@ -215,10 +215,10 @@
 
 | ID | Title | Priority | Effort | Status |
 |----|-------|----------|--------|--------|
-| TD-001 | Virtualized lists for large event streams | P1 | M | 🔲 |
-| TD-002 | Unit tests for bridge | P1 | L | 🔲 |
-| TD-003 | Integration tests for dashboard | P1 | L | 🔲 |
-| TD-004 | GitHub Actions CI/CD pipeline | P1 | M | 🔲 |
+| TD-001 | Virtualized lists for large event streams | P1 | M | ✅ Done (ActivityStream.tsx rewritten with scroll-position virtualizer; zero deps) |
+| TD-002 | Unit tests for bridge | P1 | L | ✅ Done (16 tests: writer, audit, processor) |
+| TD-003 | Integration tests for dashboard | P1 | L | ✅ Done (15 tests: agentStore 7, costStore 8; vitest setup in app/) |
+| TD-004 | GitHub Actions CI/CD pipeline | P1 | M | ✅ Done (.github/workflows/ci.yml; bridge + app + bridge-remote; type-check + test + build) |
 | TD-005 | Error tracking (Sentry or similar) | P2 | M | 🔲 |
 | TD-006 | Performance monitoring | P2 | M | 🔲 |
 | TD-007 | Accessibility audit (keyboard nav, screen readers) | P2 | L | 🔲 |

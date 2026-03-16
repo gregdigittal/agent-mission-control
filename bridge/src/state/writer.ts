@@ -1,10 +1,17 @@
-import { writeFile } from 'node:fs/promises';
+import { writeFile, rename } from 'node:fs/promises';
 import { DASHBOARD_STATE_PATH, HEARTBEAT_PATH, AGENTS_STATE_DIR } from '../config.js';
 import { join } from 'node:path';
 import type { DashboardState } from './aggregator.js';
 
+/** Write to .tmp then atomically rename — prevents partial reads by the dashboard. */
+async function atomicWrite(path: string, data: string): Promise<void> {
+  const tmpPath = `${path}.tmp`;
+  await writeFile(tmpPath, data);
+  await rename(tmpPath, path);
+}
+
 export async function writeDashboardState(state: DashboardState): Promise<void> {
-  await writeFile(DASHBOARD_STATE_PATH, JSON.stringify(state, null, 2));
+  await atomicWrite(DASHBOARD_STATE_PATH, JSON.stringify(state, null, 2));
 }
 
 export async function writeHeartbeat(): Promise<void> {
@@ -14,10 +21,10 @@ export async function writeHeartbeat(): Promise<void> {
     uptime: process.uptime(),
     memory: process.memoryUsage(),
   };
-  await writeFile(HEARTBEAT_PATH, JSON.stringify(heartbeat, null, 2));
+  await atomicWrite(HEARTBEAT_PATH, JSON.stringify(heartbeat, null, 2));
 }
 
 export async function writeAgentState(agentKey: string, state: Record<string, unknown>): Promise<void> {
   const path = join(AGENTS_STATE_DIR, `${agentKey}.json`);
-  await writeFile(path, JSON.stringify(state, null, 2));
+  await atomicWrite(path, JSON.stringify(state, null, 2));
 }

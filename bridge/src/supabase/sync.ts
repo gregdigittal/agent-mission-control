@@ -5,6 +5,11 @@ import type { DashboardState } from '../state/aggregator.js';
 let lastHeartbeat = 0;
 const HEARTBEAT_INTERVAL_MS = 30_000;
 
+// Track which agents have already had a compaction alert fired this session.
+// Prevents emitting a new event every sync cycle once threshold is crossed.
+const alertedAgents = new Set<string>();
+const CONTEXT_ALERT_THRESHOLD = 60;
+
 export async function syncToSupabase(state: DashboardState): Promise<void> {
   const client = await getSupabaseClient();
   if (!client) return;
@@ -33,6 +38,35 @@ export async function syncToSupabase(state: DashboardState): Promise<void> {
 
         if (error) {
           console.warn(`[supabase] Agent upsert error for ${agent.key}:`, error.message);
+        }
+
+        // Emit compaction alert event when context crosses threshold (once per agent)
+        const alertKey = `${session.id}:${agent.key}`;
+        if (agent.ctx >= CONTEXT_ALERT_THRESHOLD && !alertedAgents.has(alertKey)) {
+          alertedAgents.add(alertKey);
+          await audit('context_compaction_alert', {
+            agentKey: agent.key,
+            sessionId: session.id,
+            contextPct: agent.ctx,
+          });
+          console.warn(`[context] Agent ${agent.key} context at ${agent.ctx}% — compaction recommended`);
+
+          // Push to events table for realtime dashboard notification
+          const { error: evErr } = await client.from('events').insert({
+            agent_id: agent.key,
+            session_id: session.id,
+            type: 'cost_alert',
+            message: `Context window at ${agent.ctx}% — consider running /compact`,
+            detail: `Threshold: ${CONTEXT_ALERT_THRESHOLD}%. Current: ${agent.ctx}%.`,
+            ts: new Date().toISOString(),
+          });
+          if (evErr) {
+            console.warn(`[supabase] Context alert event error:`, evErr.message);
+          }
+        }
+        // Clear alert tracking when context drops back below threshold (e.g. after compaction)
+        if (agent.ctx < CONTEXT_ALERT_THRESHOLD && alertedAgents.has(alertKey)) {
+          alertedAgents.delete(alertKey);
         }
       }
 

@@ -1,0 +1,145 @@
+@import "tailwindcss";
+
+/* === DESIGN TOKENS — match dashboard/index.html exactly === */
+:root {
+  --bg-0: #06080c;
+  --bg-1: #0b0e14;
+  --bg-2: #10141c;
+  --bg-3: #161b26;
+  --bg-4: #1c2232;
+  --bg-5: #242b3d;
+
+  --border-0: #1a2030;
+  --border-1: #242e42;
+  --border-2: #2e3a52;
+
+  --text-0: #edf0f7;
+  --text-1: #b0b8cc;
+  --text-2: #6e7a94;
+  --text-3: #3e4a64;
+
+  --cyan: #22d3ee;
+  --green: #34d399;
+  --amber: #fbbf24;
+  --red: #f87171;
+  --violet: #a78bfa;
+  --blue: #60a5fa;
+  --rose: #fb7185;
+
+  /* Default to desktop profile */
+  --density-pad: 14px;
+  --density-gap: 10px;
+  --pane-min: 360px;
+  --topbar-h: 40px;
+  --font-base: 13px;
+  --font-sm: 11px;
+  --font-xs: 10px;
+  --font-xxs: 9px;
+  --card-pad: 12px 14px;
+  --kb-col-w: 210px;
+  --bb-stage-size: 17px;
+  --bb-ring-size: 54px;
+  --bb-stat-size: 17px;
+  --bottomnav-h: 0px;
+  --tap-target: 32px;
+}
+
+html.screen-mobile {
+  --density-pad: 8px;
+  --density-gap: 6px;
+  --pane-min: 100%;
+  --topbar-h: 48px;
+  --font-base: 14px;
+  --font-sm: 12px;
+  --font-xs: 11px;
+  --font-xxs: 10px;
+  --card-pad: 12px;
+  --kb-col-w: calc(100vw - 32px);
+  --bb-stage-size: 14px;
+  --bb-ring-size: 48px;
+  --bb-stat-size: 14px;
+  --bottomnav-h: 56px;
+  --tap-target: 44px;
+}
+
+html.screen-laptop {
+  --density-pad: 10px;
+  --density-gap: 7px;
+  --pane-min: 320px;
+  --topbar-h: 36px;
+  --font-base: 12px;
+  --font-sm: 10px;
+  --font-xs: 9px;
+  --font-xxs: 8px;
+  --card-pad: 8px 10px;
+  --kb-col-w: 180px;
+  --bb-stage-size: 15px;
+  --bb-ring-size: 42px;
+  --bb-stat-size: 15px;
+}
+
+html.screen-ultrawide {
+  --density-pad: 18px;
+  --density-gap: 12px;
+  --pane-min: 400px;
+  --topbar-h: 44px;
+  --font-base: 14px;
+  --font-sm: 12px;
+  --font-xs: 11px;
+  --font-xxs: 10px;
+  --card-pad: 14px 16px;
+  --kb-col-w: 240px;
+  --bb-stage-size: 20px;
+  --bb-ring-size: 62px;
+  --bb-stat-size: 20px;
+}
+
+/* === RESET & BASE === */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html {
+  font-size: var(--font-base);
+  -webkit-text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg-0);
+  color: var(--text-0);
+  overflow: hidden;
+  height: 100vh;
+  width: 100vw;
+}
+
+code, pre, .mono { font-family: 'JetBrains Mono', monospace; }
+button { cursor: pointer; border: none; background: none; font: inherit; color: inherit; }
+input, select {
+  font: inherit; color: inherit;
+  background: var(--bg-3); border: 1px solid var(--border-1);
+  border-radius: 4px; padding: 4px 8px;
+}
+:focus-visible { outline: 1px solid var(--cyan); outline-offset: 2px; }
+a { color: var(--cyan); text-decoration: none; }
+
+/* === SCROLLBAR === */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: var(--bg-1); }
+::-webkit-scrollbar-thumb { background: var(--border-2); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-3); }
+html.screen-mobile ::-webkit-scrollbar { display: none; }
+
+/* === ANIMATIONS === */
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+@keyframes fadeIn { from{opacity:0;transform:translateY(-4px)} to{opacity:1;transform:none} }
+@keyframes spin { to{transform:rotate(360deg)} }
+@keyframes slideUp { from{transform:translateY(100%)} to{transform:translateY(0)} }
+@keyframes shimmer { 0%{opacity:.4} 50%{opacity:.8} 100%{opacity:.4} }
+
+/* === SCANLINE OVERLAY === */
+body[data-scanlines]::after {
+  content: '';
+  position: fixed; inset: 0;
+  background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,.03) 2px, rgba(0,0,0,.03) 4px);
+  pointer-events: none; z-index: 9999;
+}

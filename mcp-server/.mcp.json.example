@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "agent-mission-control": {
+      "command": "node",
+      "args": ["/path/to/agent-mission-control/mcp-server/dist/index.js"],
+      "env": {
+        "AGENT_MC_AGENT_KEY": "backend",
+        "AGENT_MC_SESSION_ID": "session-uuid-here",
+        "AGENT_MC_STATE_DIR": "~/.agent-mc",
+        "AGENT_MC_BUDGET_CENTS": "500"
+      }
+    }
+  }
+}

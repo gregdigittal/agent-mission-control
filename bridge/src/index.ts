@@ -22,6 +22,10 @@ import { syncToSupabase } from './supabase/sync.js';
 import { terminateAll } from './commands/terminate.js';
 import { audit } from './audit/logger.js';
 import { writeDefaultConfig } from './config.js';
+import { startHeartbeatMonitor, stopHeartbeatMonitor } from './vps/heartbeatMonitor.js';
+import { checkAndHandoff } from './handoff/manager.js';
+import { autoCommitAll } from './commands/commit.js';
+import { agentProcesses } from './commands/spawn.js';
 
 let running = true;
 let loopCount = 0;
@@ -64,6 +68,9 @@ async function init(): Promise<void> {
     repoPath: config.repo_path,
     supabase: config.supabase.enabled,
   });
+
+  // Start VPS heartbeat monitor (polls registered VPS nodes every 60s)
+  startHeartbeatMonitor();
 }
 
 async function loop(): Promise<void> {
@@ -82,7 +89,18 @@ async function loop(): Promise<void> {
     await writeDashboardState(state);
     await writeHeartbeat();
 
-    // 4. Supabase Sync (if enabled)
+    // 4. Auto-commit agent worktrees (stage -u + commit on change, 30s cooldown)
+    const agentTaskMap = new Map(
+      state.sessions.flatMap((s) =>
+        s.agents.map((a) => [`${s.id}:${a.key}`, a.task]),
+      ),
+    );
+    await autoCommitAll(agentProcesses, agentTaskMap);
+
+    // 5. Context handoff check (auto-spawn continuation agents at 80% context)
+    await checkAndHandoff(state);
+
+    // 6. Supabase Sync (if enabled)
     if (config.supabase.enabled) {
       await syncToSupabase(state);
     }
@@ -106,6 +124,7 @@ async function shutdown(signal: string): Promise<void> {
   console.log(`\n[shutdown] Received ${signal}, terminating agents...`);
   await audit('bridge_stopping', { signal, loopCount });
 
+  stopHeartbeatMonitor();
   await terminateAll();
 
   await audit('bridge_stopped', { signal, loopCount });
