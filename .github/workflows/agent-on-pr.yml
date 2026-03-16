@@ -1,0 +1,92 @@
+# agent-on-pr.yml
+#
+# Spawns a Claude Code review agent for every PR via the Agent Mission Control API.
+#
+# Required repository secrets:
+#   AGENT_MC_API_URL    -- base URL of your deployed Agent Mission Control
+#                         (e.g. https://yourapp.vercel.app)
+#   AGENT_MC_API_SECRET -- Bearer token matching AGENT_MC_API_SECRET in your deployment
+#
+# Permissions:
+#   pull-requests: write  -- to post a comment with the session link
+
+name: Spawn Agent Review on PR
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  pull-requests: write
+
+jobs:
+  spawn-review-agent:
+    name: Spawn review agent
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout PR branch
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Compute PR diff
+        id: diff
+        env:
+          BASE_REF: ${{ github.base_ref }}
+        run: |
+          git diff "origin/${BASE_REF}...HEAD" > /tmp/pr.diff
+          {
+            echo 'diff<<DIFF_EOF'
+            cat /tmp/pr.diff
+            echo 'DIFF_EOF'
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Spawn Agent Mission Control review session
+        id: spawn
+        continue-on-error: true
+        env:
+          AGENT_MC_API_URL: ${{ secrets.AGENT_MC_API_URL }}
+          AGENT_MC_API_SECRET: ${{ secrets.AGENT_MC_API_SECRET }}
+          PR_DIFF: ${{ steps.diff.outputs.diff }}
+          REPO_PATH: ${{ github.workspace }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          # Truncate diff to 500 lines. PR_DIFF is an env var — not
+          # interpolated into shell directly, preventing injection.
+          echo "$PR_DIFF" | head -500 > /tmp/pr_truncated.diff
+
+          # Use jq to safely construct JSON — diff content is passed as a
+          # jq --arg value, not concatenated into the JSON string directly.
+          DIFF_CONTENT=$(cat /tmp/pr_truncated.diff)
+          OBJECTIVE="Review PR #${PR_NUMBER} (${PR_HEAD_SHA}) and identify issues, risks, and improvements:"$'\n\n'"${DIFF_CONTENT}"
+
+          RESPONSE=$(curl -sf -X POST "${AGENT_MC_API_URL}/api/sessions" \
+            -H "Authorization: Bearer ${AGENT_MC_API_SECRET}" \
+            -H "Content-Type: application/json" \
+            -d "$(jq -n --arg objective "$OBJECTIVE" --arg repoPath "$REPO_PATH" \
+                  '{objective: $objective, repoPath: $repoPath}')")
+
+          echo "response=${RESPONSE}" >> "$GITHUB_OUTPUT"
+          SESSION_ID=$(echo "$RESPONSE" | jq -r '.sessionId // empty')
+          echo "session_id=${SESSION_ID}" >> "$GITHUB_OUTPUT"
+
+      - name: Post success comment
+        if: steps.spawn.outcome == 'success' && steps.spawn.outputs.session_id != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          AGENT_MC_API_URL: ${{ secrets.AGENT_MC_API_URL }}
+          SESSION_ID: ${{ steps.spawn.outputs.session_id }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          BODY="Agent Mission Control: Review session spawned. Session ID: ${SESSION_ID}. Dashboard: ${AGENT_MC_API_URL}?session=${SESSION_ID}"
+          gh pr comment "${PR_NUMBER}" --body "$BODY"
+
+      - name: Post fallback comment on failure
+        if: steps.spawn.outcome == 'failure' || steps.spawn.outputs.session_id == ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          BODY="Agent Mission Control: Could not spawn a review agent for this PR (API unreachable or not configured). Please review manually or check the deployment."
+          gh pr comment "${PR_NUMBER}" --body "$BODY"
