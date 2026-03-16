@@ -1,0 +1,282 @@
+{
+  "project": "Agent Mission Control",
+  "currentStageIdx": 3,
+  "totalTasks": 18,
+  "completedTasks": 18,
+  "stages": [
+    {
+      "name": "Security",
+      "desc": "Auth + XSS hardening",
+      "status": "completed"
+    },
+    {
+      "name": "Polish",
+      "desc": "CSS vars, backoff, UI fixes",
+      "status": "completed"
+    },
+    {
+      "name": "P2+ Features",
+      "desc": "DAG, gates, URL mode, source badges",
+      "status": "completed"
+    },
+    {
+      "name": "P1 Features",
+      "desc": "Modal, shortcuts, scrollbars, README",
+      "status": "active"
+    },
+    {
+      "name": "Hosted Track",
+      "desc": "Docker, CI/CD, testing",
+      "status": "pending"
+    }
+  ],
+  "agents": [
+    {
+      "id": "claude-agent",
+      "name": "Claude",
+      "role": "AI Agent",
+      "type": "leader",
+      "status": "idle",
+      "icon": "\u25c6",
+      "task": "Full backlog cleared \u2014 all items complete",
+      "taskId": null,
+      "metrics": {
+        "ctx": "0%",
+        "cost": "$0.00",
+        "msgs": 0
+      }
+    }
+  ],
+  "tasks": [
+    {
+      "id": "F-060",
+      "title": "F-060: Input sanitization / XSS validation",
+      "status": "done",
+      "assignee": "Claude",
+      "priority": "high",
+      "deps": [],
+      "rec": false,
+      "recWhy": ""
+    },
+    {
+      "id": "F-070",
+      "title": "F-070: MCP server auth \u2014 Bearer token on write endpoints",
+      "status": "done",
+      "assignee": "Claude",
+      "priority": "high",
+      "deps": [],
+      "rec": false,
+      "recWhy": ""
+    },
+    {
+      "id": "F-002",
+      "title": "F-002: CSS variable audit \u2014 hardcoded px sweep",
+      "status": "done",
+      "assignee": "Claude",
+      "priority": "medium",
+      "deps": [],
+      "rec": false,
+      "recWhy": ""
+    },
+    {
+      "id": "F-003",
+      "title": "F-003: Error handling \u2014 inline banners + exponential backoff",
+      "status": "done",
+      "assignee": "Claude",
+      "priority": "medium",
+      "deps": [],
+      "rec": false,
+      "recWhy": ""
+    },
+    {
+      "id": "F-065",
+      "title": "F-065: Task dependency DAG \u2014 blocked tasks, cycle detection",
+      "status": "done",
+      "assignee": "Claude",
+      "priority": "low",
+      "deps": [],
+      "rec": false,
+      "recWhy": ""
+    },
+    {
+      "id": "F-061",
+      "title": "F-061: Evidence gates \u2014 block stage advancement",
+      "status": "done",
+      "assignee": "Claude",
+      "priority": "low",
+      "deps": [],
+      "rec": false,
+      "recWhy": ""
+    },
+    {
+      "id": "F-034",
+      "title": "F-034: URL data source mode",
+      "status": "done",
+      "assignee": "Claude",
+      "priority": "low",
+      "deps": [],
+      "rec": false,
+      "recWhy": ""
+    },
+    {
+      "id": "F-033",
+      "title": "F-033: Per-session source badge (SIM/FILE/URL/SB)",
+      "status": "done",
+      "assignee": "Claude",
+      "priority": "low",
+      "deps": [],
+      "rec": false,
+      "recWhy": ""
+    },
+    {
+      "id": "F-004",
+      "title": "F-004: First-run screen profile modal",
+      "status": "done",
+      "assignee": "Claude",
+      "priority": "high",
+      "deps": [],
+      "rec": false,
+      "recWhy": ""
+    },
+    {
+      "id": "F-005",
+      "title": "F-005: Keyboard shortcuts (1-4 layouts, L/D/U profiles)",
+      "status": "done",
+      "assignee": "Claude",
+      "priority": "high",
+      "deps": [],
+      "rec": false,
+      "recWhy": ""
+    },
+    {
+      "id": "F-051",
+      "title": "F-051: Custom scrollbars",
+      "status": "done",
+      "assignee": "Claude",
+      "priority": "medium",
+      "deps": [],
+      "rec": false,
+      "recWhy": ""
+    },
+    {
+      "id": "F-042",
+      "title": "F-042: README \u2014 user-facing setup guide",
+      "status": "done",
+      "assignee": "Claude",
+      "priority": "medium",
+      "deps": [],
+      "rec": false,
+      "recWhy": ""
+    },
+    {
+      "id": "F-072",
+      "title": "F-072: Docker Compose (app + postgres + mcp-server)",
+      "status": "done",
+      "assignee": "Claude",
+      "priority": "medium",
+      "deps": [],
+      "rec": false,
+      "recWhy": ""
+    },
+    {
+      "id": "F-073",
+      "title": "F-073: CI/CD pipeline \u2014 GitHub Actions",
+      "status": "done",
+      "assignee": "Claude",
+      "priority": "medium",
+      "deps": [],
+      "rec": false,
+      "recWhy": ""
+    },
+    {
+      "id": "F-074",
+      "title": "F-074: Testing framework \u2014 Vitest + Playwright",
+      "status": "done",
+      "assignee": "Claude",
+      "priority": "medium",
+      "deps": [],
+      "rec": false,
+      "recWhy": ""
+    },
+    {
+      "id": "F-052",
+      "title": "F-052: Help tooltip (? panel with shortcuts)",
+      "status": "done",
+      "assignee": "Claude",
+      "priority": "low",
+      "deps": [],
+      "rec": false,
+      "recWhy": ""
+    },
+    {
+      "id": "F-063",
+      "title": "F-063: Agent heartbeat liveness indicators",
+      "status": "done",
+      "assignee": "Claude",
+      "priority": "low",
+      "deps": [],
+      "rec": false,
+      "recWhy": ""
+    },
+    {
+      "id": "F-064",
+      "title": "F-064: Cost tracking widget \u2014 total + per-agent + trend",
+      "status": "done",
+      "assignee": "Claude",
+      "priority": "low",
+      "deps": [],
+      "rec": false,
+      "recWhy": ""
+    }
+  ],
+  "events": [
+    {
+      "agent": "Claude",
+      "type": "task",
+      "text": "agent_state.json restored \u2014 contamination fixed",
+      "timestamp": "08:37:57"
+    },
+    {
+      "agent": "Claude",
+      "type": "task",
+      "text": "Canonicalized task IDs to uppercase (F-xxx) matching BACKLOG.md",
+      "timestamp": "14:29:08"
+    },
+    {
+      "agent": "Claude",
+      "type": "task",
+      "text": "Closed F-004/005/051/042 \u2014 already implemented, marking done",
+      "timestamp": "15:37:18"
+    },
+    {
+      "agent": "Claude",
+      "type": "task",
+      "text": "F-074 started \u2014 Playwright E2E setup",
+      "timestamp": "15:37:33"
+    },
+    {
+      "agent": "Claude",
+      "type": "task",
+      "text": "F-074 done \u2014 package.json + Playwright E2E (5 test suites)",
+      "timestamp": "15:38:28"
+    },
+    {
+      "agent": "Claude",
+      "type": "task",
+      "text": "F-072 done \u2014 Dockerfile + docker-compose.yml",
+      "timestamp": "15:39:01"
+    },
+    {
+      "agent": "Claude",
+      "type": "task",
+      "text": "F-073 done \u2014 GitHub Actions CI/CD (lint+test+docker+deploy)",
+      "timestamp": "15:39:52"
+    },
+    {
+      "agent": "Claude",
+      "type": "task",
+      "text": "Backlog cleared \u2014 F-052/063/064 all implemented and closed",
+      "timestamp": "16:10:06"
+    }
+  ]
+}

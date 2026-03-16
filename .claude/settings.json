@@ -1,0 +1,16 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Bash|Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/home/gregmorris/projects/agent-mission-control/.claude/hooks/amc-push.sh",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  }
+}

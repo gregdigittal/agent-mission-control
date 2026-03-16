@@ -1,0 +1,6 @@
+{
+  "buildCommand": "cp ../index.html ./public/index.html && cp ../agent_state_example.json ./public/agent_state_example.json",
+  "outputDirectory": "public",
+  "installCommand": null,
+  "framework": null
+}
