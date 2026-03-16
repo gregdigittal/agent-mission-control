@@ -2,6 +2,7 @@ import { useState } from 'react';
 import type { FormEvent } from 'react';
 import { useAuthStore } from '../../stores/authStore';
 import { isSupabaseConfigured } from '../../lib/supabase';
+import { SsoButton } from './SsoButton';
 
 export function LoginPage() {
   const { signInWithEmail, signInWithGitHub, signUp, loading } = useAuthStore();
@@ -117,6 +118,8 @@ export function LoginPage() {
         >
           Continue with GitHub
         </button>
+
+        <SsoButton />
       </div>
     </div>
   );
