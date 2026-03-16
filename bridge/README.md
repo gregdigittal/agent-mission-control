@@ -155,9 +155,13 @@ Syncs the bridge state directory (`~/.agent-mc/state/`) to a remote VPS node ove
 
 Requires `rsync` and `ssh` to be installed and `remoteHost` to be reachable from the bridge machine. Sync failures are logged but do not halt the main loop.
 
-**Required env var (decompose feature)**
+## Environment Variables
 
-`ANTHROPIC_API_KEY` — required only if the `decompose_objective` command is used. Not needed for worktree sync itself.
+Copy `.env.example` to `.env` and fill in the values you need. The bridge reads env vars at runtime — no `.env` file is loaded automatically; use your shell, systemd `EnvironmentFile=`, or PM2 `env:` config to inject them.
+
+| Variable | Required | Purpose |
+|----------|----------|---------|
+| `ANTHROPIC_API_KEY` | Only for `decompose_objective` | Powers the task decomposition engine. The bridge runs without it — the command logs a warning and returns an empty result if the key is absent. |
 
 ## Security
 

@@ -9,6 +9,7 @@ import { terminateAgent } from './terminate.js';
 import { handleApproval } from './approve.js';
 import { triggerReviewLoop } from './review.js';
 import { createBranch, switchBranch, mergeBranch } from './branch.js';
+import { handleDecomposeObjective } from '../decompose/handler.js';
 
 // Payload schemas for each command type
 const SpawnPayloadSchema = z.object({
@@ -64,12 +65,19 @@ const MergeBranchPayloadSchema = z.object({
   message: z.string().optional(),
 });
 
+const DecomposeObjectivePayloadSchema = z.object({
+  objective: z.string(),
+  session_id: z.string(),
+  agent_key: z.string(),
+});
+
 const CommandSchema = z.object({
   id: z.string(),
   type: z.enum([
     'spawn_agent', 'terminate_agent', 'approve_task', 'update_config',
     'pause_agent', 'resume_agent', 'review_loop_agent',
     'create_branch', 'switch_branch', 'merge_branch',
+    'decompose_objective',
   ]),
   timestamp: z.string(),
   session_token: z.string(),
@@ -189,6 +197,16 @@ async function executeCommand(cmd: Command): Promise<void> {
     case 'merge_branch': {
       const payload = MergeBranchPayloadSchema.parse(cmd.payload);
       await mergeBranch(payload);
+      break;
+    }
+
+    case 'decompose_objective': {
+      const payload = DecomposeObjectivePayloadSchema.parse(cmd.payload);
+      await handleDecomposeObjective({
+        objective: payload.objective,
+        sessionId: payload.session_id,
+        agentKey: payload.agent_key,
+      });
       break;
     }
 
