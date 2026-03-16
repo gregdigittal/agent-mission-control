@@ -5,6 +5,10 @@ dist/
 .env.*
 agent_state.json
 
+# Playwright auth state
+tests/e2e/.auth/user.json
+tests/e2e/.auth/admin.json
+
 # Docusaurus site
 docs/site/node_modules/
 docs/site/.docusaurus/
