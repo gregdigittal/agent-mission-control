@@ -111,3 +111,32 @@ The bridge sets these env vars automatically when spawning agents.
 ## Transport
 
 stdio — runs as a child process of each Claude Code session. No network ports opened.
+
+## Plugin System
+
+The MCP server supports a lightweight plugin API that lets you add custom tools without modifying the core server.
+
+### How it works
+
+At startup the server reads all `*.plugin.js` files from the directory pointed to by the `PLUGIN_DIR` environment variable (default: `./plugins`). Each file must export a default object conforming to the `AgentPlugin` interface:
+
+```ts
+interface AgentPlugin {
+  name: string;
+  version: string;
+  description: string;
+  tools: PluginTool[];
+}
+```
+
+Invalid or crashing plugins are skipped with a warning — they never crash the server.
+
+### Environment variable
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `PLUGIN_DIR` | `./plugins` | Directory containing `*.plugin.js` plugin files |
+
+### Writing a plugin
+
+See `docs/site/docs/api/plugins.md` for the full guide and a "hello world" example.

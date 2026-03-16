@@ -1,0 +1,4 @@
+{
+  "tool_allowlist": ["Read", "Write", "Edit", "Bash", "Grep", "Glob"],
+  "directory_scope": ["/", "/infra", "/scripts", "/.github", "/docker"]
+}

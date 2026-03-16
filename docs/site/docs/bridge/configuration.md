@@ -79,6 +79,10 @@ Each role in `agent_roles` defines:
 
 Agents attempting to use tools outside the allowlist will have those tool calls rejected.
 
+## Community Role Templates
+
+Pre-built role definitions for common agent types (backend engineer, frontend engineer, code reviewer, devops) are available in [`docs/agent-roles/`](../../../../docs/agent-roles/README.md). Copy the JSON contents of any template into your `agent_roles` config to get started quickly.
+
 ## Budget Caps
 
 Setting budget caps prevents runaway cost from long-running agents:
