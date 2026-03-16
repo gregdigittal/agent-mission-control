@@ -5,12 +5,14 @@ interface AgentState {
   agents: Record<string, Agent>;
   events: AgentEvent[];
   eventFilter: string | null; // agentId filter, null = all
+  workspaceId: string | null;
 
   setAgents: (agents: Agent[]) => void;
   updateAgent: (id: string, update: Partial<Agent>) => void;
   setEvents: (events: AgentEvent[]) => void;
   prependEvent: (event: AgentEvent) => void;
   setEventFilter: (agentId: string | null) => void;
+  setWorkspaceId: (id: string | null) => void;
 
   agentsBySession: (sessionId: string) => Agent[];
   eventsBySession: (sessionId: string) => AgentEvent[];
@@ -20,6 +22,7 @@ export const useAgentStore = create<AgentState>((set, get) => ({
   agents: {},
   events: [],
   eventFilter: null,
+  workspaceId: null,
 
   setAgents: (agents) =>
     set({ agents: Object.fromEntries(agents.map((a) => [a.id, a])) }),
@@ -35,6 +38,8 @@ export const useAgentStore = create<AgentState>((set, get) => ({
     set((s) => ({ events: [event, ...s.events].slice(0, 500) })),
 
   setEventFilter: (agentId) => set({ eventFilter: agentId }),
+
+  setWorkspaceId: (id) => set({ workspaceId: id }),
 
   agentsBySession: (sessionId) =>
     Object.values(get().agents).filter((a) => a.sessionId === sessionId),
