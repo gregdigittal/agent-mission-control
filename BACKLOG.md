@@ -202,7 +202,7 @@
 
 | ID | Title | Priority | Effort | Deps | Status |
 |----|-------|----------|--------|------|--------|
-| M9-001 | Plugin/extension API for custom agent behaviors | P3 | XL | M5-001 | 🔲 |
+| M9-001 | Plugin/extension API for custom agent behaviors | P3 | XL | M5-001 | ✅ Done (mcp-server/src/plugins/; AgentPlugin interface + loader + registry; wired into index.ts; 23 tests; hello.plugin.js example; docs/api/plugins.md) |
 | M9-002 | Community agent role templates | P3 | L | M9-001 | ✅ Done |
 | M9-003 | Documentation site (Docusaurus or similar) | P2 | L | — | ✅ Done |
 | M9-004 | CLI tool (`agent-mc`) for headless operation | P2 | L | M2-001 | ✅ Done |
@@ -245,5 +245,5 @@
 | **Total** | **127** | **58** | **~116 done, ~11 remaining** |
 
 **Completed so far:** M0–M5 fully complete; M6 5/8 done; M7–M9 largely complete; all tech debt cleared.
-**Remaining open items:** M9-001
-**Critical path to OSS launch:** M9-001 (plugin API)
+**Remaining open items:** none — all backlog items complete.
+**Status:** Backlog fully cleared. Ready for OSS launch.
