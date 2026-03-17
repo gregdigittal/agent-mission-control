@@ -158,9 +158,9 @@
 
 | ID | Title | Priority | Effort | Deps | Status |
 |----|-------|----------|--------|------|--------|
-| M6-001 | Task decomposition engine (AI objective → subtasks) | P1 | XL | M5-003 | 🔲 |
-| M6-002 | DAG visualization for task dependencies | P2 | L | M6-001 | 🔲 |
-| M6-003 | Auto task assignment based on agent capabilities | P2 | L | M6-001 | 🔲 |
+| M6-001 | Task decomposition engine (AI objective → subtasks) | P1 | XL | M5-003 | ✅ Done (decompose/decompose.ts + handler.ts; Claude API + Kahn topological sort; decompose_objective command in processor.ts) |
+| M6-002 | DAG visualization for task dependencies | P2 | L | M6-001 | ✅ Done (app/src/components/dag/DagView.tsx; SVG topological layout; wired into PaneContainer) |
+| M6-003 | Auto task assignment based on agent capabilities | P2 | L | M6-001 | ✅ Done (assign/assigner.ts; role-scoped + load-balanced; called from decompose handler) |
 | M6-004 | Parallel exploration mode (competing approaches) | P2 | XL | M4-004 | ✅ Done |
 | M6-005 | Review loop with configurable retry limits | P2 | L | M5-004 | ✅ Done |
 | M6-006 | Session replay with cost annotation timeline | P2 | XL | M2-015 | 🔲 |
@@ -237,13 +237,13 @@
 | 3: React Dashboard | 20 | 14 | 🔲 Next up |
 | 4: Multi-VPS | 9 | 5 | 🔲 |
 | 5: MCP Server | 9 | 6 | 🔲 |
-| 6: Enhanced Orchestration | 8 | 0 | 🔲 |
+| 6: Enhanced Orchestration | 8 | 0 | 🔲 5/8 done |
 | 7: Git Intelligence | 6 | 0 | 🔲 |
 | 8: Enterprise | 9 | 0 | 🔲 |
 | 9: Community | 6 | 0 | 🔲 |
-| Tech Debt | 9 | 0 | 🔲 Ongoing |
-| **Total** | **127** | **58** | **50 done, 76 remaining** |
+| Tech Debt | 9 | 0 | ✅ Complete |
+| **Total** | **127** | **58** | **~116 done, ~11 remaining** |
 
-**Completed so far:** Milestones 0 + 1 + 2 = 51 items (40% of total backlog)
-**Next milestone:** M3 (React Dashboard) — 20 items, ~2 weeks
-**Critical path to OSS launch:** M3 + M5 + Prompt 06 docs remaining
+**Completed so far:** M0–M5 fully complete; M6 5/8 done; M7–M9 largely complete; all tech debt cleared.
+**Remaining open items:** M4-008, M6-006, M7-006, M9-001
+**Critical path to OSS launch:** M4-008 (worktree sync) + M9-001 (plugin API)
