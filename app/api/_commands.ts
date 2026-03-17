@@ -38,7 +38,14 @@ export interface CreateTaskCommand {
   createdAt: string;
 }
 
-type BridgeCommand = SpawnCommand | CreateTaskCommand;
+export interface TerminateCommand {
+  type: 'terminate';
+  commandId: string;
+  sessionId: string;
+  createdAt: string;
+}
+
+type BridgeCommand = SpawnCommand | CreateTaskCommand | TerminateCommand;
 
 /**
  * Writes a command JSON file to the bridge IPC directory.

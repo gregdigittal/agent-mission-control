@@ -4,7 +4,7 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'node', // stores don't need DOM; use jsdom only when testing components
-    include: ['src/**/*.test.ts', 'src/**/*.test.tsx'],
+    include: ['src/**/*.test.ts', 'src/**/*.test.tsx', 'api/**/*.test.ts'],
     coverage: {
       provider: 'v8',
       include: ['src/stores/**', 'src/hooks/**', 'src/lib/**'],

@@ -1,11 +1,12 @@
+import { useTranslation } from 'react-i18next';
 import { useSessionStore } from '../../stores/sessionStore';
 import type { PaneTab } from '../../types';
 
-const TABS: { id: PaneTab; label: string; icon: string }[] = [
-  { id: 'agents',    label: 'Agents',    icon: '◈' },
-  { id: 'kanban',    label: 'Kanban',    icon: '⊞' },
-  { id: 'costs',     label: 'Costs',     icon: '◎' },
-  { id: 'approvals', label: 'Approvals', icon: '◉' },
+const TABS: { id: PaneTab; labelKey: string; icon: string }[] = [
+  { id: 'agents',    labelKey: 'nav.agents',    icon: '\u25c8' },
+  { id: 'kanban',    labelKey: 'nav.kanban',    icon: '\u229e' },
+  { id: 'costs',     labelKey: 'nav.costs',     icon: '\u25ce' },
+  { id: 'approvals', labelKey: 'nav.approvals', icon: '\u25c9' },
 ];
 
 interface Props {
@@ -13,6 +14,7 @@ interface Props {
 }
 
 export function BottomNav({ pendingApprovals = 0 }: Props) {
+  const { t } = useTranslation();
   const { panes, activePane, setPaneTab, screenProfile } = useSessionStore();
   if (screenProfile !== 'mobile') return null;
 
@@ -26,15 +28,16 @@ export function BottomNav({ pendingApprovals = 0 }: Props) {
       borderTop: '1px solid var(--border-0)',
       zIndex: 200,
     }}>
-      {TABS.map(({ id, label, icon }) => {
+      {TABS.map(({ id, labelKey, icon }) => {
         const active = pane?.activeTab === id;
         const badge = id === 'approvals' && pendingApprovals > 0;
+        const label = t(labelKey);
         return (
           <button
             key={id}
             role="tab"
             aria-selected={active}
-            aria-label={badge ? `${label} (${pendingApprovals} pending)` : label}
+            aria-label={badge ? t('nav.approvalsWithCount', { count: pendingApprovals }) : label}
             onClick={() => pane && setPaneTab(pane.id, id)}
             style={{
               flex: 1, display: 'flex', flexDirection: 'column',

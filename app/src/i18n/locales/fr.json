@@ -1,0 +1,68 @@
+{
+  "topbar": {
+    "logo": "AGENT/MC",
+    "status": {
+      "live": "En direct",
+      "local": "Local"
+    },
+    "session": {
+      "add": "Ajouter une session",
+      "ariaLabel": "Sessions"
+    },
+    "screen": {
+      "mobile": "Disposition mobile",
+      "laptop": "Disposition portable",
+      "desktop": "Disposition bureau",
+      "ultrawide": "Disposition ultra-large"
+    },
+    "pane": {
+      "count": "{{count}} volet",
+      "count_plural": "{{count}} volets"
+    }
+  },
+  "nav": {
+    "agents": "Agents",
+    "kanban": "Kanban",
+    "costs": "Coûts",
+    "approvals": "Approbations",
+    "settings": "Paramètres",
+    "approvalsWithCount": "Approbations ({{count}} en attente)"
+  },
+  "agent": {
+    "card": {
+      "compactNow": "compacter maintenant",
+      "contextPct": "ctx {{pct}}%",
+      "selectAriaLabel": "Sélectionner l'agent {{name}}"
+    },
+    "status": {
+      "idle": "Inactif",
+      "running": "En cours",
+      "waiting_approval": "En attente",
+      "paused": "En pause",
+      "error": "Erreur",
+      "complete": "Terminé"
+    },
+    "stats": {
+      "tokensIn": "entrée",
+      "tokensOut": "sortie",
+      "cost": "coût"
+    }
+  },
+  "actions": {
+    "approve": "Approuver",
+    "reject": "Rejeter",
+    "edit": "Modifier",
+    "delete": "Supprimer",
+    "cancel": "Annuler",
+    "save": "Enregistrer",
+    "confirm": "Confirmer",
+    "close": "Fermer"
+  },
+  "errors": {
+    "failedToLoad": "Échec du chargement",
+    "noData": "Aucune donnée",
+    "connectionFailed": "Connexion échouée",
+    "unauthorized": "Non autorisé",
+    "tryAgain": "Réessayer"
+  }
+}

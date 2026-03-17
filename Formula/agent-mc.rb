@@ -1,12 +1,14 @@
 class AgentMc < Formula
-  desc "MCP server for Agent Mission Control — bidirectional agent ↔ dashboard communication"
+  desc "MCP server for Agent Mission Control — bidirectional agent <> dashboard communication"
   homepage "https://github.com/YOUR_ORG/agent-mission-control"
-  # Replace the url and sha256 with the values from the GitHub release you want to publish.
-  # 1. Create a GitHub release and upload the tarball of the mcp-server directory.
-  # 2. Run: curl -sL <url> | sha256sum
-  # 3. Paste the resulting hash as the sha256 value below.
+  # url, sha256, and version are updated automatically by the CI release workflow
+  # (.github/workflows/release.yml) on each tagged release.
+  # To update manually:
+  #   1. Download the mcp-server tarball from the GitHub release
+  #   2. Run: sha256sum agent-mc-mcp-server-<version>.tar.gz
+  #   3. Replace url, sha256, and version below
   url "https://github.com/YOUR_ORG/agent-mission-control/releases/download/v0.1.0/agent-mc-mcp-server-0.1.0.tar.gz"
-  sha256 "PLACEHOLDER_SHA256" # Update with: curl -sL <url> | sha256sum | awk '{print $1}'
+  sha256 "PLACEHOLDER_SHA256"
   license "MIT"
   version "0.1.0"
 
@@ -29,8 +31,7 @@ class AgentMc < Formula
   end
 
   test do
-    # The MCP server speaks stdio — verify the binary exits cleanly with --version
-    # (node will print the package version and exit 0 when we ask for it)
+    # The MCP server speaks stdio -- verify the binary exits cleanly with --version
     assert_match version.to_s, shell_output("#{bin}/agent-mc --version 2>&1", 0).strip
   end
 end

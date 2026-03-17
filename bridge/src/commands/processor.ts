@@ -11,6 +11,8 @@ import { triggerReviewLoop } from './review.js';
 import { createBranch, switchBranch, mergeBranch } from './branch.js';
 import { handleDecomposeObjective } from '../decompose/handler.js';
 import { handleCreatePr } from './createPr.js';
+import { handleResolveConflict } from './resolveConflict.js';
+import { handleExploreParallel } from './exploreParallel.js';
 
 // Payload schemas for each command type
 const SpawnPayloadSchema = z.object({
@@ -79,13 +81,27 @@ const CreatePrPayloadSchema = z.object({
   baseBranch: z.string(),
 });
 
+const ResolveConflictPayloadSchema = z.object({
+  sessionId: z.string(),
+  filePath: z.string(),
+  strategy: z.enum(['ours', 'theirs', 'manual']),
+});
+
+const ExploreParallelPayloadSchema = z.object({
+  sessionId: z.string(),
+  agentKey: z.string(),
+  objective: z.string(),
+  approaches: z.array(z.string()).min(1),
+  timeoutMs: z.number().optional(),
+});
+
 const CommandSchema = z.object({
   id: z.string(),
   type: z.enum([
     'spawn_agent', 'terminate_agent', 'approve_task', 'update_config',
     'pause_agent', 'resume_agent', 'review_loop_agent',
     'create_branch', 'switch_branch', 'merge_branch',
-    'decompose_objective', 'create_pr',
+    'decompose_objective', 'create_pr', 'resolve_conflict', 'explore_parallel',
   ]),
   timestamp: z.string(),
   session_token: z.string(),
@@ -221,6 +237,32 @@ async function executeCommand(cmd: Command): Promise<void> {
     case 'create_pr': {
       const payload = CreatePrPayloadSchema.parse(cmd.payload);
       await handleCreatePr(payload);
+      break;
+    }
+
+    case 'resolve_conflict': {
+      const payload = ResolveConflictPayloadSchema.parse(cmd.payload);
+      // Build a sessionId-keyed context view from the global agentProcesses registry.
+      // The global map uses 'sessionId:agentKey' keys; the handler expects sessionId keys.
+      const sessionMap = new Map<string, { worktreePath: string; agentKey: string }>();
+      for (const [key, agent] of agentProcesses) {
+        const colonIdx = key.indexOf(':');
+        const sessionId = colonIdx >= 0 ? key.slice(0, colonIdx) : key;
+        const agentKey = colonIdx >= 0 ? key.slice(colonIdx + 1) : '';
+        if (!sessionMap.has(sessionId)) {
+          sessionMap.set(sessionId, { worktreePath: (agent as { worktreePath?: string }).worktreePath ?? '', agentKey });
+        }
+      }
+      await handleResolveConflict(
+        { type: 'resolve_conflict', sessionId: payload.sessionId, filePath: payload.filePath, strategy: payload.strategy },
+        { agentProcesses: sessionMap },
+      );
+      break;
+    }
+
+    case 'explore_parallel': {
+      const payload = ExploreParallelPayloadSchema.parse(cmd.payload);
+      await handleExploreParallel(payload);
       break;
     }
 

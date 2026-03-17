@@ -87,10 +87,13 @@ describe('resolve_conflict — strategy: ours', () => {
     };
     await resolveConflict({ type: 'resolve_conflict', sessionId: 'session-1', filePath: 'src/store.ts', strategy: 'ours' }, ctx);
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const gitAddCall = (mockSpawnSync as ReturnType<typeof vi.fn>).mock.calls.find(
+      // @ts-ignore -- call is [cmd, args[], opts]; typed as string[][] to access elements but call[0] is string
       (call: string[][]) => call[0] === 'git' && call[1].includes('add')
     );
     expect(gitAddCall).toBeDefined();
+    // @ts-ignore -- gitAddCall is narrowed by expect().toBeDefined() above but TS doesn't track that
     expect(gitAddCall[1]).toContain('src/store.ts');
   });
 });
@@ -121,6 +124,7 @@ describe('resolve_conflict — strategy: manual', () => {
 
     expect(result.success).toBe(true);
     const gitCheckoutCall = (mockSpawnSync as ReturnType<typeof vi.fn>).mock.calls.find(
+      // @ts-ignore -- call is [cmd, args[], opts]; typed as string[][] to access elements but call[0] is string
       (call: string[][]) => call[0] === 'git' && (call[1].includes('--ours') || call[1].includes('--theirs'))
     );
     expect(gitCheckoutCall).toBeUndefined();

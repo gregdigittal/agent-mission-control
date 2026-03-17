@@ -7,6 +7,8 @@ import { audit } from '../audit/logger.js';
 import { selectVps, updateVps } from '../vps/vpsRegistry.js';
 import { registerOwnership, releaseOwnership } from '../ownership/registry.js';
 import { checkOwnershipConflict, formatConflicts } from '../ownership/enforcer.js';
+import { loadAdminPolicy, isModelAllowed, auditPolicyViolation } from '../config/adminPolicy.js';
+import { loadRoleTemplate } from '../role-templates/loader.js';
 import type { AgentProcess } from '../health/checker.js';
 
 // In-memory registry of active agent processes
@@ -24,6 +26,10 @@ export interface SpawnPayload {
   vps_id?: string;
   /** Load-balancing strategy when vps_id is not specified. Defaults to 'least-loaded'. */
   lb_strategy?: 'least-loaded' | 'round-robin';
+  /** Workspace ID used to look up the admin policy (model restrictions, budget caps). */
+  workspace_id?: string;
+  /** Community role template name. When set, overrides tool/directory from config.agent_roles. */
+  role_template?: string;
 }
 
 function agentId(sessionId: string, agentKey: string): string {
@@ -72,7 +78,26 @@ export async function spawnAgent(payload: SpawnPayload): Promise<void> {
     throw new Error(`Max agents (${config.max_agents}) reached`);
   }
 
-  // VPS selection — if vps_id is not specified, use the load balancer to pick a healthy node.
+  // Admin policy enforcement  -  model allow-list check.
+  // Only enforced when a workspace_id is provided and Supabase is configured.
+  if (payload.workspace_id) {
+    const policy = await loadAdminPolicy(payload.workspace_id);
+    const candidateModel = payload.model || config.agent_defaults.model;
+    if (!isModelAllowed(policy, candidateModel)) {
+      await auditPolicyViolation('model_not_allowed', {
+        sessionId: payload.session_id,
+        agentKey: payload.agent_key,
+        model: candidateModel,
+        workspaceId: payload.workspace_id,
+        allowedModels: policy.allowedModels,
+      });
+      throw new Error(
+        `[adminPolicy] Model '${candidateModel}' is not in the allowed list for workspace ${payload.workspace_id}`,
+      );
+    }
+  }
+
+  // VPS selection  -  if vps_id is not specified, use the load balancer to pick a healthy node.
   // If no VPS nodes are registered or reachable, the agent spawns locally (current machine).
   let selectedVpsId: string | undefined = payload.vps_id;
   if (!selectedVpsId) {
@@ -86,11 +111,32 @@ export async function spawnAgent(payload: SpawnPayload): Promise<void> {
     }
   }
 
-  // Get role permissions
-  const perms = await getPermissionsForRole(payload.role);
+  // Get role permissions  -  role template overrides config.json agent_roles if provided
+  let perms = await getPermissionsForRole(payload.role);
+  if (payload.role_template) {
+    const template = await loadRoleTemplate(payload.role_template);
+    if (template) {
+      perms = {
+        toolAllowlist: [...template.allowedTools],
+        directoryScope: [...template.directoryScope],
+      };
+      // Template maxTurns takes precedence over payload unless payload explicitly overrides
+      if (!payload.max_turns) {
+        payload = { ...payload, max_turns: template.maxTurns };
+      }
+      await audit('role_template_applied', {
+        sessionId: payload.session_id,
+        agentKey: payload.agent_key,
+        template: template.name,
+        templateVersion: template.version,
+      });
+    } else {
+      console.warn(`[spawn] Role template '${payload.role_template}' not found - using role permissions`);
+    }
+  }
   const model = payload.model || config.agent_defaults.model;
 
-  // Ownership conflict check — warn if another agent in the same session
+  // Ownership conflict check  -  warn if another agent in the same session
   // already owns overlapping paths. The spawn proceeds but logs a warning
   // so operators can detect unintended concurrent writes.
   const conflicts = checkOwnershipConflict(payload.session_id, payload.agent_key, perms.directoryScope);

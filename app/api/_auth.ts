@@ -54,7 +54,7 @@ export function validateBearerToken(req: VercelRequest, res: VercelResponse): bo
 export function requireJsonContentType(req: VercelRequest, res: VercelResponse): boolean {
   const ct = req.headers['content-type'] ?? '';
   if (!ct.includes('application/json')) {
-    res.status(400).json({ error: 'Content-Type must be application/json' });
+    res.status(415).json({ error: 'Content-Type must be application/json' });
     return false;
   }
   return true;

@@ -46,7 +46,7 @@ interface UseAdminConfigResult {
 // Helper: map raw Supabase row to AdminConfig
 // ──────────────────────────────────────────────────────────────────────────────
 
-function rowToConfig(row: Record<string, unknown>): AdminConfig {
+export function rowToConfig(row: Record<string, unknown>): AdminConfig {
   return {
     id:                      row.id as string,
     workspaceId:             row.workspace_id as string,

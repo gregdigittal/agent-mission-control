@@ -12,6 +12,8 @@ export interface AgentProcess {
   lastOutputAt: Date;
   restartCount: number;
   exitCode?: number;
+  /** Unresolved merge conflict paths, populated by conflictScanner each loop. */
+  conflictFiles?: readonly string[];
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   process?: any;
 }

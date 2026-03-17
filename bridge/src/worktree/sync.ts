@@ -73,6 +73,39 @@ async function syncSharedRemote(
 }
 
 // ---------------------------------------------------------------------------
+// aggregateBranches
+// ---------------------------------------------------------------------------
+
+/**
+ * For each agent key, count commits ahead of `main` on the agent's branch
+ * (`agent/<agentKey>`). Returns a map of agentKey → commit count.
+ *
+ * Returns 0 for any agent whose branch does not exist or produces a git error.
+ * Errors are non-fatal — a partial result is better than halting the loop.
+ */
+export async function aggregateBranches(
+  agentKeys: string[],
+  repoPath: string,
+): Promise<Record<string, number>> {
+  const result: Record<string, number> = {};
+
+  for (const agentKey of agentKeys) {
+    try {
+      const { stdout } = await execa('git', ['rev-list', '--count', `main..agent/${agentKey}`], {
+        cwd: repoPath,
+      });
+      const count = parseInt(stdout.trim(), 10);
+      result[agentKey] = Number.isNaN(count) ? 0 : count;
+    } catch {
+      // Branch doesn't exist or git error — treat as 0 commits ahead.
+      result[agentKey] = 0;
+    }
+  }
+
+  return result;
+}
+
+// ---------------------------------------------------------------------------
 // rsync
 // ---------------------------------------------------------------------------
 

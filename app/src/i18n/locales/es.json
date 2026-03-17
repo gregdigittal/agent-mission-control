@@ -1,0 +1,68 @@
+{
+  "topbar": {
+    "logo": "AGENT/MC",
+    "status": {
+      "live": "En vivo",
+      "local": "Local"
+    },
+    "session": {
+      "add": "Agregar sesión",
+      "ariaLabel": "Sesiones"
+    },
+    "screen": {
+      "mobile": "Diseño móvil",
+      "laptop": "Diseño portátil",
+      "desktop": "Diseño escritorio",
+      "ultrawide": "Diseño ultrawide"
+    },
+    "pane": {
+      "count": "{{count}} panel",
+      "count_plural": "{{count}} paneles"
+    }
+  },
+  "nav": {
+    "agents": "Agentes",
+    "kanban": "Kanban",
+    "costs": "Costos",
+    "approvals": "Aprobaciones",
+    "settings": "Configuración",
+    "approvalsWithCount": "Aprobaciones ({{count}} pendientes)"
+  },
+  "agent": {
+    "card": {
+      "compactNow": "compactar ahora",
+      "contextPct": "ctx {{pct}}%",
+      "selectAriaLabel": "Seleccionar agente {{name}}"
+    },
+    "status": {
+      "idle": "Inactivo",
+      "running": "Ejecutando",
+      "waiting_approval": "En espera",
+      "paused": "Pausado",
+      "error": "Error",
+      "complete": "Completado"
+    },
+    "stats": {
+      "tokensIn": "entrada",
+      "tokensOut": "salida",
+      "cost": "costo"
+    }
+  },
+  "actions": {
+    "approve": "Aprobar",
+    "reject": "Rechazar",
+    "edit": "Editar",
+    "delete": "Eliminar",
+    "cancel": "Cancelar",
+    "save": "Guardar",
+    "confirm": "Confirmar",
+    "close": "Cerrar"
+  },
+  "errors": {
+    "failedToLoad": "Error al cargar",
+    "noData": "Sin datos",
+    "connectionFailed": "Error de conexión",
+    "unauthorized": "No autorizado",
+    "tryAgain": "Intentar de nuevo"
+  }
+}

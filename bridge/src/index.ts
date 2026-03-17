@@ -27,6 +27,7 @@ import { checkAndHandoff } from './handoff/manager.js';
 import { autoCommitAll } from './commands/commit.js';
 import { agentProcesses } from './commands/spawn.js';
 import { syncWorktree } from './worktree/sync.js';
+import { scanForConflicts } from './worktree/conflictScanner.js';
 
 let running = true;
 let loopCount = 0;
@@ -81,6 +82,13 @@ async function loop(): Promise<void> {
     // 1. Health Check
     const healthResults = await checkHealth();
     await handleCrashedAgents(healthResults);
+
+    // 1b. Conflict scan — detect unresolved merge conflicts in each agent's worktree
+    for (const [, agent] of agentProcesses) {
+      if (agent.worktreePath) {
+        agent.conflictFiles = await scanForConflicts(agent.worktreePath);
+      }
+    }
 
     // 2. Command Processing
     const commandsProcessed = await processCommands();

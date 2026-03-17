@@ -1,11 +1,10 @@
 /**
  * useWorkspaces — fetches workspaces from Supabase.
  *
- * If the workspaces table does not exist yet, or Supabase is not configured,
- * returns a single "Personal" workspace as a graceful fallback.
+ * If Supabase is not configured, or the fetch fails, falls back gracefully
+ * to a single "Personal" workspace so the UI always has something to render.
  *
- * TODO[agent-app-core]: supabase/migrations/003_workspaces.sql needs to be created
- * Schema: CREATE TABLE workspaces (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), name text NOT NULL, owner_id uuid REFERENCES profiles(id), created_at timestamptz DEFAULT now());
+ * Schema: supabase/migrations/003_workspaces.sql
  * RLS: SELECT for authenticated users who own or are members of the workspace.
  */
 import { useEffect, useState } from 'react';
@@ -22,7 +21,7 @@ export type Workspace = {
   readonly createdAt: string;
 };
 
-const PERSONAL_WORKSPACE: Workspace = {
+export const PERSONAL_WORKSPACE: Workspace = {
   id: 'personal',
   name: 'Personal',
   ownerUid: '',

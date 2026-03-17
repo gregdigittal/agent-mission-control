@@ -1,6 +1,8 @@
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 import enLocale from './locales/en.json';
+import esLocale from './locales/es.json';
+import frLocale from './locales/fr.json';
 
 export const defaultNS = 'translation';
 
@@ -14,9 +16,9 @@ i18n
     // Namespace and resources
     defaultNS,
     resources: {
-      en: {
-        [defaultNS]: enLocale,
-      },
+      en: { [defaultNS]: enLocale },
+      es: { [defaultNS]: esLocale },
+      fr: { [defaultNS]: frLocale },
     },
 
     interpolation: {

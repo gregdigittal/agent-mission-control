@@ -161,7 +161,7 @@
 | M6-001 | Task decomposition engine (AI objective → subtasks) | P1 | XL | M5-003 | 🔲 |
 | M6-002 | DAG visualization for task dependencies | P2 | L | M6-001 | 🔲 |
 | M6-003 | Auto task assignment based on agent capabilities | P2 | L | M6-001 | 🔲 |
-| M6-004 | Parallel exploration mode (competing approaches) | P2 | XL | M4-004 | 🔲 |
+| M6-004 | Parallel exploration mode (competing approaches) | P2 | XL | M4-004 | ✅ Done |
 | M6-005 | Review loop with configurable retry limits | P2 | L | M5-004 | ✅ Done |
 | M6-006 | Session replay with cost annotation timeline | P2 | XL | M2-015 | 🔲 |
 | M6-007 | Context window compaction alerts | P1 | M | M5-002 | ✅ Done |
@@ -176,7 +176,7 @@
 | M7-001 | Visual diff preview component (full implementation) | P1 | L | M3-008 | ✅ Done (DiffViewer.tsx + DiffModal.tsx; zero deps; unified diff parser) |
 | M7-002 | Auto-commit per agent action with meaningful messages | P1 | M | M2-012 | ✅ Done (commands/commit.ts; git add -u + commit; 30s cooldown; wired into main loop) |
 | M7-003 | Branch management UI (create, merge, rebase) | P2 | L | M3-001 | ✅ Done |
-| M7-004 | Conflict detection and resolution workflow | P2 | XL | M7-003 | 🔲 |
+| M7-004 | Conflict detection and resolution workflow | P2 | XL | M7-003 | ✅ Done |
 | M7-005 | Architectural ownership boundaries (agent X owns /src/db) | P1 | L | M2-014 | ✅ Done (ownership/registry.ts + enforcer.ts; conflict detection at spawn; register/release lifecycle) |
 | M7-006 | PR creation from session (aggregate agent changes) | P2 | L | M7-002 | 🔲 |
 
@@ -186,13 +186,13 @@
 
 | ID | Title | Priority | Effort | Deps | Status |
 |----|-------|----------|--------|------|--------|
-| M8-001 | Team workspaces (shared projects, VPS pools) | P2 | XL | M3-003 | 🔲 |
-| M8-002 | SSO integration (SAML, OIDC) | P3 | L | M8-001 | 🔲 |
+| M8-001 | Team workspaces (shared projects, VPS pools) | P2 | XL | M3-003 | ✅ Done |
+| M8-002 | SSO integration (SAML, OIDC) | P3 | L | M8-001 | ✅ Done |
 | M8-003 | Centralized billing dashboard | P2 | L | M3-011 | ✅ Done |
-| M8-004 | Admin controls (org budgets, model restrictions) | P3 | L | M8-001 | 🔲 |
+| M8-004 | Admin controls (org budgets, model restrictions) | P3 | L | M8-001 | ✅ Done |
 | M8-005 | Export session data (JSON, CSV) | P2 | M | M3-004 | ✅ Done (app/src/lib/export.ts; single session + all sessions; JSON + CSV download) |
-| M8-006 | API access for CI/CD integration | P2 | L | M3-001 | 🔲 |
-| M8-007 | GitHub Actions integration (agent on PR) | P2 | L | M8-006 | 🔲 |
+| M8-006 | API access for CI/CD integration | P2 | L | M3-001 | ✅ Done |
+| M8-007 | GitHub Actions integration (agent on PR) | P2 | L | M8-006 | ✅ Done |
 | M8-008 | Webhook support for external integrations | P2 | M | M8-006 | ✅ Done |
 | M8-009 | Browser push notifications for approvals | P1 | M | M3-014 | ✅ Done (useNotifications.ts hook; integrated into ApprovalQueue.tsx) |
 
@@ -203,11 +203,11 @@
 | ID | Title | Priority | Effort | Deps | Status |
 |----|-------|----------|--------|------|--------|
 | M9-001 | Plugin/extension API for custom agent behaviors | P3 | XL | M5-001 | 🔲 |
-| M9-002 | Community agent role templates | P3 | L | M9-001 | 🔲 |
-| M9-003 | Documentation site (Docusaurus or similar) | P2 | L | — | 🔲 |
+| M9-002 | Community agent role templates | P3 | L | M9-001 | ✅ Done |
+| M9-003 | Documentation site (Docusaurus or similar) | P2 | L | — | ✅ Done |
 | M9-004 | CLI tool (`agent-mc`) for headless operation | P2 | L | M2-001 | ✅ Done |
-| M9-005 | Homebrew formula | P3 | M | M9-004 | 🔲 |
-| M9-006 | Docker Compose for self-hosted Supabase + dashboard | P2 | L | M3-001 | 🔲 |
+| M9-005 | Homebrew formula | P3 | M | M9-004 | ✅ Done |
+| M9-006 | Docker Compose for self-hosted Supabase + dashboard | P2 | L | M3-001 | ✅ Done |
 
 ---
 
@@ -222,7 +222,7 @@
 | TD-005 | Error tracking (Sentry or similar) | P2 | M | ✅ Done |
 | TD-006 | Performance monitoring | P2 | M | ✅ Done |
 | TD-007 | Accessibility audit (keyboard nav, screen readers) | P2 | L | ✅ Done |
-| TD-008 | Internationalization (i18n) framework | P3 | L | 🔲 |
+| TD-008 | Internationalization (i18n) framework | P3 | L | ✅ Done |
 | TD-009 | End-to-end test suite (Playwright) | P2 | L | ✅ Done |
 
 ---

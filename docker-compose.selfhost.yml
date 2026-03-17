@@ -110,6 +110,64 @@ services:
         condition: service_healthy
     restart: unless-stopped
 
+  # ─────────────────────────────────────────────────────────────────────────
+  # Bridge — Node.js orchestration daemon
+  # Polls commands from ./bridge-commands/, spawns Claude Code agents,
+  # writes dashboard state to ./bridge-state/.
+  #
+  # Prerequisites:
+  #   - ANTHROPIC_API_KEY must be set in .env
+  #   - Run `cd bridge && npm run build` before starting this service
+  # ─────────────────────────────────────────────────────────────────────────
+  bridge:
+    build:
+      context: ./bridge
+      dockerfile: Dockerfile
+    environment:
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:?ANTHROPIC_API_KEY is required for the bridge}
+      SUPABASE_URL: http://supabase-kong:8000
+      SUPABASE_ANON_KEY: ${ANON_KEY:-}
+      BRIDGE_COMMAND_DIR: /data/commands
+      BRIDGE_STATE_DIR: /data/state
+      BRIDGE_LOG_DIR: /data/logs
+    volumes:
+      - bridge-data:/data
+      # Mount a repo for agents to work in — override this to your actual repo path
+      - ${REPO_PATH:-./}:/repo:rw
+    depends_on:
+      supabase-db:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # ─────────────────────────────────────────────────────────────────────────
+  # MCP Server — JSON-RPC publishing endpoint for LinkedIn and Instagram
+  # Expose on port 3001 (or $MCP_PORT). The bridge calls this to publish posts.
+  #
+  # Prerequisites:
+  #   - LINKEDIN_CLIENT_ID, LINKEDIN_CLIENT_SECRET, INSTAGRAM_ACCESS_TOKEN
+  #     must be set in .env
+  #   - Run `cd mcp-server && npm run build` before starting this service
+  # ─────────────────────────────────────────────────────────────────────────
+  mcp-server:
+    build:
+      context: ./mcp-server
+      dockerfile: Dockerfile
+    ports:
+      - "${MCP_PORT:-3001}:3001"
+    environment:
+      PORT: 3001
+      LINKEDIN_CLIENT_ID: ${LINKEDIN_CLIENT_ID:-}
+      LINKEDIN_CLIENT_SECRET: ${LINKEDIN_CLIENT_SECRET:-}
+      INSTAGRAM_ACCESS_TOKEN: ${INSTAGRAM_ACCESS_TOKEN:-}
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3001/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
+
 volumes:
   supabase-db-data:
+    driver: local
+  bridge-data:
     driver: local

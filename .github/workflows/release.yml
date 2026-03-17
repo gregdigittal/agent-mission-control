@@ -1,0 +1,98 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    name: Build, Release, and Update Homebrew Formula
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Extract version from tag
+        id: version
+        run: |
+          VERSION="${GITHUB_REF_NAME}"
+          VERSION_CLEAN="${VERSION#v}"
+          echo "tag=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "clean=${VERSION_CLEAN}" >> "$GITHUB_OUTPUT"
+
+      - name: Build bridge
+        working-directory: bridge
+        run: |
+          npm ci
+          npm run build
+
+      - name: Build mcp-server
+        working-directory: mcp-server
+        run: |
+          npm ci
+          npm run build
+
+      - name: Create bridge tarball
+        run: |
+          VERSION="${{ steps.version.outputs.clean }}"
+          tar -czf "agent-mc-bridge-${VERSION}.tar.gz" \
+            -C bridge dist/ package.json package-lock.json
+          echo "BRIDGE_TARBALL=agent-mc-bridge-${VERSION}.tar.gz" >> "$GITHUB_ENV"
+
+      - name: Create mcp-server tarball
+        run: |
+          VERSION="${{ steps.version.outputs.clean }}"
+          tar -czf "agent-mc-mcp-server-${VERSION}.tar.gz" \
+            -C mcp-server dist/ package.json package-lock.json
+          echo "MCP_TARBALL=agent-mc-mcp-server-${VERSION}.tar.gz" >> "$GITHUB_ENV"
+
+      - name: Compute SHA256 checksums
+        id: sha256
+        run: |
+          BRIDGE_SHA=$(sha256sum "$BRIDGE_TARBALL" | awk '{print $1}')
+          MCP_SHA=$(sha256sum "$MCP_TARBALL" | awk '{print $1}')
+          echo "bridge=${BRIDGE_SHA}" >> "$GITHUB_OUTPUT"
+          echo "mcp=${MCP_SHA}" >> "$GITHUB_OUTPUT"
+          echo "Bridge SHA256: ${BRIDGE_SHA}"
+          echo "MCP SHA256:    ${MCP_SHA}"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.version.outputs.tag }}
+          name: Agent Mission Control ${{ steps.version.outputs.tag }}
+          generate_release_notes: true
+          files: |
+            ${{ env.BRIDGE_TARBALL }}
+            ${{ env.MCP_TARBALL }}
+
+      - name: Update Homebrew formula
+        run: |
+          VERSION="${{ steps.version.outputs.clean }}"
+          SHA="${{ steps.sha256.outputs.mcp }}"
+          REPO="${{ github.repository }}"
+          TAG="${{ steps.version.outputs.tag }}"
+
+          sed -i \
+            -e "s|url \".*\"|url \"https://github.com/${REPO}/releases/download/${TAG}/agent-mc-mcp-server-${VERSION}.tar.gz\"|" \
+            -e "s|sha256 \".*\"|sha256 \"${SHA}\"|" \
+            -e "s|version \".*\"|version \"${VERSION}\"|" \
+            Formula/agent-mc.rb
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add Formula/agent-mc.rb
+          git commit -m "chore(release): update Formula/agent-mc.rb to ${TAG}"
+          git push origin HEAD:main
