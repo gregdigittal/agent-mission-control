@@ -99,9 +99,14 @@ const BridgeConfigSchema = z.object({
     /** Whether to auto-trigger a review loop when an agent exits with a non-zero code. */
     auto_review_on_failure: z.boolean().default(false),
   }).default({}),
+  /** Path to scan for git repos (immediate children). When absent, project discovery is disabled. */
+  projects_root: z.string().optional(),
 });
 
 export type BridgeConfig = z.infer<typeof BridgeConfigSchema>;
+
+/** Service role key for server-side Supabase writes (bridge scanner, backlog import). Never in config files. */
+export const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY ?? '';
 
 let cachedConfig: BridgeConfig | null = null;
 
