@@ -124,15 +124,15 @@ html.screen-mobile .topbar-desktop{display:none}
 
 /* === SESSION TABS === */
 .session-tabs{display:flex;gap:2px;align-items:center}
-.session-tab{
+.tab{
   padding:3px 10px;border-radius:4px 4px 0 0;font-size:var(--font-xs);font-weight:500;
   border:1px solid var(--border-1);border-bottom:none;color:var(--text-2);
   background:var(--bg-2);position:relative;display:flex;align-items:center;gap:4px;
 }
-.session-tab.active{color:var(--text-0);background:var(--bg-3);border-color:var(--border-2)}
-.session-tab .dot{width:6px;height:6px;border-radius:50%}
-.session-tab .close-tab{font-size:9px;opacity:.5;margin-left:4px}
-.session-tab .close-tab:hover{opacity:1;color:var(--red)}
+.tab.active{color:var(--text-0);background:var(--bg-3);border-color:var(--border-2)}
+.tab .dot{width:6px;height:6px;border-radius:50%}
+.tab .close-tab{font-size:9px;opacity:.5;margin-left:4px}
+.tab .close-tab:hover{opacity:1;color:var(--red)}
 .add-session{font-size:var(--font-xs);padding:3px 8px;color:var(--text-3)}
 .add-session:hover{color:var(--cyan)}
 html.screen-mobile .session-tabs{display:none}
@@ -393,19 +393,75 @@ html.screen-mobile .ptr-indicator.visible{display:block}
 .hidden{display:none!important}
 .text-cyan{color:var(--cyan)}.text-green{color:var(--green)}.text-amber{color:var(--amber)}
 .text-red{color:var(--red)}.text-violet{color:var(--violet)}.text-blue{color:var(--blue)}.text-rose{color:var(--rose)}
+/* === FIRST RUN MODAL === */
+.modal-overlay{display:flex;position:fixed;inset:0;z-index:9999;align-items:center;justify-content:center;background:rgba(0,0,0,.75)}
+.modal-overlay.hidden{display:none!important}
+.modal-box{background:var(--bg-2);border:1px solid var(--border-1);border-radius:8px;padding:32px;max-width:480px;width:90%;color:var(--text-0)}
+.modal-box h2{margin:0 0 8px;font-size:18px}
+.modal-box p{margin:0 0 16px;color:var(--text-2);font-size:var(--font-sm)}
+.screen-cards{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px}
+.screen-card{padding:10px 18px;border:1px solid var(--border-1);border-radius:6px;cursor:pointer;color:var(--text-1);font-size:var(--font-sm);transition:border-color .15s}
+.screen-card:hover,.screen-card.selected{border-color:var(--cyan);color:var(--cyan)}
+#modal-confirm{padding:8px 24px;background:var(--cyan);color:#000;border:none;border-radius:4px;cursor:pointer;font-weight:600;font-size:var(--font-sm)}
+/* === FILEWATCH BAR === */
+#filewatch-bar{display:none;padding:4px 12px;background:var(--bg-1);border-top:1px solid var(--border-0);align-items:center;gap:8px;font-size:var(--font-xxs);color:var(--text-2);position:fixed;bottom:0;left:0;right:0;z-index:50}
+#filewatch-bar.visible{display:flex}
+#fw-path{background:var(--bg-2);border:1px solid var(--border-0);border-radius:3px;padding:2px 8px;color:var(--text-0);font-size:var(--font-xxs);width:240px}
+/* === HELP PANEL === */
+#help-panel{position:fixed;top:var(--topbar-h);right:0;width:260px;background:var(--bg-2);border-left:1px solid var(--border-1);height:calc(100vh - var(--topbar-h));padding:16px;transform:translateX(100%);transition:transform .2s;z-index:200;overflow-y:auto}
+#help-panel.open{transform:translateX(0)}
+#help-panel h3{margin:0 0 12px;font-size:var(--font-sm);color:var(--text-0)}
+#help-panel ul{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:8px}
+#help-panel li{display:flex;gap:10px;align-items:center;font-size:var(--font-xs);color:var(--text-1)}
+#help-panel kbd{background:var(--bg-3);border:1px solid var(--border-1);border-radius:3px;padding:1px 5px;font-family:var(--font-mono,monospace);font-size:var(--font-xxs);min-width:24px;text-align:center}
 </style>
 </head>
 <body>
 
+<!-- FIRST RUN MODAL -->
+<div id="first-run-modal" class="modal-overlay">
+  <div class="modal-box">
+    <h2>Agent Mission Control</h2>
+    <p>Choose your screen profile to get started:</p>
+    <div class="screen-cards">
+      <div class="screen-card" data-screen="laptop" onclick="selectScreenCard('laptop')">Laptop</div>
+      <div class="screen-card" data-screen="desktop" onclick="selectScreenCard('desktop')">Desktop</div>
+      <div class="screen-card" data-screen="ultrawide" onclick="selectScreenCard('ultrawide')">Ultrawide</div>
+    </div>
+    <button id="modal-confirm" onclick="confirmFirstRun()">Get Started</button>
+  </div>
+</div>
+
+<!-- FILE WATCH BAR -->
+<footer id="filewatch-bar" class="visible">
+  <span>File Watch:</span>
+  <input id="fw-path" type="text" value="agent_state.json" placeholder="Path to agent_state.json" />
+</footer>
+
+<!-- HELP PANEL -->
+<div id="help-panel" class="help-panel">
+  <h3>Keyboard Shortcuts</h3>
+  <ul>
+    <li><kbd>L</kbd> Laptop profile</li>
+    <li><kbd>D</kbd> Desktop profile</li>
+    <li><kbd>U</kbd> Ultrawide profile</li>
+    <li><kbd>1–4</kbd> Layout panes</li>
+    <li><kbd>F</kbd> Toggle file watch bar</li>
+    <li><kbd>?</kbd> Toggle this panel</li>
+    <li><kbd>A</kbd> Agents view</li>
+    <li><kbd>K</kbd> Kanban view</li>
+  </ul>
+</div>
+
 <!-- TOPBAR -->
 <div id="topbar">
-  <div class="logo">AMC<span> // Mission Control</span></div>
+  <div class="logo brand">AMC<span> // MISSION CONTROL</span></div>
   <div class="live-badge"><div class="live-dot"></div>LIVE</div>
 
   <button class="hamburger" onclick="toggleMobileMenu()">&#9776;</button>
 
   <div class="topbar-desktop topbar-group">
-    <div class="session-tabs" id="sessionTabs"></div>
+    <div class="session-tabs" id="session-tabs"></div>
     <button class="add-session" onclick="addSession()">+ Session</button>
   </div>
 
@@ -432,6 +488,9 @@ html.screen-mobile .ptr-indicator.visible{display:block}
       <option value="file">File Watch</option>
     </select>
   </div>
+  <div class="topbar-group">
+    <button class="topbar-btn" id="help-btn" onclick="document.getElementById('help-panel').classList.toggle('open')">?</button>
+  </div>
 </div>
 
 <!-- MOBILE MENU -->
@@ -454,7 +513,7 @@ html.screen-mobile .ptr-indicator.visible{display:block}
 </div>
 
 <!-- MAIN PANES -->
-<div id="main"></div>
+<div id="workspace"></div>
 
 <!-- BOTTOM NAV (mobile) -->
 <div id="bottomnav">
@@ -499,12 +558,18 @@ const SESSION_COLORS = [
 
 
 // === STATE ===
+const _defaultSessionId = 'default-session';
 let state = {
   dataSource: 'supabase',  // supabase | file
   screenProfile: 'desktop',
   layoutCount: 2,
-  sessions: [],
-  activeSessionId: null,
+  sessions: [{
+    id: _defaultSessionId, name: 'Session 1', color: { dot: '#22d3ee', bg: '#0e1117' },
+    status: 'idle', currentStage: 0, stages: [], projectName: '—',
+    totalTasks: 0, completedTasks: 0, budgetLimit: 5000, totalCost: 0,
+    agents: [], events: [], tasks: [], approvals: [],
+  }],
+  activeSessionId: _defaultSessionId,
   activePaneViews: [], // 'agents' | 'kanban' per pane
   mobileTab: 'agents',
   mobileMenuOpen: false,
@@ -780,12 +845,12 @@ function renderAll() {
 }
 
 function renderSessionTabs() {
-  const container = document.getElementById('sessionTabs');
+  const container = document.getElementById('session-tabs');
   const mobileSelect = document.getElementById('mobileSessionSelect');
   if (!container) return;
 
   container.innerHTML = state.sessions.map(s => `
-    <button class="session-tab ${s.id === state.activeSessionId ? 'active' : ''}"
+    <button class="tab ${s.id === state.activeSessionId ? 'active' : ''}"
             onclick="switchSession('${escapeJsString(s.id)}')">
       <span class="dot" style="background:${s.color.dot}"></span>
       ${escapeHtml(s.name)}
@@ -801,7 +866,7 @@ function renderSessionTabs() {
 }
 
 function renderPanes() {
-  const main = document.getElementById('main');
+  const main = document.getElementById('workspace');
   const isMobile = state.screenProfile === 'mobile';
   const count = isMobile ? 1 : state.layoutCount;
 
@@ -1087,7 +1152,7 @@ function setupPullToRefresh() {
   if (state.screenProfile !== 'mobile') return;
   if (ptrListenersAttached) return;
   ptrListenersAttached = true;
-  const main = document.getElementById('main');
+  const main = document.getElementById('workspace');
   main.addEventListener('touchstart', e => {
     if (state.screenProfile !== 'mobile') return;
     if (main.scrollTop === 0) {
@@ -1234,6 +1299,7 @@ function getAgentColor(agent, session) {
 function setScreen(profile) {
   state.screenProfile = profile;
   document.documentElement.className = 'screen-' + profile;
+  document.body.className = 'screen-' + profile;
 
   // Constrain layout
   const maxPanes = { mobile: 1, laptop: 2, desktop: 3, ultrawide: 4 }[profile] || 2;
@@ -1338,19 +1404,39 @@ document.addEventListener('keydown', e => {
   else if (key >= '1' && key <= '4') setLayout(parseInt(key));
   else if (key === 'A') { state.activePaneViews[0] = 'agents'; renderAll(); }
   else if (key === 'K') { state.activePaneViews[0] = 'kanban'; renderAll(); }
+  else if (key === 'F') { document.getElementById('filewatch-bar')?.classList.toggle('visible'); }
+  else if (e.key === '?') { document.getElementById('help-panel')?.classList.toggle('open'); }
 });
+
+// === FIRST RUN MODAL ===
+let _selectedScreen = 'desktop';
+function selectScreenCard(profile) {
+  _selectedScreen = profile;
+  document.querySelectorAll('.screen-card').forEach(c => c.classList.toggle('selected', c.dataset.screen === profile));
+}
+function confirmFirstRun() {
+  localStorage.setItem('amc_screen', _selectedScreen);
+  document.getElementById('first-run-modal').classList.add('hidden');
+  setScreen(_selectedScreen);
+}
 
 // === INIT ===
 (async function init() {
-  // Detect screen profile
-  const w = window.innerWidth;
-  if (w < 768) setScreen('mobile');
-  else if (w <= 1440) setScreen('laptop');
-  else if (w <= 2560) setScreen('desktop');
-  else setScreen('ultrawide');
+  // First-run modal: show if no screen profile saved
+  const savedScreen = localStorage.getItem('amc_screen');
+  if (savedScreen) {
+    document.getElementById('first-run-modal').classList.add('hidden');
+    setScreen(savedScreen);
+  } else {
+    // Detect default and apply screen profile; user confirms via modal
+    const w = window.innerWidth;
+    _selectedScreen = w < 768 ? 'mobile' : w <= 1440 ? 'laptop' : w <= 2560 ? 'desktop' : 'ultrawide';
+    selectScreenCard(_selectedScreen);
+    setScreen(_selectedScreen);
+  }
 
   // Set default layout
-  setLayout(2);
+  setLayout(1);
 
   // Init Supabase client and load data
   initSupabase();
@@ -1366,6 +1452,11 @@ document.addEventListener('keydown', e => {
   }
 
   renderAll();
+
+  // Close help panel when clicking outside it (on workspace)
+  document.getElementById('workspace').addEventListener('click', () => {
+    document.getElementById('help-panel').classList.remove('open');
+  });
 
   // Listen for resize
   window.addEventListener('resize', () => {
