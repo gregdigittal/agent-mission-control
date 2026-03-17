@@ -178,7 +178,7 @@
 | M7-003 | Branch management UI (create, merge, rebase) | P2 | L | M3-001 | ✅ Done |
 | M7-004 | Conflict detection and resolution workflow | P2 | XL | M7-003 | ✅ Done |
 | M7-005 | Architectural ownership boundaries (agent X owns /src/db) | P1 | L | M2-014 | ✅ Done (ownership/registry.ts + enforcer.ts; conflict detection at spawn; register/release lifecycle) |
-| M7-006 | PR creation from session (aggregate agent changes) | P2 | L | M7-002 | 🔲 |
+| M7-006 | PR creation from session (aggregate agent changes) | P2 | L | M7-002 | ✅ Done (commands/createPr.ts; git checkout -b + push + gh pr create; CreatePrModal.tsx; 11 tests; wired into processor) |
 
 ---
 
@@ -245,5 +245,5 @@
 | **Total** | **127** | **58** | **~116 done, ~11 remaining** |
 
 **Completed so far:** M0–M5 fully complete; M6 5/8 done; M7–M9 largely complete; all tech debt cleared.
-**Remaining open items:** M7-006, M9-001
+**Remaining open items:** M9-001
 **Critical path to OSS launch:** M9-001 (plugin API)
