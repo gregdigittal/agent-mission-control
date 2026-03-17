@@ -130,7 +130,7 @@
 | M4-005 | VPS registration interactive CLI | P0 | M | M4-001 | ✅ Done (dashboard registration form; bridge-side CLI TBD) |
 | M4-006 | Heartbeat monitoring + offline detection | P0 | M | M4-002 | ✅ Done |
 | M4-007 | Load balancer (VPS selection for new agents) | P1 | M | M4-006 | ✅ Done (selectVps in vpsRegistry.ts; least-loaded + round-robin; wired into spawn.ts) |
-| M4-008 | Git worktree sync strategy (shared_remote / rsync) | P1 | L | M4-002 | 🔲 (documented; impl deferred) |
+| M4-008 | Git worktree sync strategy (shared_remote / rsync) | P1 | L | M4-002 | ✅ Done (worktree/sync.ts; shared_remote git push + rsync state modes; wired into main loop; 14 tests) |
 | M4-009 | Updated README with multi-VPS guide | P1 | M | — | ✅ Done (docs/multi-vps-architecture.md) |
 
 ---
@@ -245,5 +245,5 @@
 | **Total** | **127** | **58** | **~116 done, ~11 remaining** |
 
 **Completed so far:** M0–M5 fully complete; M6 5/8 done; M7–M9 largely complete; all tech debt cleared.
-**Remaining open items:** M4-008, M6-006, M7-006, M9-001
-**Critical path to OSS launch:** M4-008 (worktree sync) + M9-001 (plugin API)
+**Remaining open items:** M6-006, M7-006, M9-001
+**Critical path to OSS launch:** M9-001 (plugin API)
