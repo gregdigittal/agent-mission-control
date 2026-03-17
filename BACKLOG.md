@@ -163,7 +163,7 @@
 | M6-003 | Auto task assignment based on agent capabilities | P2 | L | M6-001 | ✅ Done (assign/assigner.ts; role-scoped + load-balanced; called from decompose handler) |
 | M6-004 | Parallel exploration mode (competing approaches) | P2 | XL | M4-004 | ✅ Done |
 | M6-005 | Review loop with configurable retry limits | P2 | L | M5-004 | ✅ Done |
-| M6-006 | Session replay with cost annotation timeline | P2 | XL | M2-015 | 🔲 |
+| M6-006 | Session replay with cost annotation timeline | P2 | XL | M2-015 | ✅ Done (app/src/components/replay/SessionReplay.tsx; SVG timeline + cost curve + tooltips; 11 tests; wired into PaneContainer) |
 | M6-007 | Context window compaction alerts | P1 | M | M5-002 | ✅ Done |
 | M6-008 | Auto-handoff when context near full | P2 | L | M6-007 | ✅ Done (handoff/manager.ts; spawns continuation agent at 80%; wired into main loop) |
 
@@ -245,5 +245,5 @@
 | **Total** | **127** | **58** | **~116 done, ~11 remaining** |
 
 **Completed so far:** M0–M5 fully complete; M6 5/8 done; M7–M9 largely complete; all tech debt cleared.
-**Remaining open items:** M6-006, M7-006, M9-001
+**Remaining open items:** M7-006, M9-001
 **Critical path to OSS launch:** M9-001 (plugin API)
