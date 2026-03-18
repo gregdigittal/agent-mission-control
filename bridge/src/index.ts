@@ -3,8 +3,8 @@
 /**
  * Agent Bridge — Hybrid orchestrator for Claude Code agent teams.
  *
- * Zero network listeners. Filesystem IPC only.
- * Optional Supabase sync for remote dashboard access.
+ * Zero network listeners. Filesystem IPC + Supabase command channel.
+ * Supabase sync enables remote dashboard control from Vercel or any browser.
  *
  * Usage:
  *   agent-bridge              # Run with ~/.agent-mc/config.json
@@ -18,7 +18,8 @@ import { checkHealth } from './health/checker.js';
 import { handleCrashedAgents } from './health/recovery.js';
 import { aggregateState } from './state/aggregator.js';
 import { writeDashboardState, writeHeartbeat } from './state/writer.js';
-import { syncToSupabase } from './supabase/sync.js';
+import { syncToSupabase, pullCommandsFromSupabase } from './supabase/sync.js';
+import { registerVpsNode } from './vps/registration.js';
 import { terminateAll } from './commands/terminate.js';
 import { audit } from './audit/logger.js';
 import { writeDefaultConfig } from './config.js';
@@ -71,6 +72,11 @@ async function init(): Promise<void> {
     supabase: config.supabase.enabled,
   });
 
+  // Register this bridge instance as a VPS node in Supabase
+  if (config.supabase.enabled) {
+    await registerVpsNode();
+  }
+
   // Start VPS heartbeat monitor (polls registered VPS nodes every 60s)
   startHeartbeatMonitor();
 }
@@ -90,8 +96,12 @@ async function loop(): Promise<void> {
       }
     }
 
-    // 2. Command Processing
-    const commandsProcessed = await processCommands();
+    // 2. Command Processing — filesystem IPC + Supabase remote channel
+    const fsCommands = await processCommands();
+    const remoteCommands = config.supabase.enabled
+      ? await pullCommandsFromSupabase()
+      : 0;
+    const commandsProcessed = fsCommands + remoteCommands;
 
     // 3. Status Aggregation
     const state = await aggregateState();

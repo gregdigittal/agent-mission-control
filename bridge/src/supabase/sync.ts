@@ -1,5 +1,7 @@
-import { getSupabaseClient } from './client.js';
+import { hostname } from 'node:os';
+import { getSupabaseClient, getSupabaseAdminClient } from './client.js';
 import { audit } from '../audit/logger.js';
+import { executeCommand, CommandSchema } from '../commands/processor.js';
 import type { DashboardState } from '../state/aggregator.js';
 
 let lastHeartbeat = 0;
@@ -85,15 +87,101 @@ export async function syncToSupabase(state: DashboardState): Promise<void> {
     const now = Date.now();
     if (now - lastHeartbeat > HEARTBEAT_INTERVAL_MS) {
       lastHeartbeat = now;
-      // This would update the vps_nodes table with heartbeat
-      // Skipped if no vps_node record exists yet
+      const nodeId = process.env['VPS_NODE_ID'] ?? hostname();
+      const agentCount = state.sessions.reduce((n, s) => n + s.agents.length, 0);
+      const { error: hbErr } = await client.from('vps_nodes').update({
+        last_heartbeat: new Date().toISOString(),
+        agent_count: agentCount,
+        health: 'healthy',
+      }).eq('id', nodeId);
+      if (hbErr) {
+        console.warn(`[supabase] Heartbeat update error:`, hbErr.message);
+      }
     }
   } catch (err) {
     await audit('supabase_sync_error', { error: String(err) });
   }
 }
 
-export async function pullCommandsFromSupabase(): Promise<void> {
-  // Future: pull pending commands from Supabase for remote dashboard access
-  // For now, commands come through filesystem IPC
+/**
+ * Polls the Supabase `commands` table for pending commands and executes them.
+ * Uses the admin (service role) client so RLS does not block reads.
+ * Returns the number of commands successfully processed.
+ */
+export async function pullCommandsFromSupabase(): Promise<number> {
+  const client = await getSupabaseAdminClient();
+  if (!client) return 0;
+
+  // Fetch pending commands, oldest first, capped at 20 per cycle
+  const { data, error } = await client
+    .from('commands')
+    .select('*')
+    .eq('status', 'pending')
+    .order('created_at', { ascending: true })
+    .limit(20);
+
+  if (error) {
+    console.warn('[supabase:commands] Fetch error:', error.message);
+    return 0;
+  }
+  if (!data || data.length === 0) return 0;
+
+  let processed = 0;
+
+  for (const row of data) {
+    // Mark as processing (idempotency guard — prevents double-execution on overlapping loops)
+    const { error: markErr } = await client
+      .from('commands')
+      .update({ status: 'processing' })
+      .eq('id', row.id)
+      .eq('status', 'pending');
+
+    if (markErr) {
+      console.warn(`[supabase:commands] Could not claim command ${row.id}:`, markErr.message);
+      continue;
+    }
+
+    try {
+      // Validate and normalise the raw row to the Command shape
+      const parseResult = CommandSchema.safeParse({
+        id: row.id,
+        type: row.type,
+        timestamp: row.created_at,
+        session_token: row.session_token ?? '',
+        payload: row.payload ?? {},
+      });
+
+      if (!parseResult.success) {
+        const msg = parseResult.error.message;
+        await client
+          .from('commands')
+          .update({ status: 'error', error: `Invalid command shape: ${msg}`, processed_at: new Date().toISOString() })
+          .eq('id', row.id);
+        await audit('supabase_command_invalid', { commandId: row.id, type: row.type, error: msg });
+        console.warn(`[supabase:commands] Invalid command ${row.id} (${row.type}):`, msg);
+        continue;
+      }
+
+      // Authentication for Supabase-sourced commands is handled by RLS on insert
+      // (only authenticated users can insert). Skip local token validation.
+      await executeCommand(parseResult.data);
+
+      await client
+        .from('commands')
+        .update({ status: 'done', processed_at: new Date().toISOString() })
+        .eq('id', row.id);
+
+      processed++;
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      await client
+        .from('commands')
+        .update({ status: 'error', error: message, processed_at: new Date().toISOString() })
+        .eq('id', row.id);
+      await audit('supabase_command_error', { commandId: row.id, type: row.type, error: message });
+      console.error(`[supabase:commands] Failed to execute ${row.type} (${row.id}):`, message);
+    }
+  }
+
+  return processed;
 }

@@ -95,7 +95,7 @@ const ExploreParallelPayloadSchema = z.object({
   timeoutMs: z.number().optional(),
 });
 
-const CommandSchema = z.object({
+export const CommandSchema = z.object({
   id: z.string(),
   type: z.enum([
     'spawn_agent', 'terminate_agent', 'approve_task', 'update_config',
@@ -108,7 +108,7 @@ const CommandSchema = z.object({
   payload: z.record(z.unknown()),
 });
 
-type Command = z.infer<typeof CommandSchema>;
+export type Command = z.infer<typeof CommandSchema>;
 
 export async function processCommands(): Promise<number> {
   let processed = 0;
@@ -151,7 +151,7 @@ export async function processCommands(): Promise<number> {
   return processed;
 }
 
-async function executeCommand(cmd: Command): Promise<void> {
+export async function executeCommand(cmd: Command): Promise<void> {
   await audit('command_received', { commandId: cmd.id, type: cmd.type });
 
   switch (cmd.type) {
