@@ -34,6 +34,16 @@ export interface Pane {
   id: string;
   sessionId: string;
   activeTab: PaneTab;
+  projectId: string;
+}
+
+export interface Project {
+  id: string;
+  name: string;
+  local_path: string;
+  backlog_path: string | null;
+  detected_stack: string[];
+  last_scanned_at: string;
 }
 
 export type PaneTab = 'agents' | 'kanban' | 'costs' | 'approvals' | 'dag' | 'replay';

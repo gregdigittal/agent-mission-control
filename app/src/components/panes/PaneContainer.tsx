@@ -1,4 +1,5 @@
 import { PaneTabBar } from './PaneTabBar';
+import { PaneProjectSelector } from './PaneProjectSelector';
 import { AgentView } from '../agents/AgentView';
 import { KanbanBoard } from '../kanban/KanbanBoard';
 import { DagView } from '../dag/DagView';
@@ -25,16 +26,7 @@ export function PaneContainer({ paneId }: Props) {
 
   function renderContent() {
     if (!pane?.sessionId || !session) {
-      return (
-        <div style={{
-          height: '100%', display: 'flex', flexDirection: 'column',
-          alignItems: 'center', justifyContent: 'center',
-          color: 'var(--text-3)', gap: 8,
-        }}>
-          <div style={{ fontSize: 24 }}>◈</div>
-          <div style={{ fontSize: 'var(--font-xs)' }}>No session selected</div>
-        </div>
-      );
+      return <PaneProjectSelector paneId={paneId} />;
     }
 
     const sessionTasks = tasks.filter((t) => t.sessionId === session.id);
@@ -73,7 +65,7 @@ export function PaneContainer({ paneId }: Props) {
         overflow: 'hidden', minWidth: 'var(--pane-min)',
       }}
     >
-      {pane?.sessionId && <PaneTabBar paneId={paneId} />}
+      {pane?.sessionId && session && <PaneTabBar paneId={paneId} />}
       <div style={{ flex: 1, overflow: 'auto' }}>
         {renderContent()}
       </div>

@@ -17,6 +17,7 @@ interface SessionState {
 
   setPaneCount: (count: PaneCount) => void;
   setPaneSession: (paneId: string, sessionId: string) => void;
+  setPaneProject: (paneId: string, projectId: string) => void;
   setPaneTab: (paneId: string, tab: PaneTab) => void;
   setActivePane: (paneId: string) => void;
 
@@ -25,6 +26,11 @@ interface SessionState {
   setWorkspaceId: (id: string | null) => void;
 
   nextSessionColor: () => SessionColor;
+
+  updateSession: (id: string, updates: Partial<Session>) => void;
+
+  refreshTick: number;
+  triggerRefresh: () => void;
 }
 
 function buildPanes(count: PaneCount, existing: Pane[]): Pane[] {
@@ -34,6 +40,7 @@ function buildPanes(count: PaneCount, existing: Pane[]): Pane[] {
       id: `pane-${i + 1}`,
       sessionId: '',
       activeTab: 'agents' as PaneTab,
+      projectId: '',
     });
   }
   return panes;
@@ -71,6 +78,13 @@ export const useSessionStore = create<SessionState>((set, get) => ({
       panes: s.panes.map((p) => (p.id === paneId ? { ...p, sessionId } : p)),
     })),
 
+  setPaneProject: (paneId, projectId) =>
+    set((s) => ({
+      panes: s.panes.map((p) =>
+        p.id === paneId ? { ...p, projectId, sessionId: '' } : p,
+      ),
+    })),
+
   setPaneTab: (paneId, tab) =>
     set((s) => ({
       panes: s.panes.map((p) => (p.id === paneId ? { ...p, activeTab: tab } : p)),
@@ -92,4 +106,14 @@ export const useSessionStore = create<SessionState>((set, get) => ({
     const used = get().sessions.map((s) => s.color);
     return SESSION_COLORS.find((c) => !used.includes(c)) ?? 'cyan';
   },
+
+  updateSession: (id, updates) =>
+    set((s) => ({
+      sessions: s.sessions.map((sess) =>
+        sess.id === id ? { ...sess, ...updates } : sess,
+      ),
+    })),
+
+  refreshTick: 0,
+  triggerRefresh: () => set((s) => ({ refreshTick: s.refreshTick + 1 })),
 }));

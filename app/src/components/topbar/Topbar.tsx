@@ -1,6 +1,5 @@
 import { useTranslation } from 'react-i18next';
 import { LiveClock } from './LiveClock';
-import { SessionTabs } from './SessionTabs';
 import { TilePicker } from './TilePicker';
 import { ScreenPicker } from './ScreenPicker';
 import { ProfileMenu } from '../auth/ProfileMenu';
@@ -8,11 +7,10 @@ import { WorkspaceSwitcher } from '../workspace/WorkspaceSwitcher';
 import { useSessionStore } from '../../stores/sessionStore';
 
 interface Props {
-  onAddSession?: () => void;
   isOnline: boolean;
 }
 
-export function Topbar({ onAddSession, isOnline }: Props) {
+export function Topbar({ isOnline }: Props) {
   const { screenProfile } = useSessionStore();
   const isMobile = screenProfile === 'mobile';
   const { t } = useTranslation();
@@ -36,14 +34,7 @@ export function Topbar({ onAddSession, isOnline }: Props) {
         {isOnline ? t('topbar.status.live') : t('topbar.status.local')}
       </span>
 
-      {/* Session tabs */}
-      {!isMobile && (
-        <div style={{ flex: 1, overflow: 'hidden' }}>
-          <SessionTabs onAddSession={onAddSession} />
-        </div>
-      )}
-
-      {isMobile && <div style={{ flex: 1 }} />}
+      <div style={{ flex: 1 }} />
 
       {/* Right controls */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>

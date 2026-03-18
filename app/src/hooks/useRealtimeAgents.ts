@@ -1,16 +1,18 @@
 import { useEffect } from 'react';
 import { subscribeToTable } from '../lib/realtime';
 import { useAgentStore } from '../stores/agentStore';
+import { useSessionStore } from '../stores/sessionStore';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import type { Agent, AgentEvent } from '../types';
 
 export function useRealtimeAgents(sessionId: string): void {
   const { setAgents, updateAgent } = useAgentStore();
+  const refreshTick = useSessionStore((s) => s.refreshTick);
 
   useEffect(() => {
     if (!isSupabaseConfigured() || !supabase) return;
 
-    // Initial load
+    // Initial load (re-runs on pull-to-refresh via refreshTick)
     supabase
       .from('agents')
       .select('*')
@@ -29,16 +31,17 @@ export function useRealtimeAgents(sessionId: string): void {
     });
 
     return unsub;
-  }, [sessionId, setAgents, updateAgent]);
+  }, [sessionId, refreshTick, setAgents, updateAgent]);
 }
 
 export function useRealtimeEvents(sessionId: string): void {
   const { setEvents, prependEvent } = useAgentStore();
+  const refreshTick = useSessionStore((s) => s.refreshTick);
 
   useEffect(() => {
     if (!isSupabaseConfigured() || !supabase) return;
 
-    // Initial load — last 100 events
+    // Initial load — last 100 events (re-runs on pull-to-refresh via refreshTick)
     supabase
       .from('events')
       .select('*')
@@ -59,5 +62,5 @@ export function useRealtimeEvents(sessionId: string): void {
     });
 
     return unsub;
-  }, [sessionId, setEvents, prependEvent]);
+  }, [sessionId, refreshTick, setEvents, prependEvent]);
 }

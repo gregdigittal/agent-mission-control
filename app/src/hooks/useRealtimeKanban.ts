@@ -1,15 +1,18 @@
 import { useEffect } from 'react';
 import { subscribeToTable } from '../lib/realtime';
 import { useKanbanStore } from '../stores/kanbanStore';
+import { useSessionStore } from '../stores/sessionStore';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import type { KanbanTask } from '../types';
 
 export function useRealtimeKanban(sessionId: string): void {
   const { setTasks, updateTask, addTask } = useKanbanStore();
+  const refreshTick = useSessionStore((s) => s.refreshTick);
 
   useEffect(() => {
     if (!isSupabaseConfigured() || !supabase) return;
 
+    // Initial load (re-runs on pull-to-refresh via refreshTick)
     supabase
       .from('kanban_tasks')
       .select('*')
@@ -27,5 +30,5 @@ export function useRealtimeKanban(sessionId: string): void {
     });
 
     return unsub;
-  }, [sessionId, setTasks, updateTask, addTask]);
+  }, [sessionId, refreshTick, setTasks, updateTask, addTask]);
 }

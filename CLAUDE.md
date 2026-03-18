@@ -8,7 +8,7 @@ Real-time dashboard for monitoring and orchestrating teams of AI coding agents (
 agent-mission-control/
 ├── dashboard/          MVP: single-file HTML/CSS/JS dashboard
 ├── bridge/             Node.js/TypeScript orchestration daemon
-├── app/                React/Vite OSS dashboard (Milestone 3 — in progress)
+├── app/                React/Vite OSS dashboard (Milestone 3 — complete)
 ├── Dashboard-prompts/  Build prompts for each milestone
 ├── BACKLOG.md          Full milestone backlog with status
 ├── FUNCTIONAL_SPEC.md  Detailed functional specification
@@ -24,9 +24,10 @@ agent-mission-control/
 | M0: Foundation (Supabase schema, RLS, triggers) | ✅ Complete |
 | M1: Personal Dashboard MVP (`dashboard/index.html`) | ✅ Complete |
 | M2: Hybrid Bridge (`bridge/`) | ✅ Complete |
-| **M3: React Dashboard (`app/`)** | **🔲 In Progress** |
-| M4: Multi-VPS Orchestration | 🔲 Backlog |
-| M5: MCP Server | 🔲 Backlog |
+| M3: React Dashboard (`app/`) | ✅ Complete |
+| M4: Multi-VPS Orchestration | ✅ Complete |
+| M5: MCP Server | ✅ Complete |
+| M6–M9: Enhanced Orchestration, Git Intelligence, Enterprise, Community | ✅ Complete |
 
 ## Supabase Project
 
@@ -96,8 +97,7 @@ VITE_SUPABASE_ANON_KEY=<your-anon-key>
 ## Known Issues / Flags
 
 - `dashboard/index.html` contains TODO placeholder values for `SUPABASE_URL` and `SUPABASE_ANON_KEY` — edit these before deploying (Settings → API in the Supabase dashboard). Both the dashboard and React app (`app/`) must use project-specific values; no credentials are committed to source.
-- No test suite exists yet (TD-002, TD-003 in backlog).
-- No CI/CD pipeline (TD-004 in backlog).
+- All backlog items (M0–M9, TD-001–TD-009) are complete. See `BACKLOG.md` for full history.
 
 ## Specialist Agents
 
