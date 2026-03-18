@@ -1,5 +1,6 @@
 import { hostname } from 'node:os';
 import { getSupabaseClient, getSupabaseAdminClient } from './client.js';
+import { getNodeUuid } from '../vps/nodeId.js';
 import { audit } from '../audit/logger.js';
 import { executeCommand, CommandSchema } from '../commands/processor.js';
 import type { DashboardState } from '../state/aggregator.js';
@@ -83,19 +84,23 @@ export async function syncToSupabase(state: DashboardState): Promise<void> {
       }
     }
 
-    // Periodic heartbeat to vps_nodes
+    // Periodic heartbeat to vps_nodes — uses admin client to bypass RLS
     const now = Date.now();
     if (now - lastHeartbeat > HEARTBEAT_INTERVAL_MS) {
       lastHeartbeat = now;
-      const nodeId = process.env['VPS_NODE_ID'] ?? hostname();
-      const agentCount = state.sessions.reduce((n, s) => n + s.agents.length, 0);
-      const { error: hbErr } = await client.from('vps_nodes').update({
-        last_heartbeat: new Date().toISOString(),
-        agent_count: agentCount,
-        health: 'healthy',
-      }).eq('id', nodeId);
-      if (hbErr) {
-        console.warn(`[supabase] Heartbeat update error:`, hbErr.message);
+      const adminClient = await getSupabaseAdminClient();
+      if (adminClient) {
+        const nodeId = await getNodeUuid();
+        const agentCount = state.sessions.reduce((n, s) => n + s.agents.length, 0);
+        const { error: hbErr } = await adminClient.from('vps_nodes').update({
+          last_heartbeat: new Date().toISOString(),
+          current_agent_count: agentCount,
+          status: 'online',
+          updated_at: new Date().toISOString(),
+        }).eq('id', nodeId);
+        if (hbErr) {
+          console.warn(`[supabase] Heartbeat update error:`, hbErr.message);
+        }
       }
     }
   } catch (err) {
