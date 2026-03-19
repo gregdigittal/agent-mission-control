@@ -3,6 +3,16 @@ import type { Session, Pane, PaneCount, PaneTab, ScreenProfile, SessionColor } f
 
 const SESSION_COLORS: SessionColor[] = ['cyan', 'green', 'violet', 'amber', 'rose', 'blue'];
 
+/** Detect the current screen profile from window width at call time. */
+function detectScreenProfile(): ScreenProfile {
+  if (typeof window === 'undefined') return 'desktop';
+  const w = window.innerWidth;
+  if (w < 768) return 'mobile';
+  if (w < 1280) return 'laptop';
+  if (w < 1920) return 'desktop';
+  return 'ultrawide';
+}
+
 interface SessionState {
   sessions: Session[];
   panes: Pane[];
@@ -51,7 +61,10 @@ export const useSessionStore = create<SessionState>((set, get) => ({
   panes: buildPanes(1, []),
   paneCount: 1,
   activePane: 'pane-1',
-  screenProfile: 'desktop',
+  // Initialised from window.innerWidth at store creation time so that
+  // useScreenProfile's mount effect does not need to call set() on first render,
+  // avoiding the useSyncExternalStore cascade that causes React error #185.
+  screenProfile: detectScreenProfile(),
   workspaceId: null,
 
   setSessions: (sessions) => set({ sessions }),

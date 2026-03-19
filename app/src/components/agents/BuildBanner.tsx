@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { ProgressRing } from '../shared/ProgressRing';
 import { useAgentStore } from '../../stores/agentStore';
 import type { BuildStage } from '../../types';
@@ -9,7 +10,11 @@ interface Props {
 }
 
 export function BuildBanner({ sessionId }: Props) {
-  const agents = useAgentStore((s) => s.agentsBySession(sessionId));
+  const rawAgents = useAgentStore((s) => s.agents);
+  const agents = useMemo(
+    () => Object.values(rawAgents).filter((a) => a.sessionId === sessionId),
+    [rawAgents, sessionId],
+  );
   const running = agents.filter((a) => a.status === 'running');
 
   if (running.length === 0) return null;

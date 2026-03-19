@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useAgentStore } from '../../stores/agentStore';
 import { useCommand } from '../../hooks/useCommand';
 import { useNotifications } from '../../hooks/useNotifications';
@@ -11,7 +11,11 @@ interface Props {
 type MergeStrategy = 'merge' | 'squash' | 'rebase';
 
 export function BranchManager({ sessionId }: Props) {
-  const agents = useAgentStore((s) => s.agentsBySession(sessionId));
+  const rawAgents = useAgentStore((s) => s.agents);
+  const agents = useMemo(
+    () => Object.values(rawAgents).filter((a) => a.sessionId === sessionId),
+    [rawAgents, sessionId],
+  );
   const { send } = useCommand();
   const { notify } = useNotifications();
 

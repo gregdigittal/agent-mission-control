@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { BuildBanner } from './BuildBanner';
 import { AgentCard } from './AgentCard';
 import { ActivityStream } from './ActivityStream';
@@ -10,8 +11,13 @@ interface Props {
 }
 
 export function AgentView({ sessionId }: Props) {
-  const agents = useAgentStore((s) => s.agentsBySession(sessionId));
-  const { eventFilter, setEventFilter } = useAgentStore();
+  const rawAgents = useAgentStore((s) => s.agents);
+  const agents = useMemo(
+    () => Object.values(rawAgents).filter((a) => a.sessionId === sessionId),
+    [rawAgents, sessionId],
+  );
+  const eventFilter = useAgentStore((s) => s.eventFilter);
+  const setEventFilter = useAgentStore((s) => s.setEventFilter);
   const session = useSessionStore((s) => s.sessions.find((sess) => sess.id === sessionId));
 
   const conflictFiles = session?.conflictFiles ?? [];

@@ -11,16 +11,21 @@ function detectProfile(): ScreenProfile {
 }
 
 export function useScreenProfile(): ScreenProfile {
-  const { screenProfile, setScreenProfile } = useSessionStore();
+  // Use selectors to subscribe only to the specific slice needed, preventing
+  // unrelated store updates from triggering useSyncExternalStore tearing checks
+  // on this component (which was a contributor to React error #185).
+  const screenProfile = useSessionStore((s) => s.screenProfile);
+  const setScreenProfile = useSessionStore((s) => s.setScreenProfile);
 
   useEffect(() => {
-    // Set initial profile
-    setScreenProfile(detectProfile());
-
+    // Do not set on mount — screenProfile is already initialised from
+    // window.innerWidth in the store creator (detectScreenProfile).
+    // Setting it here caused a Zustand useSyncExternalStore cascade during
+    // the React commit phase, triggering React error #185.
     const handler = () => setScreenProfile(detectProfile());
     window.addEventListener('resize', handler);
     return () => window.removeEventListener('resize', handler);
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [setScreenProfile]);
 
   return screenProfile;
 }

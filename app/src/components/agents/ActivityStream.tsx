@@ -1,4 +1,4 @@
-import { useRef, useState, useCallback } from 'react';
+import { useRef, useState, useCallback, useMemo } from 'react';
 import { useAgentStore } from '../../stores/agentStore';
 import type { AgentEvent, EventType } from '../../types';
 
@@ -65,8 +65,15 @@ interface Props {
 }
 
 export function ActivityStream({ sessionId }: Props) {
-  const events = useAgentStore((s) => s.eventsBySession(sessionId));
-  const { eventFilter, setEventFilter } = useAgentStore();
+  const rawEvents = useAgentStore((s) => s.events);
+  const eventFilter = useAgentStore((s) => s.eventFilter);
+  const setEventFilter = useAgentStore((s) => s.setEventFilter);
+  const events = useMemo(
+    () => rawEvents
+      .filter((e) => e.sessionId === sessionId)
+      .filter((e) => !eventFilter || e.agentId === eventFilter),
+    [rawEvents, eventFilter, sessionId],
+  );
   const { attachRef, startIndex, endIndex, totalHeight, offsetTop } = useVirtualizer(events.length);
 
   return (

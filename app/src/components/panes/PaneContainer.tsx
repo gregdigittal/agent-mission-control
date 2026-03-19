@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { PaneTabBar } from './PaneTabBar';
 import { PaneProjectSelector } from './PaneProjectSelector';
 import { AgentView } from '../agents/AgentView';
@@ -21,8 +22,31 @@ export function PaneContainer({ paneId }: Props) {
   const pane = panes.find((p) => p.id === paneId);
   const session = sessions.find((s) => s.id === pane?.sessionId);
   const tasks = useKanbanStore((s) => s.tasks);
-  const agentEvents = useAgentStore((s) => session ? s.eventsBySession(session.id) : []);
-  const sessionCostUsd = useCostStore((s) => session ? s.totalBySession(session.id) : 0);
+
+  // Subscribe to raw primitives only — selectors that return computed arrays (filter/map)
+  // create new references on every call, breaking useSyncExternalStore's getSnapshot
+  // caching requirement and causing React error #185.
+  const rawEvents = useAgentStore((s) => s.events);
+  const eventFilter = useAgentStore((s) => s.eventFilter);
+  const rawRecords = useCostStore((s) => s.records);
+
+  const agentEvents = useMemo(
+    () => !session
+      ? []
+      : rawEvents
+          .filter((e) => e.sessionId === session.id)
+          .filter((e) => !eventFilter || e.agentId === eventFilter),
+    [rawEvents, eventFilter, session],
+  );
+
+  const sessionCostUsd = useMemo(
+    () => !session
+      ? 0
+      : rawRecords
+          .filter((r) => r.sessionId === session.id)
+          .reduce((sum, r) => sum + r.costUsd, 0),
+    [rawRecords, session],
+  );
 
   function renderContent() {
     if (!pane?.sessionId || !session) {

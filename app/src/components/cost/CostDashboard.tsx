@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { useCostStore } from '../../stores/costStore';
 import { useAgentStore } from '../../stores/agentStore';
 import { formatCost, getBudgetColor } from '../../lib/cost';
@@ -10,8 +11,13 @@ interface Props {
 export function CostDashboard({ sessionId }: Props) {
   useCostTracking(sessionId);
 
-  const agents = useAgentStore((s) => s.agentsBySession(sessionId));
-  const { totalByAgent, budgets } = useCostStore();
+  const rawAgents = useAgentStore((s) => s.agents);
+  const agents = useMemo(
+    () => Object.values(rawAgents).filter((a) => a.sessionId === sessionId),
+    [rawAgents, sessionId],
+  );
+  const totalByAgent = useCostStore((s) => s.totalByAgent);
+  const budgets = useCostStore((s) => s.budgets);
   const budget = budgets[sessionId];
 
   const totalSpent = agents.reduce((sum, a) => sum + a.costUsd, 0);
