@@ -17,7 +17,7 @@ interface SwipeHandlers {
 export function useSwipeGesture<T extends HTMLElement>({
   onSwipeLeft,
   onSwipeRight,
-}: SwipeHandlers): React.RefObject<T> {
+}: SwipeHandlers): React.RefObject<T | null> {
   const ref = useRef<T>(null);
   const startX = useRef(0);
   const startY = useRef(0);

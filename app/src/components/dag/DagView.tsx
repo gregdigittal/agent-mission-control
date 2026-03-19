@@ -67,9 +67,7 @@ function computeLayout(tasks: KanbanTask[]): LayoutNode[] {
     const validDeps = deps.filter((d) => idSet.has(d));
     dependsOn.set(task.id, validDeps);
     inDegree.set(task.id, (inDegree.get(task.id) ?? 0));
-    for (const dep of validDeps) {
-      inDegree.set(task.id, (inDegree.get(task.id) ?? 0) + 1);
-    }
+    inDegree.set(task.id, (inDegree.get(task.id) ?? 0) + validDeps.length);
   }
 
   // Build reverse adjacency: dep → [tasks that depend on dep]

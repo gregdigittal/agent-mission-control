@@ -54,6 +54,7 @@ const EVENT_COLORS: Record<EventType, string> = {
   approval_granted:  'var(--green)',
   approval_rejected: 'var(--red)',
   cost_alert:        'var(--amber)',
+  cost_milestone:    'var(--amber)',
   stage_change:      'var(--violet)',
   agent_start:       'var(--green)',
   agent_stop:        'var(--text-3)',

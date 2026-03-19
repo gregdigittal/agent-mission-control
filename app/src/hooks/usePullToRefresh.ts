@@ -4,7 +4,7 @@ const PULL_THRESHOLD_PX = 64;
 
 interface PullToRefreshResult {
   /** Attach to the scrollable container element. */
-  containerRef: React.RefObject<HTMLElement>;
+  containerRef: React.RefObject<HTMLElement | null>;
   /** True while the refresh is in progress — show a loading indicator. */
   isRefreshing: boolean;
 }

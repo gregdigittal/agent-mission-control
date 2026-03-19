@@ -8,7 +8,7 @@
  * Accessibility: focus-trapped inside modal, Escape closes it.
  */
 
-import React, { useEffect, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import { DiffViewer } from './DiffViewer.js';
 
 interface DiffModalProps {

@@ -53,11 +53,13 @@ export function useWorkspaces(): UseWorkspacesResult {
     setLoading(true);
     setError(null);
 
-    supabase
-      .from('workspaces')
-      .select('id, name, owner_id, created_at')
-      .order('created_at', { ascending: true })
-      .then(({ data, error: sbError }) => {
+    void (async () => {
+      try {
+        const { data, error: sbError } = await supabase
+          .from('workspaces')
+          .select('id, name, owner_id, created_at')
+          .order('created_at', { ascending: true });
+
         if (cancelled) return;
         setLoading(false);
 
@@ -83,14 +85,14 @@ export function useWorkspaces(): UseWorkspacesResult {
         }));
 
         setWorkspaces(mapped);
-      })
-      .catch((err: unknown) => {
+      } catch (err: unknown) {
         if (cancelled) return;
         const message = err instanceof Error ? err.message : String(err);
         console.warn('[useWorkspaces] Unexpected error — falling back to Personal:', message);
         setWorkspaces([PERSONAL_WORKSPACE]);
         setLoading(false);
-      });
+      }
+    })();
 
     return () => {
       cancelled = true;

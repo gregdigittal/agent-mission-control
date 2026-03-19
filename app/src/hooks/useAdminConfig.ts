@@ -86,12 +86,14 @@ export function useAdminConfig(): UseAdminConfigResult {
     setLoading(true);
     setError(null);
 
-    supabase
-      .from('admin_config')
-      .select('*')
-      .eq('workspace_id', workspaceId)
-      .maybeSingle()
-      .then(({ data, error: sbError }) => {
+    void (async () => {
+      try {
+        const { data, error: sbError } = await supabase
+          .from('admin_config')
+          .select('*')
+          .eq('workspace_id', workspaceId)
+          .maybeSingle();
+
         if (cancelled) return;
         setLoading(false);
 
@@ -102,14 +104,14 @@ export function useAdminConfig(): UseAdminConfigResult {
         }
 
         setConfig(data ? rowToConfig(data as Record<string, unknown>) : null);
-      })
-      .catch((err: unknown) => {
+      } catch (err: unknown) {
         if (cancelled) return;
         const message = err instanceof Error ? err.message : String(err);
         console.warn('[useAdminConfig] Unexpected error:', message);
         setError(message);
         setLoading(false);
-      });
+      }
+    })();
 
     return () => {
       cancelled = true;

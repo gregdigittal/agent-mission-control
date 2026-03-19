@@ -56,7 +56,9 @@ export async function handleSsoCallback(): Promise<SsoCallbackResult> {
   }
 
   try {
-    const { data, error } = await supabase.auth.getSessionFromUrl({ reHashParams: true });
+    // getSessionFromUrl was removed in supabase-js v2.x; the client automatically
+    // handles the OAuth callback URL on load. Retrieve the active session directly.
+    const { data, error } = await supabase.auth.getSession();
     if (error) {
       return { user: null, error: error.message };
     }

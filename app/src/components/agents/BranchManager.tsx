@@ -46,11 +46,11 @@ export function BranchManager({ sessionId }: Props) {
     setBusy(true);
     try {
       await send({ type: 'create_branch', payload: { branch_name: newBranch.trim(), from_ref: fromRef || 'HEAD' } });
-      notify({ message: `Branch "${newBranch}" creation queued`, type: 'success' });
+      notify(`Branch "${newBranch}" creation queued`);
       setNewBranch('');
       setFromRef('HEAD');
     } catch (err) {
-      notify({ message: `Failed to queue branch: ${err instanceof Error ? err.message : String(err)}`, type: 'error' });
+      notify(`Failed to queue branch: ${err instanceof Error ? err.message : String(err)}`);
     } finally {
       setBusy(false);
     }
@@ -61,10 +61,10 @@ export function BranchManager({ sessionId }: Props) {
     setBusy(true);
     try {
       await send({ type: 'switch_branch', payload: { branch_name: switchTarget.trim() } });
-      notify({ message: `Switch to "${switchTarget}" queued`, type: 'success' });
+      notify(`Switch to "${switchTarget}" queued`);
       setSwitchTarget('');
     } catch (err) {
-      notify({ message: `Failed: ${err instanceof Error ? err.message : String(err)}`, type: 'error' });
+      notify(`Failed: ${err instanceof Error ? err.message : String(err)}`);
     } finally {
       setBusy(false);
     }
@@ -83,12 +83,12 @@ export function BranchManager({ sessionId }: Props) {
           ...(mergeMsg.trim() ? { message: mergeMsg.trim() } : {}),
         },
       });
-      notify({ message: `Merge of "${mergeSrc}" queued`, type: 'success' });
+      notify(`Merge of "${mergeSrc}" queued`);
       setMergeSrc('');
       setMergeDst('');
       setMergeMsg('');
     } catch (err) {
-      notify({ message: `Failed: ${err instanceof Error ? err.message : String(err)}`, type: 'error' });
+      notify(`Failed: ${err instanceof Error ? err.message : String(err)}`);
     } finally {
       setBusy(false);
     }
