@@ -40,7 +40,7 @@ export function Topbar({ isOnline }: Props) {
       <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
         {!isMobile && <WorkspaceSwitcher />}
         {!isMobile && <TilePicker />}
-        {!isMobile && <ScreenPicker />}
+        <ScreenPicker />
         <LiveClock />
         <ProfileMenu />
       </div>

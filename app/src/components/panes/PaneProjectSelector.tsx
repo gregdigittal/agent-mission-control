@@ -4,15 +4,22 @@ import { useProjectStore } from '../../stores/projectStore';
 import { supabase, isSupabaseConfigured } from '../../lib/supabase';
 import type { Project, Session } from '../../types';
 
+function generateId() {
+  return crypto.randomUUID();
+}
+
 interface Props {
   paneId: string;
 }
 
 export function PaneProjectSelector({ paneId }: Props) {
   const { panes, sessions, setPaneProject, setPaneSession, nextSessionColor, screenProfile } = useSessionStore();
-  const { projects } = useProjectStore();
+  const { projects, addProject } = useProjectStore();
   const [isCreating, setIsCreating] = useState(false);
   const [newSessionName, setNewSessionName] = useState('');
+  const [isCreatingProject, setIsCreatingProject] = useState(false);
+  const [newProjectName, setNewProjectName] = useState('');
+  const [newProjectPath, setNewProjectPath] = useState('');
 
   // Desktop only
   if (screenProfile === 'mobile') return null;
@@ -35,6 +42,46 @@ export function PaneProjectSelector({ paneId }: Props) {
 
   function handleSelectSession(session: Session) {
     setPaneSession(paneId, session.id);
+  }
+
+  async function handleCreateProject() {
+    if (!newProjectName.trim()) return;
+
+    const project: Project = {
+      id: generateId(),
+      name: newProjectName.trim(),
+      local_path: newProjectPath.trim() || newProjectName.trim().toLowerCase().replace(/\s+/g, '-'),
+      backlog_path: null,
+      detected_stack: [],
+      last_scanned_at: new Date().toISOString(),
+    };
+
+    if (isSupabaseConfigured() && supabase) {
+      const { data, error } = await supabase
+        .from('projects')
+        .insert({
+          id: project.id,
+          name: project.name,
+          local_path: project.local_path,
+          backlog_path: project.backlog_path,
+          detected_stack: project.detected_stack,
+          last_scanned_at: project.last_scanned_at,
+        })
+        .select()
+        .single();
+
+      if (error) {
+        console.error('[PaneProjectSelector] create project error:', error);
+        return;
+      }
+      if (data) addProject(data as Project);
+    } else {
+      addProject(project);
+    }
+
+    setNewProjectName('');
+    setNewProjectPath('');
+    setIsCreatingProject(false);
   }
 
   async function handleCreateSession() {
@@ -99,8 +146,57 @@ export function PaneProjectSelector({ paneId }: Props) {
           </div>
 
           {projects.length === 0 ? (
-            <div style={{ fontSize: 'var(--font-xs)', color: 'var(--text-3)' }}>
-              No projects found. Run the bridge scanner to discover projects.
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <div style={{ fontSize: 'var(--font-xs)', color: 'var(--text-3)' }}>
+                No projects yet. Create one manually or start the bridge to auto-discover projects from your VPS.
+              </div>
+              {isCreatingProject ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  <input
+                    autoFocus
+                    type="text"
+                    placeholder="Project name…"
+                    value={newProjectName}
+                    onChange={(e) => setNewProjectName(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Escape') { setIsCreatingProject(false); setNewProjectName(''); setNewProjectPath(''); }
+                    }}
+                    style={{ padding: '6px 10px', fontSize: 'var(--font-xs)', color: 'var(--text-1)', background: 'var(--bg-4)', border: '1px solid var(--border-1)', borderRadius: 5, outline: 'none' }}
+                  />
+                  <input
+                    type="text"
+                    placeholder="Path on VPS (optional)"
+                    value={newProjectPath}
+                    onChange={(e) => setNewProjectPath(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') { void handleCreateProject(); }
+                      if (e.key === 'Escape') { setIsCreatingProject(false); setNewProjectName(''); setNewProjectPath(''); }
+                    }}
+                    style={{ padding: '6px 10px', fontSize: 'var(--font-xs)', color: 'var(--text-1)', background: 'var(--bg-4)', border: '1px solid var(--border-1)', borderRadius: 5, outline: 'none' }}
+                  />
+                  <div style={{ display: 'flex', gap: 6 }}>
+                    <button
+                      onClick={() => { void handleCreateProject(); }}
+                      style={{ flex: 1, padding: '5px 0', fontSize: 'var(--font-xs)', color: 'var(--bg-0)', background: 'var(--cyan)', borderRadius: 5, cursor: 'pointer' }}
+                    >
+                      Create
+                    </button>
+                    <button
+                      onClick={() => { setIsCreatingProject(false); setNewProjectName(''); setNewProjectPath(''); }}
+                      style={{ flex: 1, padding: '5px 0', fontSize: 'var(--font-xs)', color: 'var(--text-2)', background: 'var(--bg-4)', border: '1px solid var(--border-0)', borderRadius: 5, cursor: 'pointer' }}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <button
+                  onClick={() => setIsCreatingProject(true)}
+                  style={{ padding: '7px 12px', fontSize: 'var(--font-xs)', color: 'var(--cyan)', background: 'transparent', border: '1px dashed var(--border-1)', borderRadius: 5, cursor: 'pointer', textAlign: 'left' }}
+                >
+                  + Create project
+                </button>
+              )}
             </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
@@ -151,6 +247,46 @@ export function PaneProjectSelector({ paneId }: Props) {
                   )}
                 </button>
               ))}
+            </div>
+          )}
+
+          {/* Add project button — always visible when list is showing */}
+          {projects.length > 0 && !isCreatingProject && (
+            <button
+              onClick={() => setIsCreatingProject(true)}
+              style={{ padding: '5px 8px', fontSize: 'var(--font-xs)', color: 'var(--text-3)', background: 'transparent', border: '1px dashed var(--border-0)', borderRadius: 5, cursor: 'pointer', textAlign: 'left', marginTop: 4 }}
+            >
+              + New project
+            </button>
+          )}
+          {projects.length > 0 && isCreatingProject && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 4 }}>
+              <input
+                autoFocus
+                type="text"
+                placeholder="Project name…"
+                value={newProjectName}
+                onChange={(e) => setNewProjectName(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Escape') { setIsCreatingProject(false); setNewProjectName(''); setNewProjectPath(''); }
+                }}
+                style={{ padding: '6px 10px', fontSize: 'var(--font-xs)', color: 'var(--text-1)', background: 'var(--bg-4)', border: '1px solid var(--border-1)', borderRadius: 5, outline: 'none' }}
+              />
+              <input
+                type="text"
+                placeholder="Path on VPS (optional)"
+                value={newProjectPath}
+                onChange={(e) => setNewProjectPath(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') { void handleCreateProject(); }
+                  if (e.key === 'Escape') { setIsCreatingProject(false); setNewProjectName(''); setNewProjectPath(''); }
+                }}
+                style={{ padding: '6px 10px', fontSize: 'var(--font-xs)', color: 'var(--text-1)', background: 'var(--bg-4)', border: '1px solid var(--border-1)', borderRadius: 5, outline: 'none' }}
+              />
+              <div style={{ display: 'flex', gap: 6 }}>
+                <button onClick={() => { void handleCreateProject(); }} style={{ flex: 1, padding: '5px 0', fontSize: 'var(--font-xs)', color: 'var(--bg-0)', background: 'var(--cyan)', borderRadius: 5, cursor: 'pointer' }}>Create</button>
+                <button onClick={() => { setIsCreatingProject(false); setNewProjectName(''); setNewProjectPath(''); }} style={{ flex: 1, padding: '5px 0', fontSize: 'var(--font-xs)', color: 'var(--text-2)', background: 'var(--bg-4)', border: '1px solid var(--border-0)', borderRadius: 5, cursor: 'pointer' }}>Cancel</button>
+              </div>
             </div>
           )}
         </div>
