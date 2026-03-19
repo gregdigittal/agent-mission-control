@@ -1,0 +1,24 @@
+{
+  "apps": [
+    {
+      "name": "agent-bridge",
+      "script": "dist/index.js",
+      "cwd": "/home/gregmorris/agent-mission-control/bridge",
+      "autorestart": true,
+      "watch": false,
+      "max_restarts": 10,
+      "restart_delay": 5000,
+      "min_uptime": "10s",
+      "out_file": "/home/gregmorris/.agent-mc/logs/pm2-out.log",
+      "error_file": "/home/gregmorris/.agent-mc/logs/pm2-err.log",
+      "merge_logs": true,
+      "log_date_format": "YYYY-MM-DD HH:mm:ss Z",
+      "env": {
+        "NODE_ENV": "production",
+        "SUPABASE_SERVICE_ROLE_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpwc25ib2dsZHRlcG1md2dxYXJ6Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MzA4MjkyOCwiZXhwIjoyMDg4NjU4OTI4fQ.ihAw6BcUmiJBqtUBSv2I8sdjDIEiJ0sYheKRF5XQ5Wg",
+        "VPS_NODE_ID": "vps-main",
+        "VPS_REGION": "eu-west-1"
+      }
+    }
+  ]
+}
