@@ -1,1469 +1,1537 @@
-<!--
-  Agent Mission Control — Personal Dashboard
-
-  Quick start:
-    cd /path/to/dashboard
-    python3 -m http.server 8080
-    # Access at http://your-vps-ip:8080
-
-  Or with nginx:
-    server {
-      listen 8080;
-      root /path/to/dashboard;
-      index index.html;
-    }
-
-  Configure Supabase (optional):
-    Edit SUPABASE_URL and SUPABASE_ANON_KEY below
--->
 <!DOCTYPE html>
-<html lang="en" class="screen-desktop">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Agent Mission Control</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230a0f1a'/%3E%3Cpolygon points='16,4 28,24 4,24' fill='none' stroke='%2322d3ee' stroke-width='2.5' stroke-linejoin='round'/%3E%3Ccircle cx='16' cy='17' r='2.5' fill='%2322d3ee'/%3E%3C/svg%3E">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=JetBrains+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
-/* === RESET & BASE === */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-html{font-size:var(--font-base);-webkit-text-size-adjust:100%;-webkit-tap-highlight-color:transparent}
-body{font-family:'DM Sans',sans-serif;background:var(--bg-0);color:var(--text-0);overflow:hidden;height:100vh;width:100vw;position:relative}
-code,pre,.mono{font-family:'JetBrains Mono',monospace}
-button{cursor:pointer;border:none;background:none;font:inherit;color:inherit}
-input,select{font:inherit;color:inherit;background:var(--bg-3);border:1px solid var(--border-1);border-radius:4px;padding:4px 8px}
-:focus-visible{outline:1px solid var(--cyan);outline-offset:2px}
-a{color:var(--cyan);text-decoration:none}
+html{-webkit-font-smoothing:antialiased}
+body{font-family:var(--sans);font-size:var(--font-base);color:var(--text-0);background:var(--bg-0);min-height:100vh;overflow-x:hidden}
+body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.03) 2px,rgba(0,0,0,.03) 4px)}
 
-/* === COLOR PALETTE === */
+/* ── Design Tokens ────────────────────────────────────────────────────────── */
 :root{
   --bg-0:#06080c;--bg-1:#0b0e14;--bg-2:#10141c;--bg-3:#161b26;--bg-4:#1c2232;--bg-5:#242b3d;
   --border-0:#1a2030;--border-1:#242e42;--border-2:#2e3a52;
   --text-0:#edf0f7;--text-1:#b0b8cc;--text-2:#6e7a94;--text-3:#3e4a64;
   --cyan:#22d3ee;--green:#34d399;--amber:#fbbf24;--red:#f87171;--violet:#a78bfa;--blue:#60a5fa;--rose:#fb7185;
-  --session-colors: cyan,green,violet,amber,rose,blue;
+  --mono:'JetBrains Mono',monospace;--sans:'DM Sans',sans-serif;
+  /* Desktop (27") — default */
+  --density-pad:14px;--density-gap:10px;--pane-min:360px;--topbar-h:40px;
+  --font-base:13px;--font-sm:11px;--font-xs:10px;--font-xxs:9px;
+  --card-pad:12px 14px;--kb-col-w:210px;
+  --bb-stage-size:17px;--bb-ring-size:54px;--bb-stat-size:17px;
+  --modal-radius:12px;--error-h:36px;
 }
-
-/* === SCREEN PROFILES === */
-html.screen-mobile{
-  --density-pad:8px;--density-gap:6px;--pane-min:100%;--topbar-h:48px;
-  --font-base:14px;--font-sm:12px;--font-xs:11px;--font-xxs:10px;
-  --card-pad:12px;--kb-col-w:calc(100vw - 32px);
-  --bb-stage-size:14px;--bb-ring-size:48px;--bb-stat-size:14px;
-  --bottomnav-h:56px;--tap-target:44px;
-}
-html.screen-laptop{
+.screen-laptop{
   --density-pad:10px;--density-gap:7px;--pane-min:320px;--topbar-h:36px;
   --font-base:12px;--font-sm:10px;--font-xs:9px;--font-xxs:8px;
   --card-pad:8px 10px;--kb-col-w:180px;
   --bb-stage-size:15px;--bb-ring-size:42px;--bb-stat-size:15px;
 }
-html.screen-desktop{
-  --density-pad:14px;--density-gap:10px;--pane-min:360px;--topbar-h:40px;
-  --font-base:13px;--font-sm:11px;--font-xs:10px;--font-xxs:9px;
-  --card-pad:12px 14px;--kb-col-w:210px;
-  --bb-stage-size:17px;--bb-ring-size:54px;--bb-stat-size:17px;
-}
-html.screen-ultrawide{
+.screen-ultrawide{
   --density-pad:18px;--density-gap:12px;--pane-min:400px;--topbar-h:44px;
   --font-base:14px;--font-sm:12px;--font-xs:11px;--font-xxs:10px;
   --card-pad:14px 16px;--kb-col-w:240px;
   --bb-stage-size:20px;--bb-ring-size:62px;--bb-stat-size:20px;
 }
 
-/* === SCROLLBAR === */
-::-webkit-scrollbar{width:5px;height:5px}
-::-webkit-scrollbar-track{background:var(--bg-1)}
-::-webkit-scrollbar-thumb{background:var(--border-2);border-radius:3px}
-::-webkit-scrollbar-thumb:hover{background:var(--text-3)}
-html.screen-mobile ::-webkit-scrollbar{display:none}
+/* ── Topbar ───────────────────────────────────────────────────────────────── */
+#topbar{height:var(--topbar-h);background:var(--bg-1);border-bottom:1px solid var(--border-0);display:flex;align-items:center;padding:0 var(--density-pad);gap:var(--density-gap);position:sticky;top:0;z-index:100}
+.brand{display:flex;align-items:center;gap:8px;font-family:var(--mono);font-weight:700;font-size:var(--font-sm);color:var(--cyan);letter-spacing:.05em;white-space:nowrap}
+#session-tabs{display:flex;gap:4px;flex:1;overflow-x:auto;min-width:0}
+.session-tab{padding:5px 12px;border-radius:6px;cursor:pointer;font-family:var(--mono);font-size:var(--font-xs);color:var(--text-2);background:transparent;border:1px solid transparent;white-space:nowrap;transition:all .15s;display:flex;align-items:center;gap:5px}
+.session-tab:hover{color:var(--text-1);background:var(--bg-3)}
+.session-tab.active{color:var(--cyan);background:var(--bg-3);border-color:var(--border-1);box-shadow:0 0 8px rgba(34,211,238,.1)}
+.session-tab .tab-close{display:none;margin-left:4px;font-size:10px;color:var(--text-3);cursor:pointer;padding:0 2px;border-radius:2px;line-height:1}
+.session-tab:hover .tab-close{display:inline-flex}
+.session-tab .tab-close:hover{color:var(--red);background:rgba(248,113,113,.15)}
+.source-badge{font-size:9px;padding:0 4px;border-radius:3px;font-family:var(--mono);letter-spacing:.04em;color:var(--text-3);background:var(--bg-4);border:1px solid var(--border-0);line-height:16px}
+.add-session-btn{padding:5px 10px;border-radius:6px;cursor:pointer;font-family:var(--mono);font-size:var(--font-xs);color:var(--text-3);background:transparent;border:1px dashed var(--border-1);white-space:nowrap;transition:all .15s;display:flex;align-items:center;flex-shrink:0}
+.add-session-btn:hover{color:var(--green);border-color:var(--green);background:rgba(52,211,153,.05)}
+.topbar-right{display:flex;align-items:center;gap:var(--density-gap);margin-left:auto;white-space:nowrap}
+.live-badge{display:flex;align-items:center;gap:4px;font-family:var(--mono);font-size:var(--font-xxs);color:var(--green);font-weight:600;letter-spacing:.05em}
+.live-dot{animation:pulse 2s infinite}
+#clock{font-family:var(--mono);font-size:var(--font-xs);color:var(--text-2)}
+.picker{display:flex;gap:2px}
+.picker-btn{padding:3px 7px;border-radius:4px;cursor:pointer;font-family:var(--mono);font-size:var(--font-xxs);color:var(--text-3);background:transparent;border:1px solid var(--border-0);transition:all .15s}
+.picker-btn:hover{color:var(--text-2);border-color:var(--border-1)}
+.picker-btn.active{color:var(--cyan);border-color:var(--cyan);background:rgba(34,211,238,.06)}
+.picker-btn.disabled{opacity:.3;pointer-events:none}
+.help-btn{padding:3px 7px;border-radius:4px;cursor:pointer;font-family:var(--mono);font-size:var(--font-xxs);color:var(--text-2);background:transparent;border:1px solid var(--border-0);transition:all .15s;outline:none}
+.help-btn:hover{color:var(--cyan);border-color:var(--cyan)}
 
-/* === TOPBAR === */
-#topbar{
-  height:var(--topbar-h);display:flex;align-items:center;gap:10px;
-  padding:0 var(--density-pad);background:var(--bg-1);border-bottom:1px solid var(--border-0);
-  position:relative;z-index:100;
-}
-#topbar .logo{font-family:'JetBrains Mono',monospace;font-weight:600;color:var(--cyan);font-size:var(--font-sm);white-space:nowrap;letter-spacing:0.5px}
-#topbar .logo span{color:var(--text-2);font-weight:400}
-.live-badge{display:inline-flex;align-items:center;gap:4px;font-size:var(--font-xxs);color:var(--green);text-transform:uppercase;letter-spacing:1px}
-.live-dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 2s infinite}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+/* ── Cost Widget (F-064) ─────────────────────────────────────────────────── */
+.cost-widget{font-family:var(--mono);font-size:var(--font-xxs);color:var(--text-2);display:flex;align-items:center;gap:3px}
+.cost-widget .cost-val{color:var(--amber);font-weight:600}
 
-.topbar-spacer{flex:1}
-.topbar-group{display:flex;align-items:center;gap:6px}
-.topbar-btn{
-  padding:3px 8px;border-radius:4px;font-size:var(--font-xs);
-  background:var(--bg-3);border:1px solid var(--border-1);color:var(--text-1);
-  transition:all .15s;
-}
-.topbar-btn:hover{border-color:var(--cyan);color:var(--cyan)}
-.topbar-btn.active{background:var(--cyan);color:var(--bg-0);border-color:var(--cyan)}
-.topbar-select{
-  font-size:var(--font-xs);background:var(--bg-3);border:1px solid var(--border-1);
-  color:var(--text-1);padding:3px 6px;border-radius:4px;
-}
+/* ── Connection Status (F-062) ───────────────────────────────────────────── */
+.conn-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.conn-dot.connected{background:var(--green)}
+.conn-dot.stale{background:var(--amber)}
+.conn-dot.disconnected{background:var(--red)}
+.conn-dot.unknown{background:var(--text-3)}
 
-/* === HAMBURGER (mobile) === */
-.hamburger{display:none;width:var(--tap-target,36px);height:var(--tap-target,36px);align-items:center;justify-content:center;font-size:18px;color:var(--text-1)}
-html.screen-mobile .hamburger{display:flex}
-html.screen-mobile .topbar-desktop{display:none}
-.mobile-menu{
-  display:none;position:fixed;top:var(--topbar-h);left:0;right:0;bottom:0;
-  background:rgba(6,8,12,.95);z-index:200;padding:var(--density-pad);
-  flex-direction:column;gap:12px;overflow-y:auto;
-}
-.mobile-menu.open{display:flex}
-.mobile-menu label{font-size:var(--font-sm);color:var(--text-2);display:block;margin-bottom:4px}
-.mobile-menu select,.mobile-menu button{width:100%;padding:10px;font-size:var(--font-base);border-radius:6px}
-.mobile-menu button{background:var(--bg-4);border:1px solid var(--border-1);text-align:left;color:var(--text-0)}
+/* ── Session Dropdown ─────────────────────────────────────────────────────── */
+.session-dropdown{position:fixed;min-width:300px;max-height:340px;overflow-y:auto;background:var(--bg-2);border:1px solid var(--border-1);border-radius:8px;box-shadow:0 8px 32px rgba(0,0,0,.5);z-index:200;padding:6px}
+.session-dropdown-item{display:flex;align-items:center;gap:var(--density-gap);padding:var(--density-gap) var(--density-pad);border-radius:6px;cursor:pointer;transition:all .12s;border:1px solid transparent}
+.session-dropdown-item:hover{background:var(--bg-3);border-color:var(--border-1)}
+.session-dropdown-item .sdi-icon{font-size:1.2em;flex-shrink:0}
+.session-dropdown-item .sdi-info{flex:1;min-width:0}
+.session-dropdown-item .sdi-name{font-family:var(--mono);font-size:var(--font-xs);font-weight:600;color:var(--text-0);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.session-dropdown-item .sdi-meta{font-size:var(--font-xxs);color:var(--text-3);display:flex;gap:8px}
+.session-dropdown-item.disabled{opacity:.35;pointer-events:none}
+.session-dropdown-empty{padding:16px;text-align:center;font-size:var(--font-xs);color:var(--text-3)}
+.session-dropdown-loading{padding:16px;text-align:center;font-size:var(--font-xs);color:var(--text-2)}
+.session-dropdown-header{padding:6px 12px 8px;font-family:var(--mono);font-size:var(--font-xxs);color:var(--text-2);text-transform:uppercase;letter-spacing:.08em;border-bottom:1px solid var(--border-0);margin-bottom:4px}
 
-/* === SESSION TABS === */
-.session-tabs{display:flex;gap:2px;align-items:center}
-.tab{
-  padding:3px 10px;border-radius:4px 4px 0 0;font-size:var(--font-xs);font-weight:500;
-  border:1px solid var(--border-1);border-bottom:none;color:var(--text-2);
-  background:var(--bg-2);position:relative;display:flex;align-items:center;gap:4px;
-}
-.tab.active{color:var(--text-0);background:var(--bg-3);border-color:var(--border-2)}
-.tab .dot{width:6px;height:6px;border-radius:50%}
-.tab .close-tab{font-size:9px;opacity:.5;margin-left:4px}
-.tab .close-tab:hover{opacity:1;color:var(--red)}
-.add-session{font-size:var(--font-xs);padding:3px 8px;color:var(--text-3)}
-.add-session:hover{color:var(--cyan)}
-html.screen-mobile .session-tabs{display:none}
-
-/* === MAIN LAYOUT === */
-#main{
-  display:flex;height:calc(100vh - var(--topbar-h));overflow:hidden;
-}
-html.screen-mobile #main{height:calc(100vh - var(--topbar-h) - var(--bottomnav-h))}
-
-/* === PANES === */
-.pane{
-  flex:1;min-width:var(--pane-min);display:flex;flex-direction:column;
-  border-right:1px solid var(--border-0);overflow:hidden;
-}
+/* ── Workspace & Panes ────────────────────────────────────────────────────── */
+#workspace{display:flex;height:calc(100vh - var(--topbar-h));overflow:hidden}
+.pane{flex:1;min-width:var(--pane-min);border-right:1px solid var(--border-0);display:flex;flex-direction:column;overflow:hidden}
 .pane:last-child{border-right:none}
-.pane-header{
-  display:flex;align-items:center;gap:6px;padding:4px var(--density-pad);
-  background:var(--bg-2);border-bottom:1px solid var(--border-0);min-height:28px;
-}
-.pane-tab{
-  font-size:var(--font-xs);padding:2px 8px;border-radius:3px;color:var(--text-2);
-}
-.pane-tab.active{background:var(--bg-4);color:var(--text-0)}
-.pane-tab:hover{color:var(--text-1)}
-.pane-session-select{margin-left:auto;font-size:var(--font-xxs)}
+.pane-header{display:flex;align-items:center;justify-content:space-between;padding:var(--density-gap) var(--density-pad);background:var(--bg-1);border-bottom:1px solid var(--border-0);font-size:var(--font-xs);gap:8px}
+.pane-header select{background:var(--bg-3);color:var(--text-1);border:1px solid var(--border-1);border-radius:4px;padding:2px 6px;font-family:var(--mono);font-size:var(--font-xxs);cursor:pointer;outline:none}
+.pane-header select:focus{border-color:var(--cyan)}
 .pane-body{flex:1;overflow-y:auto;padding:var(--density-pad)}
-html.screen-mobile .pane-header{display:none}
+.empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:12px;color:var(--text-3);font-family:var(--mono);font-size:var(--font-xs)}
+.empty-state-icon{font-size:2em;color:var(--border-1)}
 
-/* === BUILD STAGE BANNER === */
-.build-banner{
-  display:flex;align-items:center;gap:var(--density-gap);padding:var(--card-pad);
-  background:var(--bg-2);border:1px solid var(--border-1);border-radius:6px;margin-bottom:var(--density-gap);
-}
-.build-banner .ring-wrap{position:relative;width:var(--bb-ring-size);height:var(--bb-ring-size);flex-shrink:0}
-.build-banner svg.progress-ring{width:100%;height:100%;transform:rotate(-90deg)}
-.progress-ring-bg{fill:none;stroke:var(--bg-4);stroke-width:3}
-.progress-ring-fg{fill:none;stroke:var(--cyan);stroke-width:3;stroke-linecap:round;transition:stroke-dashoffset .5s;filter:drop-shadow(0 0 4px var(--cyan))}
-.build-banner .ring-pct{
-  position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
-  font-family:'JetBrains Mono',monospace;font-size:var(--font-xxs);font-weight:600;color:var(--cyan);
-}
-.build-banner .stage-name{font-weight:600;font-size:var(--bb-stage-size);color:var(--text-0)}
-.build-banner .project-name{font-size:var(--font-xs);color:var(--text-2)}
-.build-banner .stats{margin-left:auto;display:flex;gap:12px;font-size:var(--bb-stat-size);font-family:'JetBrains Mono',monospace;color:var(--text-2)}
-.build-banner .stats .val{color:var(--text-0);font-weight:500}
+/* ── Build Banner ─────────────────────────────────────────────────────────── */
+.build-banner{display:flex;align-items:center;gap:var(--density-gap);padding:var(--card-pad);background:var(--bg-2);border:1px solid var(--border-0);border-radius:8px;margin-bottom:var(--density-gap)}
+.progress-ring{position:relative;width:var(--bb-ring-size);height:var(--bb-ring-size);flex-shrink:0}
+.progress-ring svg{width:100%;height:100%;transform:rotate(-90deg)}
+.ring-bg{fill:none;stroke:var(--border-1);stroke-width:4}
+.ring-fg{fill:none;stroke:var(--cyan);stroke-width:4;stroke-linecap:round;transition:stroke-dashoffset .5s;filter:drop-shadow(0 0 4px rgba(34,211,238,.4))}
+.progress-pct{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:var(--bb-stat-size);font-weight:700;color:var(--text-0)}
+.build-stats{display:flex;flex-direction:column;gap:3px;flex:1}
+.build-project{font-family:var(--mono);font-size:var(--font-sm);font-weight:600;color:var(--text-0)}
+.build-stage{font-size:var(--font-xs);color:var(--cyan);font-weight:500}
+.build-detail{font-size:var(--font-xxs);color:var(--text-2)}
+.build-metrics{display:flex;gap:var(--density-gap);margin-top:4px}
+.build-metric{display:flex;flex-direction:column;gap:1px}
+.build-metric-val{font-family:var(--mono);font-size:var(--font-xs);font-weight:600;color:var(--text-0)}
+.build-metric-lbl{font-size:var(--font-xxs);color:var(--text-3)}
 
-/* === PIPELINE ROW === */
-.pipeline-row{display:flex;gap:4px;margin-bottom:var(--density-gap);overflow-x:auto;padding-bottom:4px}
-.pipeline-stage{
-  flex:1;min-width:0;padding:4px 6px;border-radius:4px;text-align:center;
-  font-size:var(--font-xxs);font-family:'JetBrains Mono',monospace;
-  background:var(--bg-3);border:1px solid var(--border-0);color:var(--text-3);
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:all .3s;
-}
-.pipeline-stage.active{background:var(--bg-4);border-color:var(--cyan);color:var(--cyan);box-shadow:0 0 8px rgba(34,211,238,.15)}
-.pipeline-stage.done{background:var(--bg-3);border-color:var(--green);color:var(--green);opacity:.7}
+/* ── Pipeline ─────────────────────────────────────────────────────────────── */
+.pipeline{display:flex;gap:4px;overflow-x:auto;padding-bottom:var(--density-gap);margin-bottom:var(--density-gap)}
+.stage-pill{display:flex;align-items:center;gap:4px;padding:4px 10px;border-radius:20px;font-family:var(--mono);font-size:var(--font-xxs);white-space:nowrap;background:var(--bg-3);color:var(--text-3);border:1px solid var(--border-0);transition:all .2s}
+.stage-pill.completed{color:var(--green);border-color:rgba(52,211,153,.2);background:rgba(52,211,153,.06)}
+.stage-pill.active{color:var(--cyan);border-color:rgba(34,211,238,.3);background:rgba(34,211,238,.08);box-shadow:0 0 10px rgba(34,211,238,.15)}
+.stage-dot{width:5px;height:5px;border-radius:50%;background:currentColor;flex-shrink:0}
+.stage-pill.active .stage-dot{animation:pulse 1.5s infinite}
+.stage-pill.gate-blocked{border-color:rgba(251,191,36,.4);box-shadow:0 0 8px rgba(251,191,36,.1)}
+.stage-gate-lock{font-size:var(--font-xxs);margin-left:3px;opacity:.85}
+.evidence-gate-bar{display:flex;align-items:center;gap:8px;padding:3px 6px;border-radius:4px;background:rgba(251,191,36,.06);border:1px solid rgba(251,191,36,.2);margin-bottom:var(--density-gap);font-family:var(--mono);font-size:var(--font-xxs);color:var(--amber);flex-wrap:wrap}
+.evidence-gate-bar.gate-clear{background:rgba(52,211,153,.06);border-color:rgba(52,211,153,.2);color:var(--green)}
 
-/* === AGENT CARDS === */
-.agent-grid{display:flex;flex-direction:column;gap:var(--density-gap);margin-bottom:var(--density-gap)}
-.agent-card{
-  padding:var(--card-pad);background:var(--bg-2);border:1px solid var(--border-1);border-radius:6px;
-  display:flex;gap:10px;align-items:flex-start;transition:border-color .2s;
-}
-.agent-card:hover{border-color:var(--border-2)}
-.agent-avatar{font-size:20px;flex-shrink:0;width:32px;text-align:center;line-height:32px}
+/* ── Agent Cards ──────────────────────────────────────────────────────────── */
+.agents-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:var(--density-gap);margin-bottom:var(--density-gap)}
+.agent-card{background:var(--bg-2);border:1px solid var(--border-0);border-radius:8px;padding:var(--card-pad);display:flex;flex-direction:column;gap:var(--density-gap);transition:all .15s}
+.agent-card:hover{border-color:var(--border-1);transform:translateY(-1px)}
+.agent-card.status-working{border-left:2px solid var(--cyan)}
+.agent-card.status-thinking{border-left:2px solid var(--violet)}
+.agent-card.status-idle{border-left:2px solid var(--text-3)}
+.agent-card.status-error{border-left:2px solid var(--red)}
+.agent-card.status-leader{border-left:2px solid var(--amber)}
+.agent-top{display:flex;align-items:center;gap:var(--density-gap)}
+.agent-icon{font-size:1.3em}
 .agent-info{flex:1;min-width:0}
-.agent-name{font-weight:600;font-size:var(--font-sm);display:flex;align-items:center;gap:6px}
-.agent-role{font-size:var(--font-xs);color:var(--text-2);margin-top:1px}
-.agent-task{font-size:var(--font-xs);color:var(--text-1);margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.agent-metrics{display:flex;gap:10px;margin-top:6px;font-size:var(--font-xxs);font-family:'JetBrains Mono',monospace;color:var(--text-2)}
-.agent-metrics .metric{display:flex;align-items:center;gap:3px}
-.agent-metrics .metric .val{color:var(--text-1)}
-.agent-files{margin-top:6px;font-size:var(--font-xxs);color:var(--text-3)}
-.agent-files span{color:var(--text-2);font-family:'JetBrains Mono',monospace}
-.status-badge{
-  font-size:var(--font-xxs);padding:1px 6px;border-radius:3px;font-weight:500;
-  text-transform:uppercase;letter-spacing:.5px;
-}
-.status-leader{background:rgba(34,211,238,.15);color:var(--cyan)}
-.status-working{background:rgba(52,211,153,.15);color:var(--green)}
-.status-thinking{background:rgba(167,139,250,.15);color:var(--violet)}
-.status-idle{background:rgba(110,122,148,.15);color:var(--text-2)}
-.status-error{background:rgba(248,113,113,.15);color:var(--red)}
-.status-paused{background:rgba(251,191,36,.15);color:var(--amber)}
-.status-budget_exceeded{background:rgba(248,113,113,.15);color:var(--red)}
+.agent-name{font-family:var(--mono);font-size:var(--font-sm);font-weight:600;color:var(--text-0);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.agent-role{font-size:var(--font-xxs);color:var(--text-2)}
+.agent-status{font-family:var(--mono);font-size:var(--font-xxs);padding:2px 6px;border-radius:4px;display:inline-flex;align-items:center;gap:3px}
+.agent-status.working{color:var(--cyan);background:rgba(34,211,238,.1)}
+.agent-status.thinking{color:var(--violet);background:rgba(167,139,250,.1)}
+.agent-status.idle{color:var(--text-3);background:var(--bg-3)}
+.agent-status.error{color:var(--red);background:rgba(248,113,113,.1)}
+.agent-status.leader{color:var(--amber);background:rgba(251,191,36,.1)}
+.agent-task{font-family:var(--mono);font-size:var(--font-xs);color:var(--text-1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.agent-metrics{display:flex;gap:var(--density-gap);font-family:var(--mono);font-size:var(--font-xxs);color:var(--text-3)}
+.agent-metric-cost{color:var(--amber)}
+.typing-dots span{animation:typingDot .8s infinite;opacity:.3}
+.typing-dots span:nth-child(2){animation-delay:.15s}
+.typing-dots span:nth-child(3){animation-delay:.3s}
+/* F-063 Heartbeat indicator */
+.agent-heartbeat{display:flex;align-items:center;gap:4px;font-size:var(--font-xxs);color:var(--text-3);font-family:var(--mono)}
+.hb-dot{width:5px;height:5px;border-radius:50%;flex-shrink:0}
+.hb-dot.fresh{background:var(--green);animation:pulseDot 2s infinite}
+.hb-dot.stale{background:var(--amber)}
+.hb-dot.dead{background:var(--red)}
 
-/* collapsible details on mobile */
-.agent-details{display:block}
-html.screen-mobile .agent-card{flex-wrap:wrap}
-html.screen-mobile .agent-details{display:none}
-html.screen-mobile .agent-card.expanded .agent-details{display:block;width:100%}
+/* ── Activity Feed ────────────────────────────────────────────────────────── */
+.feed-section{margin-top:var(--density-gap)}
+.feed-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--density-gap);font-family:var(--mono);font-size:var(--font-xs);color:var(--text-2)}
+.feed-filters{display:flex;gap:3px}
+.feed-filter-btn{padding:2px 7px;border-radius:4px;cursor:pointer;font-family:var(--mono);font-size:var(--font-xxs);color:var(--text-3);background:transparent;border:1px solid transparent;transition:all .15s}
+.feed-filter-btn:hover{color:var(--text-2)}
+.feed-filter-btn.active{color:var(--cyan);background:rgba(34,211,238,.06);border-color:var(--border-1)}
+.feed-list{display:flex;flex-direction:column;gap:2px;max-height:280px;overflow-y:auto}
+.feed-item{display:flex;gap:var(--density-gap);padding:4px 6px;border-radius:4px;font-size:var(--font-xs);animation:feedIn .3s ease-out}
+.feed-time{font-family:var(--mono);font-size:var(--font-xxs);color:var(--text-3);white-space:nowrap;min-width:52px}
+.feed-icon{font-size:.85em;flex-shrink:0}
+.feed-agent{font-family:var(--mono);font-size:var(--font-xxs);color:var(--cyan);white-space:nowrap;min-width:72px;overflow:hidden;text-overflow:ellipsis}
+.feed-text{color:var(--text-1);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.feed-type-tool .feed-text{color:var(--blue)}
+.feed-type-file .feed-text{color:var(--green)}
+.feed-type-error .feed-text{color:var(--red)}
+.feed-type-thinking .feed-text{color:var(--violet)}
 
-/* === ACTIVITY STREAM === */
-.activity-header{display:flex;align-items:center;gap:8px;margin-bottom:var(--density-gap)}
-.activity-title{font-size:var(--font-sm);font-weight:600;color:var(--text-1)}
-.activity-filters{display:flex;gap:3px;margin-left:auto}
-.activity-filter{
-  font-size:var(--font-xxs);padding:2px 6px;border-radius:3px;
-  color:var(--text-3);background:var(--bg-3);
-}
-.activity-filter.active{color:var(--text-0);background:var(--bg-4)}
-.activity-filter:hover{color:var(--text-1)}
-.activity-feed{display:flex;flex-direction:column;gap:2px}
-.event-item{
-  padding:4px 8px;border-radius:4px;font-size:var(--font-xs);display:flex;
-  gap:8px;align-items:baseline;animation:feedIn .3s ease-out;
-}
-@keyframes feedIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
-.event-time{font-family:'JetBrains Mono',monospace;font-size:var(--font-xxs);color:var(--text-3);flex-shrink:0}
-.event-agent{font-weight:600;font-size:var(--font-xxs);flex-shrink:0}
-.event-icon{flex-shrink:0}
-.event-desc{color:var(--text-1);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.event-type-tool .event-icon::before{content:'🔧'}
-.event-type-file .event-icon::before{content:'📄'}
-.event-type-task .event-icon::before{content:'📋'}
-.event-type-message .event-icon::before{content:'💬'}
-.event-type-thinking .event-icon::before{content:'🧠'}
-.event-type-error .event-icon::before{content:'❌'}
-.event-type-approval .event-icon::before{content:'✅'}
-.event-type-cost .event-icon::before{content:'💰'}
-.event-type-permission .event-icon::before{content:'🔐'}
-.event-type-spawn .event-icon::before{content:'🚀'}
-.event-type-terminate .event-icon::before{content:'⏹️'}
+/* ── Kanban ───────────────────────────────────────────────────────────────── */
+.kanban{display:flex;gap:var(--density-gap);overflow-x:auto;height:100%}
+.kanban-col{min-width:var(--kb-col-w);width:var(--kb-col-w);background:var(--bg-2);border:1px solid var(--border-0);border-radius:8px;display:flex;flex-direction:column;flex-shrink:0}
+.kanban-col-header{padding:var(--density-gap) var(--density-pad);border-bottom:1px solid var(--border-0);display:flex;align-items:center;justify-content:space-between;font-family:var(--mono);font-size:var(--font-xs);font-weight:600;color:var(--text-1)}
+.kanban-count{background:var(--bg-4);padding:1px 7px;border-radius:10px;font-size:var(--font-xxs);color:var(--text-2);font-weight:400}
+.kanban-cards{flex:1;padding:var(--density-gap);display:flex;flex-direction:column;gap:var(--density-gap);overflow-y:auto;min-height:40px}
+.kanban-cards.drag-over{background:rgba(34,211,238,.04);outline:1px dashed rgba(34,211,238,.2);border-radius:4px}
+.kanban-card{background:var(--bg-3);border:1px solid var(--border-0);border-radius:6px;padding:var(--card-pad);cursor:grab;transition:all .15s;user-select:none}
+.kanban-card:hover{border-color:var(--border-1);transform:translateY(-1px)}
+.kanban-card.dragging{opacity:.4;cursor:grabbing;transform:rotate(1deg)}
+.kanban-card-title{font-size:var(--font-xs);font-weight:500;color:var(--text-0);margin-bottom:6px}
+.kanban-card-meta{display:flex;align-items:center;justify-content:space-between;font-size:var(--font-xxs)}
+.kanban-card-assignee{color:var(--text-2);font-family:var(--mono)}
+.kanban-card-priority{padding:1px 5px;border-radius:3px;font-family:var(--mono);font-weight:600}
+.priority-high{color:var(--red);background:rgba(248,113,113,.1)}
+.priority-medium{color:var(--amber);background:rgba(251,191,36,.1)}
+.priority-low{color:var(--green);background:rgba(52,211,153,.1)}
+.kanban-card.recommended{border-color:var(--violet);box-shadow:0 0 10px rgba(167,139,250,.1)}
+.recommend-badge{display:flex;align-items:center;gap:4px;margin-top:5px;padding:3px 7px;background:rgba(167,139,250,.08);border-radius:4px;font-size:var(--font-xxs);color:var(--violet)}
+.approval-btns{display:flex;gap:4px;margin-top:5px}
+.approval-btns button{flex:1;padding:3px 6px;border:1px solid var(--border-1);border-radius:4px;font-family:var(--mono);font-size:var(--font-xxs);cursor:pointer;transition:all .15s;background:var(--bg-4);color:var(--text-2);outline:none}
+.btn-approve:hover{background:rgba(52,211,153,.15);color:var(--green);border-color:var(--green)}
+.btn-reject:hover{background:rgba(248,113,113,.15);color:var(--red);border-color:var(--red)}
+.dep-badge{display:flex;align-items:center;gap:4px;margin-top:5px;padding:3px 7px;background:rgba(251,191,36,.08);border-radius:4px;font-size:var(--font-xxs);color:var(--amber)}
+.kanban-card.dependency{border-color:var(--amber);box-shadow:0 0 10px rgba(251,191,36,.1)}
+.kanban-card-deps{display:flex;flex-wrap:wrap;gap:3px;margin-top:3px}
+.dep-tag{font-size:var(--font-xxs);color:var(--text-2);background:var(--bg-4);border-radius:3px;padding:1px 5px}
+.dep-tag.dep-blocking{color:var(--amber);background:rgba(251,191,36,.1)}
+.kanban-card-deps-header{font-size:var(--font-xxs);color:var(--amber);margin-top:5px;margin-bottom:2px;display:flex;align-items:center;gap:3px}
+.dep-cycle-badge{display:flex;align-items:center;gap:4px;margin-top:5px;padding:3px 7px;background:rgba(248,113,113,.08);border-radius:4px;font-size:var(--font-xxs);color:var(--red)}
+.kanban-card.has-cycle{border-color:var(--red);box-shadow:0 0 10px rgba(248,113,113,.15)}
+.active-agent-ind{display:flex;align-items:center;gap:4px;margin-top:5px;padding:3px 7px;background:rgba(34,211,238,.06);border-radius:4px;font-size:var(--font-xxs);color:var(--cyan)}
+.ag-dot{width:5px;height:5px;border-radius:50%;background:var(--cyan);animation:pulseDot 1.5s ease-in-out infinite;flex-shrink:0}
+.ag-dot.status-thinking{background:var(--violet)}
+.ag-dot.status-idle{background:var(--text-3);animation:none}
+.kanban-card.agent-active{border-left:2px solid var(--cyan)}
+.transition-badge{display:flex;align-items:center;gap:4px;margin-top:5px;padding:3px 7px;background:rgba(96,165,250,.08);border-radius:4px;font-size:var(--font-xxs);color:var(--blue)}
+.kanban-card.transition{border-color:var(--blue);box-shadow:0 0 10px rgba(96,165,250,.1)}
 
-/* === KANBAN BOARD === */
-.kanban-board{display:flex;gap:var(--density-gap);height:100%;overflow-x:auto;padding-bottom:8px}
-html.screen-mobile .kanban-board{flex-direction:column;overflow-x:visible;gap:12px}
-.kanban-column{
-  min-width:var(--kb-col-w);max-width:var(--kb-col-w);flex-shrink:0;
-  background:var(--bg-2);border:1px solid var(--border-0);border-radius:6px;
-  display:flex;flex-direction:column;overflow:hidden;
-}
-html.screen-mobile .kanban-column{min-width:100%;max-width:100%}
-.kanban-col-header{
-  padding:8px 10px;font-size:var(--font-sm);font-weight:600;
-  border-bottom:1px solid var(--border-0);display:flex;align-items:center;justify-content:space-between;
-}
-.kanban-col-count{
-  font-size:var(--font-xxs);background:var(--bg-4);padding:1px 6px;border-radius:8px;
-  font-family:'JetBrains Mono',monospace;color:var(--text-2);
-}
-.kanban-col-body{flex:1;overflow-y:auto;padding:6px;display:flex;flex-direction:column;gap:4px;min-height:60px}
-.kanban-col-body.drag-over{background:rgba(34,211,238,.05);border:1px dashed var(--cyan);border-radius:4px}
-.kanban-task{
-  padding:8px;background:var(--bg-3);border:1px solid var(--border-1);border-radius:4px;
-  cursor:grab;transition:all .15s;font-size:var(--font-xs);
-}
-.kanban-task:active{cursor:grabbing}
-.kanban-task:hover{border-color:var(--border-2)}
-.kanban-task.dragging{opacity:.5}
-.kanban-task-title{font-weight:500;color:var(--text-0);margin-bottom:4px}
-.kanban-task-meta{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
-.kanban-tag{
-  font-size:var(--font-xxs);padding:1px 5px;border-radius:3px;
-  background:var(--bg-4);color:var(--text-2);
-}
-.kanban-tag-backend{color:var(--green)}
-.kanban-tag-frontend{color:var(--blue)}
-.kanban-tag-testing{color:var(--amber)}
-.kanban-tag-infra{color:var(--violet)}
-.kanban-tag-review{color:var(--cyan)}
-.kanban-tag-database{color:var(--rose)}
-.kanban-tag-security{color:var(--red)}
-.kanban-tag-devops{color:var(--amber)}
-.kanban-priority{font-size:var(--font-xxs)}
-.kanban-agent{font-size:var(--font-xxs);color:var(--text-3);font-family:'JetBrains Mono',monospace}
-.kanban-recommend{
-  display:inline-flex;align-items:center;gap:3px;font-size:var(--font-xxs);
-  background:rgba(167,139,250,.1);color:var(--violet);padding:1px 5px;border-radius:3px;
-}
-.kanban-approve-btn{
-  margin-top:6px;padding:4px 10px;border-radius:4px;font-size:var(--font-xs);font-weight:600;
-  background:rgba(52,211,153,.15);color:var(--green);border:1px solid rgba(52,211,153,.3);
-  width:100%;
-}
-html.screen-mobile .kanban-approve-btn{min-height:var(--tap-target);font-size:var(--font-sm)}
-.kanban-approve-btn:hover{background:rgba(52,211,153,.25)}
-
-/* === COST VIEW === */
-.cost-view{padding:var(--density-pad)}
-.cost-card{
-  padding:var(--card-pad);background:var(--bg-2);border:1px solid var(--border-1);
-  border-radius:6px;margin-bottom:var(--density-gap);
-}
-.cost-card h3{font-size:var(--font-sm);color:var(--text-1);margin-bottom:8px}
-.cost-row{display:flex;justify-content:space-between;padding:4px 0;font-size:var(--font-xs);border-bottom:1px solid var(--border-0)}
-.cost-row:last-child{border-bottom:none}
-.cost-val{font-family:'JetBrains Mono',monospace;color:var(--cyan)}
-.cost-budget-bar{
-  height:6px;background:var(--bg-4);border-radius:3px;margin-top:6px;overflow:hidden;
-}
-.cost-budget-fill{height:100%;border-radius:3px;transition:width .5s}
-
-/* === APPROVAL VIEW === */
-.approval-view{padding:var(--density-pad)}
-.approval-card{
-  padding:var(--card-pad);background:var(--bg-2);border:1px solid var(--border-1);
-  border-radius:6px;margin-bottom:var(--density-gap);
-}
-.approval-card .risk-badge{
-  display:inline-block;font-size:var(--font-xxs);padding:2px 8px;border-radius:3px;
-  font-weight:600;text-transform:uppercase;letter-spacing:.5px;
-}
-.risk-green{background:rgba(52,211,153,.15);color:var(--green)}
-.risk-yellow{background:rgba(251,191,36,.15);color:var(--amber)}
-.risk-red{background:rgba(248,113,113,.15);color:var(--red)}
-.approval-desc{font-size:var(--font-sm);color:var(--text-0);margin:8px 0}
-.approval-agent{font-size:var(--font-xs);color:var(--text-2);margin-bottom:8px}
-.approval-files{font-size:var(--font-xxs);color:var(--text-3);font-family:'JetBrains Mono',monospace;margin-bottom:8px}
-.approval-actions{display:flex;gap:8px}
-.approval-actions button{
-  flex:1;padding:8px;border-radius:6px;font-weight:600;font-size:var(--font-sm);
-  border:1px solid transparent;
-}
-html.screen-mobile .approval-actions button{min-height:var(--tap-target)}
-.btn-approve{background:rgba(52,211,153,.15);color:var(--green);border-color:rgba(52,211,153,.3)}
-.btn-approve:hover{background:rgba(52,211,153,.25)}
-.btn-reject{background:rgba(248,113,113,.15);color:var(--red);border-color:rgba(248,113,113,.3)}
-.btn-reject:hover{background:rgba(248,113,113,.25)}
-.approval-empty{text-align:center;padding:40px 20px;color:var(--text-3);font-size:var(--font-sm)}
-
-/* === BOTTOM NAV (mobile) === */
-#bottomnav{
-  display:none;position:fixed;bottom:0;left:0;right:0;height:var(--bottomnav-h);
-  background:var(--bg-1);border-top:1px solid var(--border-0);
-  z-index:100;
-}
-html.screen-mobile #bottomnav{display:flex}
-.bottomnav-tab{
-  flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
-  gap:2px;color:var(--text-3);font-size:10px;font-weight:500;
-  position:relative;min-height:var(--bottomnav-h);
-}
-.bottomnav-tab.active{color:var(--cyan)}
-.bottomnav-tab .nav-icon{font-size:18px}
-.bottomnav-badge{
-  position:absolute;top:4px;right:calc(50% - 18px);
-  background:var(--red);color:#fff;font-size:8px;font-weight:700;
-  min-width:14px;height:14px;border-radius:7px;display:flex;align-items:center;justify-content:center;
-  padding:0 3px;
-}
-
-/* === SCANLINE OVERLAY (desktop only) === */
-body::after{
-  content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
-  background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.03) 2px,rgba(0,0,0,.03) 4px);
-}
-html.screen-mobile body::after{display:none}
-
-/* === PULL TO REFRESH === */
-.ptr-indicator{
-  display:none;text-align:center;padding:12px;color:var(--cyan);font-size:var(--font-xs);
-}
-html.screen-mobile .ptr-indicator.visible{display:block}
-
-/* === UTILITY === */
-.hidden{display:none!important}
-.text-cyan{color:var(--cyan)}.text-green{color:var(--green)}.text-amber{color:var(--amber)}
-.text-red{color:var(--red)}.text-violet{color:var(--violet)}.text-blue{color:var(--blue)}.text-rose{color:var(--rose)}
-/* === FIRST RUN MODAL === */
-.modal-overlay{display:flex;position:fixed;inset:0;z-index:9999;align-items:center;justify-content:center;background:rgba(0,0,0,.75)}
-.modal-overlay.hidden{display:none!important}
-.modal-box{background:var(--bg-2);border:1px solid var(--border-1);border-radius:8px;padding:32px;max-width:480px;width:90%;color:var(--text-0)}
-.modal-box h2{margin:0 0 8px;font-size:18px}
-.modal-box p{margin:0 0 16px;color:var(--text-2);font-size:var(--font-sm)}
-.screen-cards{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px}
-.screen-card{padding:10px 18px;border:1px solid var(--border-1);border-radius:6px;cursor:pointer;color:var(--text-1);font-size:var(--font-sm);transition:border-color .15s}
-.screen-card:hover,.screen-card.selected{border-color:var(--cyan);color:var(--cyan)}
-#modal-confirm{padding:8px 24px;background:var(--cyan);color:#000;border:none;border-radius:4px;cursor:pointer;font-weight:600;font-size:var(--font-sm)}
-/* === FILEWATCH BAR === */
-#filewatch-bar{display:none;padding:4px 12px;background:var(--bg-1);border-top:1px solid var(--border-0);align-items:center;gap:8px;font-size:var(--font-xxs);color:var(--text-2);position:fixed;bottom:0;left:0;right:0;z-index:50}
+/* ── File Watch Bar ───────────────────────────────────────────────────────── */
+#filewatch-bar{display:none;position:fixed;bottom:0;left:0;right:0;height:36px;background:var(--bg-1);border-top:1px solid var(--border-0);padding:0 var(--density-pad);align-items:center;gap:var(--density-gap);font-family:var(--mono);font-size:var(--font-xxs);z-index:100}
 #filewatch-bar.visible{display:flex}
-#fw-path{background:var(--bg-2);border:1px solid var(--border-0);border-radius:3px;padding:2px 8px;color:var(--text-0);font-size:var(--font-xxs);width:240px}
-/* === HELP PANEL === */
-#help-panel{position:fixed;top:var(--topbar-h);right:0;width:260px;background:var(--bg-2);border-left:1px solid var(--border-1);height:calc(100vh - var(--topbar-h));padding:16px;transform:translateX(100%);transition:transform .2s;z-index:200;overflow-y:auto}
-#help-panel.open{transform:translateX(0)}
-#help-panel h3{margin:0 0 12px;font-size:var(--font-sm);color:var(--text-0)}
-#help-panel ul{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:8px}
-#help-panel li{display:flex;gap:10px;align-items:center;font-size:var(--font-xs);color:var(--text-1)}
-#help-panel kbd{background:var(--bg-3);border:1px solid var(--border-1);border-radius:3px;padding:1px 5px;font-family:var(--font-mono,monospace);font-size:var(--font-xxs);min-width:24px;text-align:center}
+.fw-label{color:var(--text-2)}
+.fw-input{background:var(--bg-3);color:var(--text-1);border:1px solid var(--border-1);border-radius:4px;padding:2px 8px;font-family:var(--mono);font-size:var(--font-xxs);width:200px;outline:none}
+.fw-input:focus{border-color:var(--cyan)}
+.fw-btn{padding:3px 10px;border-radius:4px;font-family:var(--mono);font-size:var(--font-xxs);cursor:pointer;border:1px solid;transition:all .15s;outline:none}
+.fw-btn-start{background:rgba(52,211,153,.1);color:var(--green);border-color:rgba(52,211,153,.3)}
+.fw-btn-start:hover{background:rgba(52,211,153,.2)}
+.fw-btn-stop{background:rgba(248,113,113,.1);color:var(--red);border-color:rgba(248,113,113,.3)}
+.fw-btn-stop:hover{background:rgba(248,113,113,.2)}
+.fw-status{color:var(--text-3)}
+.fw-mode{padding:2px 8px;border-radius:4px;font-family:var(--mono);font-size:var(--font-xxs);cursor:pointer;border:1px solid var(--border-1);background:transparent;color:var(--text-2);outline:none;transition:all .15s}
+.fw-mode-active{color:var(--cyan);border-color:rgba(34,211,238,.4);background:rgba(34,211,238,.08)}
+.fw-mode:hover:not(.fw-mode-active){color:var(--text-1);border-color:var(--border-2)}
+.fw-input-sb{width:170px}
+
+/* ── Error Banner ─────────────────────────────────────────────────────────── */
+.error-banner{background:rgba(248,113,113,.1);border-bottom:1px solid rgba(248,113,113,.25);padding:0 var(--density-pad);height:var(--error-h);display:flex;align-items:center;gap:var(--density-gap);font-family:var(--mono);font-size:var(--font-xs);color:var(--red);position:sticky;top:var(--topbar-h);z-index:90}
+.error-banner-msg{flex:1}
+.error-banner-dismiss{cursor:pointer;color:var(--text-3);font-size:14px;padding:2px 6px;border-radius:3px;transition:color .15s}
+.error-banner-dismiss:hover{color:var(--text-1)}
+
+/* ── First-Run Modal ──────────────────────────────────────────────────────── */
+.modal-overlay{position:fixed;inset:0;background:rgba(6,8,12,.9);display:flex;align-items:center;justify-content:center;z-index:1000;backdrop-filter:blur(6px)}
+.modal-box{background:var(--bg-2);border:1px solid var(--border-1);border-radius:var(--modal-radius);padding:32px;max-width:560px;width:90%;box-shadow:0 24px 64px rgba(0,0,0,.7)}
+.modal-title{font-family:var(--mono);font-size:var(--font-sm);color:var(--cyan);letter-spacing:.08em;text-transform:uppercase;margin-bottom:6px}
+.modal-subtitle{font-size:var(--font-xs);color:var(--text-2);margin-bottom:24px;line-height:1.5}
+.screen-cards{display:flex;gap:12px}
+.screen-card{flex:1;background:var(--bg-3);border:2px solid var(--border-0);border-radius:8px;padding:20px 12px;cursor:pointer;transition:all .15s;text-align:center}
+.screen-card:hover{border-color:var(--border-1);background:var(--bg-4)}
+.screen-card.selected{border-color:var(--cyan);background:rgba(34,211,238,.06)}
+.screen-card-icon{font-size:2em;margin-bottom:10px}
+.screen-card-label{font-family:var(--mono);font-size:var(--font-xs);color:var(--text-0);font-weight:600;margin-bottom:4px}
+.screen-card-desc{font-size:var(--font-xxs);color:var(--text-2)}
+.modal-confirm{display:block;width:100%;margin-top:20px;padding:10px;background:rgba(34,211,238,.1);border:1px solid rgba(34,211,238,.3);border-radius:6px;font-family:var(--mono);font-size:var(--font-xs);color:var(--cyan);cursor:pointer;transition:all .15s;text-align:center;outline:none}
+.modal-confirm:hover{background:rgba(34,211,238,.18);border-color:var(--cyan)}
+
+/* ── Help Panel ───────────────────────────────────────────────────────────── */
+.help-panel{position:fixed;top:calc(var(--topbar-h) + 8px);right:var(--density-pad);background:var(--bg-2);border:1px solid var(--border-1);border-radius:8px;padding:16px;width:256px;z-index:200;box-shadow:0 8px 32px rgba(0,0,0,.5);display:none}
+.help-panel.open{display:block}
+.help-panel-title{font-family:var(--mono);font-size:var(--font-xxs);color:var(--cyan);letter-spacing:.08em;text-transform:uppercase;padding-bottom:8px;border-bottom:1px solid var(--border-0);margin-bottom:10px}
+.help-section{font-family:var(--mono);font-size:var(--font-xxs);color:var(--text-3);text-transform:uppercase;letter-spacing:.06em;margin:9px 0 4px}
+.help-row{display:flex;align-items:center;justify-content:space-between;padding:3px 0;font-size:var(--font-xxs)}
+.help-key{font-family:var(--mono);background:var(--bg-4);border:1px solid var(--border-1);border-radius:3px;padding:1px 6px;color:var(--text-1)}
+.help-desc{color:var(--text-2)}
+
+/* ── Scrollbars ───────────────────────────────────────────────────────────── */
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border-1);border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:var(--border-2)}
+*{scrollbar-width:thin;scrollbar-color:var(--border-1) transparent}
+
+/* ── Animations ───────────────────────────────────────────────────────────── */
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+@keyframes pulseDot{0%,100%{opacity:1}50%{opacity:.3}}
+@keyframes typingDot{0%,100%{opacity:.3}50%{opacity:1}}
+@keyframes feedIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 </style>
 </head>
-<body>
+<body class="screen-desktop">
 
-<!-- FIRST RUN MODAL -->
-<div id="first-run-modal" class="modal-overlay">
-  <div class="modal-box">
-    <h2>Agent Mission Control</h2>
-    <p>Choose your screen profile to get started:</p>
-    <div class="screen-cards">
-      <div class="screen-card" data-screen="laptop" onclick="selectScreenCard('laptop')">Laptop</div>
-      <div class="screen-card" data-screen="desktop" onclick="selectScreenCard('desktop')">Desktop</div>
-      <div class="screen-card" data-screen="ultrawide" onclick="selectScreenCard('ultrawide')">Ultrawide</div>
-    </div>
-    <button id="modal-confirm" onclick="confirmFirstRun()">Get Started</button>
-  </div>
+<div id="error-banner" class="error-banner" style="display:none">
+  <span id="error-banner-msg" class="error-banner-msg"></span>
+  <span class="error-banner-dismiss" id="error-dismiss">&times;</span>
 </div>
 
-<!-- FILE WATCH BAR -->
-<footer id="filewatch-bar" class="visible">
-  <span>File Watch:</span>
-  <input id="fw-path" type="text" value="agent_state.json" placeholder="Path to agent_state.json" />
+<header id="topbar">
+  <div class="brand"><span>&loz;</span><span>MISSION CONTROL</span></div>
+  <div id="session-tabs"></div>
+  <div class="topbar-right">
+    <div id="cost-widget" class="cost-widget" style="display:none"></div>
+    <div id="screen-picker" class="picker"></div>
+    <div id="tile-picker" class="picker"></div>
+    <span class="live-badge"><span class="live-dot">&bull;</span> LIVE</span>
+    <span id="clock"></span>
+    <button class="help-btn" id="help-btn" title="Keyboard shortcuts (?)">?</button>
+  </div>
+</header>
+
+<main id="workspace"></main>
+
+<footer id="filewatch-bar">
+  <button id="fw-mode-file" class="fw-mode fw-mode-active">FILE</button>
+  <button id="fw-mode-url" class="fw-mode">URL</button>
+  <button id="fw-mode-sb" class="fw-mode">SUPABASE</button>
+  <span id="fw-file-grp"><input id="fw-path" class="fw-input" value="agent_state.json"></span>
+  <span id="fw-url-grp" style="display:none"><input id="fw-url" class="fw-input" placeholder="https://example.com/agent_state.json"></span>
+  <span id="fw-sb-grp" style="display:none">
+    <input id="fw-sb-url" class="fw-input fw-input-sb" placeholder="https://xxx.supabase.co">
+    <input id="fw-sb-key" class="fw-input fw-input-sb" placeholder="anon key">
+  </span>
+  <button id="fw-toggle" class="fw-btn fw-btn-start">START</button>
+  <span id="fw-status" class="fw-status">Idle</span>
 </footer>
 
-<!-- HELP PANEL -->
+<!-- First-Run Modal -->
+<div id="first-run-modal" class="modal-overlay">
+  <div class="modal-box">
+    <div class="modal-title">&#9670; Agent Mission Control</div>
+    <div class="modal-subtitle">Select your screen size to optimise layout density and font scaling.</div>
+    <div class="screen-cards" id="screen-cards">
+      <div class="screen-card" data-screen="laptop" onclick="AMC.UI.pickScreen(this,'laptop')">
+        <div class="screen-card-icon">&#128187;</div>
+        <div class="screen-card-label">14&#8243; Laptop</div>
+        <div class="screen-card-desc">Compact<br>1&ndash;2 panes</div>
+      </div>
+      <div class="screen-card selected" data-screen="desktop" onclick="AMC.UI.pickScreen(this,'desktop')">
+        <div class="screen-card-icon">&#128444;</div>
+        <div class="screen-card-label">27&#8243; Desktop</div>
+        <div class="screen-card-desc">Standard<br>1&ndash;3 panes</div>
+      </div>
+      <div class="screen-card" data-screen="ultrawide" onclick="AMC.UI.pickScreen(this,'ultrawide')">
+        <div class="screen-card-icon">&#9588;</div>
+        <div class="screen-card-label">49&#8243; Ultrawide</div>
+        <div class="screen-card-desc">Expanded<br>1&ndash;4 panes</div>
+      </div>
+    </div>
+    <button class="modal-confirm" id="modal-confirm" onclick="AMC.UI.confirmScreen()">Open Mission Control &rarr;</button>
+  </div>
+</div>
+
+<!-- Help Panel -->
 <div id="help-panel" class="help-panel">
-  <h3>Keyboard Shortcuts</h3>
-  <ul>
-    <li><kbd>L</kbd> Laptop profile</li>
-    <li><kbd>D</kbd> Desktop profile</li>
-    <li><kbd>U</kbd> Ultrawide profile</li>
-    <li><kbd>1–4</kbd> Layout panes</li>
-    <li><kbd>F</kbd> Toggle file watch bar</li>
-    <li><kbd>?</kbd> Toggle this panel</li>
-    <li><kbd>A</kbd> Agents view</li>
-    <li><kbd>K</kbd> Kanban view</li>
-  </ul>
-</div>
-
-<!-- TOPBAR -->
-<div id="topbar">
-  <div class="logo brand">AMC<span> // MISSION CONTROL</span></div>
-  <div class="live-badge"><div class="live-dot"></div>LIVE</div>
-
-  <button class="hamburger" onclick="toggleMobileMenu()">&#9776;</button>
-
-  <div class="topbar-desktop topbar-group">
-    <div class="session-tabs" id="session-tabs"></div>
-    <button class="add-session" onclick="addSession()">+ Session</button>
-  </div>
-
-  <div class="topbar-spacer"></div>
-
-  <div class="topbar-desktop topbar-group">
-    <span style="font-size:var(--font-xxs);color:var(--text-3)">Layout</span>
-    <button class="topbar-btn" onclick="setLayout(1)" data-layout="1">1</button>
-    <button class="topbar-btn" onclick="setLayout(2)" data-layout="2">2</button>
-    <button class="topbar-btn" onclick="setLayout(3)" data-layout="3">3</button>
-    <button class="topbar-btn" onclick="setLayout(4)" data-layout="4">4</button>
-  </div>
-
-  <div class="topbar-desktop topbar-group">
-    <span style="font-size:var(--font-xxs);color:var(--text-3)">Screen</span>
-    <button class="topbar-btn" onclick="setScreen('laptop')" data-screen="laptop">L</button>
-    <button class="topbar-btn" onclick="setScreen('desktop')" data-screen="desktop">D</button>
-    <button class="topbar-btn" onclick="setScreen('ultrawide')" data-screen="ultrawide">U</button>
-  </div>
-
-  <div class="topbar-group">
-    <select class="topbar-select" id="dataSourceSelect" onchange="switchDataSource(this.value)">
-      <option value="supabase">Supabase</option>
-      <option value="file">File Watch</option>
-    </select>
-  </div>
-  <div class="topbar-group">
-    <button class="topbar-btn" id="help-btn" onclick="document.getElementById('help-panel').classList.toggle('open')">?</button>
-  </div>
-</div>
-
-<!-- MOBILE MENU -->
-<div class="mobile-menu" id="mobileMenu">
-  <label>Session</label>
-  <select id="mobileSessionSelect" onchange="switchSession(this.value)"></select>
-  <label>Screen Profile</label>
-  <select onchange="setScreen(this.value)">
-    <option value="mobile">Mobile</option>
-    <option value="laptop">Laptop</option>
-    <option value="desktop">Desktop</option>
-    <option value="ultrawide">Ultrawide</option>
-  </select>
-  <label>Data Source</label>
-  <select onchange="switchDataSource(this.value)">
-    <option value="supabase">Supabase</option>
-    <option value="file">File Watch</option>
-  </select>
-  <button onclick="location.reload()">Reload Dashboard</button>
-</div>
-
-<!-- MAIN PANES -->
-<div id="workspace"></div>
-
-<!-- BOTTOM NAV (mobile) -->
-<div id="bottomnav">
-  <button class="bottomnav-tab active" data-tab="agents" onclick="switchMobileTab('agents')">
-    <span class="nav-icon">📊</span>Agents
-  </button>
-  <button class="bottomnav-tab" data-tab="kanban" onclick="switchMobileTab('kanban')">
-    <span class="nav-icon">📋</span>Kanban
-  </button>
-  <button class="bottomnav-tab" data-tab="costs" onclick="switchMobileTab('costs')">
-    <span class="nav-icon">💰</span>Costs
-  </button>
-  <button class="bottomnav-tab" data-tab="approvals" onclick="switchMobileTab('approvals')">
-    <span class="nav-icon">✅</span>Approvals
-    <span class="bottomnav-badge hidden" id="approvalBadge">0</span>
-  </button>
+  <div class="help-panel-title">&#9670; Keyboard Shortcuts</div>
+  <div class="help-section">Layout</div>
+  <div class="help-row"><span class="help-key">1</span><span class="help-desc">Single pane</span></div>
+  <div class="help-row"><span class="help-key">2</span><span class="help-desc">Two panes</span></div>
+  <div class="help-row"><span class="help-key">3</span><span class="help-desc">Three panes</span></div>
+  <div class="help-row"><span class="help-key">4</span><span class="help-desc">Four panes</span></div>
+  <div class="help-section">Screen Profile</div>
+  <div class="help-row"><span class="help-key">L</span><span class="help-desc">14&quot; Laptop</span></div>
+  <div class="help-row"><span class="help-key">D</span><span class="help-desc">27&quot; Desktop</span></div>
+  <div class="help-row"><span class="help-key">U</span><span class="help-desc">49&quot; Ultrawide</span></div>
+  <div class="help-section">Other</div>
+  <div class="help-row"><span class="help-key">F</span><span class="help-desc">Toggle File Watch bar</span></div>
+  <div class="help-row"><span class="help-key">?</span><span class="help-desc">Toggle this panel</span></div>
 </div>
 
 <script>
-// === CONFIG ===
-// Edit SUPABASE_URL and SUPABASE_ANON_KEY below before deploying.
-// Find these values in your Supabase project:
-//   Settings → API → Project URL  (SUPABASE_URL)
-//   Settings → API → anon / public key  (SUPABASE_ANON_KEY)
-const SUPABASE_URL = 'https://YOUR_PROJECT_REF.supabase.co';  // TODO: replace with your Supabase project URL
-const SUPABASE_ANON_KEY = 'YOUR_ANON_KEY';  // TODO: replace with your anon key (Settings → API)
-const FILE_POLL_INTERVAL = 3000;
+/* ════════════════════════════════════════════════════════
+   DOM HELPERS
+   ════════════════════════════════════════════════════════ */
+function h(tag, p) {
+  var el = document.createElement(tag);
+  if (!p) return el;
+  if (p.cls) el.className = p.cls;
+  if (p.text !== undefined) el.textContent = p.text;
+  if (p.id) el.id = p.id;
+  if (p.draggable) el.draggable = true;
+  if (p.style) Object.assign(el.style, p.style);
+  if (p.data) { for (var k in p.data) el.dataset[k] = p.data[k]; }
+  if (p.title) el.title = p.title;
+  for (var k in p) { if (k.slice(0,2) === 'on') el.addEventListener(k.slice(2), p[k]); }
+  return el;
+}
+function txt(s) { return document.createTextNode(String(s)); }
+function svgNS(tag, attrs) {
+  var el = document.createElementNS('http://www.w3.org/2000/svg', tag);
+  if (attrs) for (var k in attrs) el.setAttribute(k, attrs[k]);
+  return el;
+}
+function clear(el) { while (el.firstChild) el.removeChild(el.firstChild); }
+function ts() { return new Date().toTimeString().slice(0,8); }
 
-const STAGES = ['Planning','Scaffolding','Backend','Frontend','Integration','Testing','Optimization','Review'];
-const COLUMNS = ['backlog','todo','in_progress','done'];
-const COLUMN_LABELS = {backlog:'Backlog',todo:'To Do',in_progress:'In Progress',done:'Done'};
-const TAGS = ['backend','frontend','testing','infra','review','database','security','devops'];
-const PRIORITIES = {high:'🔴',medium:'🟠',low:'🟡'};
-const SESSION_COLORS = [
-  {name:'cyan',bg:'#22d3ee',fg:'#06080c',dot:'#22d3ee'},
-  {name:'green',bg:'#34d399',fg:'#06080c',dot:'#34d399'},
-  {name:'violet',bg:'#a78bfa',fg:'#06080c',dot:'#a78bfa'},
-  {name:'amber',bg:'#fbbf24',fg:'#06080c',dot:'#fbbf24'},
-  {name:'rose',bg:'#fb7185',fg:'#06080c',dot:'#fb7185'},
-  {name:'blue',bg:'#60a5fa',fg:'#06080c',dot:'#60a5fa'},
-];
+/* ════════════════════════════════════════════════════════
+   CONSTANTS
+   ════════════════════════════════════════════════════════ */
+var STAGES = ['Planning','Scaffolding','Core Logic','API Layer','Frontend','Testing','Integration','Review'];
+var COLS = ['backlog','in-progress','review','done'];
+var COL_LABELS = {backlog:'To Do','in-progress':'In Progress',review:'Review',done:'Done'};
+var ACCENT_CYCLE = ['var(--cyan)','var(--green)','var(--amber)','var(--violet)','var(--blue)','var(--rose)'];
+var FEED_ICONS = {tool:'⚡',file:'📄',task:'✦',message:'💬',thinking:'💭',error:'⚠'};
 
+/* ════════════════════════════════════════════════════════
+   AMC.State
+   ════════════════════════════════════════════════════════ */
+var AMC = {};
 
-// === STATE ===
-const _defaultSessionId = 'default-session';
-let state = {
-  dataSource: 'supabase',  // supabase | file
-  screenProfile: 'desktop',
-  layoutCount: 2,
-  sessions: [{
-    id: _defaultSessionId, name: 'Session 1', color: { dot: '#22d3ee', bg: '#0e1117' },
-    status: 'idle', currentStage: 0, stages: [], projectName: '—',
-    totalTasks: 0, completedTasks: 0, budgetLimit: 5000, totalCost: 0,
-    agents: [], events: [], tasks: [], approvals: [],
-  }],
-  activeSessionId: _defaultSessionId,
-  activePaneViews: [], // 'agents' | 'kanban' per pane
-  mobileTab: 'agents',
-  mobileMenuOpen: false,
-  activityFilter: 'all',
+AMC.State = {
+  sessions: {},
+  order: [],
+  active: null,
+  screen: 'desktop',
+  maxPanes: {laptop:2, desktop:3, ultrawide:4},
+  tiles: 1,
+  panes: [],
+
+  getSession: function(sid) { return this.sessions[sid]; },
+
+  addSession: function(sess) {
+    this.sessions[sess.id] = sess;
+    this.order.push(sess.id);
+    if (!this.active) this.active = sess.id;
+    this.fixPanes();
+  },
+
+  removeSession: function(sid) {
+    if (this.order.length <= 1 && sid !== 'filewatch') return;
+    delete this.sessions[sid];
+    this.order = this.order.filter(function(id){ return id !== sid; });
+    if (this.active === sid) this.active = this.order[0] || '';
+    var self = this;
+    this.panes.forEach(function(p){ if (p.sid === sid) p.sid = self.active; });
+    if (sid === 'filewatch') AMC.Data.stopFileWatch();
+  },
+
+  fixPanes: function() {
+    var self = this;
+    while (this.panes.length < this.tiles) this.panes.push({sid: this.active, view:'agents'});
+    this.panes = this.panes.slice(0, this.tiles);
+    this.panes.forEach(function(p){ if (!self.sessions[p.sid]) p.sid = self.active; });
+  },
+
+  setScreen: function(s) {
+    this.screen = s;
+    document.body.className = 'screen-' + s;
+    var mx = this.maxPanes[s];
+    if (this.tiles > mx) { this.tiles = mx; this.panes = this.panes.slice(0, mx); }
+    try { localStorage.setItem('amc_screen', s); } catch(e) {}
+  },
+
+  setTiles: function(n) {
+    this.tiles = n;
+    var self = this;
+    while (this.panes.length < n) this.panes.push({sid: this.active || (this.order[0]||''), view:'agents'});
+    this.panes = this.panes.slice(0, n);
+    this.panes.forEach(function(p){ if (!self.sessions[p.sid]) p.sid = self.active; });
+  },
+
+  logEvent: function(sid, ev) {
+    var sess = this.sessions[sid];
+    if (!sess) return;
+    sess.events.push(ev);
+    if (sess.events.length > 200) sess.events = sess.events.slice(-200);
+  }
 };
 
-let supabaseClient = null;
-let supabaseSubscriptions = [];
-let filePollTimer = null;
+/* ════════════════════════════════════════════════════════
+   AMC.Data  —  File watch, validation, auto-detect
+   ════════════════════════════════════════════════════════ */
+AMC.Data = {
+  _fwIv: null,
+  _fwRemoved: false,
+  _errTimer: null,
+  _fwErrCount: 0,   /* F-003: backoff state */
+  _sbIv: null, _sbUrl: '', _sbKey: '', _sbActive: false,
+  _sbErrCount: 0,   /* F-003: backoff state for Supabase */
+  _urlIv: null, _urlActive: false, _urlErrCount: 0, /* F-034: URL mode */
 
-// === SUPABASE ===
-function initSupabase() {
-  try {
-    if (typeof supabase !== 'undefined' && supabase.createClient) {
-      supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-      return true;
+  /* F-060: validate + normalise incoming state JSON */
+  validateState: function(d) {
+    if (typeof d !== 'object' || d === null || Array.isArray(d)) {
+      throw new Error('State root must be a JSON object');
     }
-  } catch(e) { console.warn('Supabase init failed:', e); }
-  return false;
-}
+    var safeStr = function(v, fb) { return typeof v === 'string' ? v.slice(0, 2000) : (fb || ''); };
+    var safeInt = function(v, fb) { var n = parseInt(v); return isNaN(n) ? (fb||0) : Math.max(0, n); };
+    var VALID_STATUSES = {agent:['leader','working','thinking','idle','error'], stage:['completed','active','pending'], task:['backlog','in-progress','review','done'], event:['tool','file','task','message','thinking','error']};
 
-async function loadFromSupabase() {
-  if (!supabaseClient) return false;
-  try {
-    const [sessionsRes, agentsRes, eventsRes, tasksRes, approvalsRes] = await Promise.all([
-      supabaseClient.from('agent_sessions').select('*').order('created_at', {ascending: false}),
-      supabaseClient.from('agents').select('*'),
-      supabaseClient.from('events').select('*').order('created_at', {ascending: false}).limit(100),
-      supabaseClient.from('kanban_tasks').select('*').order('sort_order'),
-      supabaseClient.from('approval_queue').select('*').eq('status', 'pending').order('created_at', {ascending: false}),
-    ]);
-
-    if (sessionsRes.error) throw sessionsRes.error;
-    if (agentsRes.error) throw agentsRes.error;
-    if (eventsRes.error) throw eventsRes.error;
-    if (tasksRes.error) throw tasksRes.error;
-    if (approvalsRes.error) throw approvalsRes.error;
-
-    const sessions = (sessionsRes.data || []).map((s, i) => {
-      const color = SESSION_COLORS[i % SESSION_COLORS.length];
-      const sessionAgents = (agentsRes.data || []).filter(a => a.session_id === s.id).map(a => ({
-        id: a.id, key: a.agent_key, name: a.name, role: a.role, icon: a.icon || '🤖',
-        status: a.status || 'idle', task: a.current_task || '',
-        ctx: Number(a.context_usage_pct) || 0, cost: a.cost_cents || 0,
-        msgs: a.message_count || 0, files: a.active_files || [],
-        budgetLimit: a.budget_limit_cents,
-      }));
-      const sessionEvents = (eventsRes.data || []).filter(e => e.session_id === s.id).map(e => ({
-        id: e.id, type: e.event_type, agent: e.agent_key, desc: e.description,
-        file: e.file_path, time: new Date(e.created_at), meta: e.metadata,
-      }));
-      const sessionTasks = (tasksRes.data || []).filter(t => t.session_id === s.id).map(t => ({
-        id: t.id, title: t.title, desc: t.description, tag: t.tag,
-        priority: t.priority || 'medium', column: t.column_name || 'backlog',
-        agent: t.assigned_agent, recommendation: t.recommendation,
-        needsApproval: t.needs_approval, approved: t.approved,
-      }));
-      const sessionApprovals = (approvalsRes.data || []).filter(a => a.session_id === s.id).map(a => ({
-        id: a.id, agent: a.agent_key, desc: a.action_description,
-        risk: a.risk_level, files: a.files_affected || [], status: a.status,
-        details: a.details, created: new Date(a.created_at),
-      }));
-      const stages = s.stages && Array.isArray(s.stages) && s.stages.length > 0
-        ? s.stages : STAGES.map(name => ({ name }));
-
-      return {
-        id: s.id, name: s.name, color, status: s.status || 'active',
-        currentStage: s.current_stage_idx || 0, stages,
-        projectName: s.build_config?.project || s.name,
-        totalTasks: s.total_tasks || 0, completedTasks: s.completed_tasks || 0,
-        budgetLimit: s.budget_limit_cents, totalCost: s.total_cost_cents || 0,
-        agents: sessionAgents, events: sessionEvents, tasks: sessionTasks,
-        approvals: sessionApprovals,
-      };
-    });
-
-    if (sessions.length > 0) {
-      state.sessions = sessions;
-      state.activeSessionId = sessions[0].id;
-    }
-    return true;
-  } catch(e) {
-    console.warn('Supabase load failed:', e);
-    return false;
-  }
-}
-
-function subscribeRealtime() {
-  if (!supabaseClient) return;
-  // Clean previous
-  supabaseSubscriptions.forEach(s => s.unsubscribe());
-  supabaseSubscriptions = [];
-
-  const tables = ['agents','events','kanban_tasks','agent_sessions','approval_queue'];
-  tables.forEach(table => {
-    const sub = supabaseClient.channel(`public:${table}`)
-      .on('postgres_changes', { event: '*', schema: 'public', table }, (payload) => {
-        handleRealtimeChange(table, payload);
-      })
-      .subscribe();
-    supabaseSubscriptions.push(sub);
-  });
-}
-
-function handleRealtimeChange(table, payload) {
-  const { eventType, new: newRow, old: oldRow } = payload;
-  const session = state.sessions.find(s => s.id === (newRow?.session_id || oldRow?.session_id));
-  if (!session && table !== 'agent_sessions') return;
-
-  if (table === 'agents') {
-    const agentData = {
-      id: newRow.id, key: newRow.agent_key, name: newRow.name, role: newRow.role,
-      icon: newRow.icon || '🤖', status: newRow.status || 'idle',
-      task: newRow.current_task || '', ctx: Number(newRow.context_usage_pct) || 0,
-      cost: newRow.cost_cents || 0, msgs: newRow.message_count || 0,
-      files: newRow.active_files || [], budgetLimit: newRow.budget_limit_cents,
+    var out = {
+      project: safeStr(d.project, 'Unknown Project'),
+      currentStageIdx: Math.min(7, safeInt(d.currentStageIdx, 0)),
+      totalTasks: safeInt(d.totalTasks, 0),
+      completedTasks: safeInt(d.completedTasks, 0),
+      stages: [], agents: [], events: [], tasks: [],
+      meta: (d.meta && typeof d.meta === 'object') ? d.meta : null
     };
-    if (eventType === 'INSERT') session.agents.push(agentData);
-    else if (eventType === 'UPDATE') {
-      const idx = session.agents.findIndex(a => a.id === newRow.id);
-      if (idx >= 0) session.agents[idx] = agentData;
-    } else if (eventType === 'DELETE') {
-      session.agents = session.agents.filter(a => a.id !== oldRow.id);
-    }
-  } else if (table === 'events' && eventType === 'INSERT') {
-    session.events.unshift({
-      id: newRow.id, type: newRow.event_type, agent: newRow.agent_key,
-      desc: newRow.description, file: newRow.file_path,
-      time: new Date(newRow.created_at), meta: newRow.metadata,
-    });
-    if (session.events.length > 200) session.events.pop();
-  } else if (table === 'kanban_tasks') {
-    const taskData = {
-      id: newRow.id, title: newRow.title, desc: newRow.description, tag: newRow.tag,
-      priority: newRow.priority || 'medium', column: newRow.column_name || 'backlog',
-      agent: newRow.assigned_agent, recommendation: newRow.recommendation,
-      needsApproval: newRow.needs_approval, approved: newRow.approved,
-    };
-    if (eventType === 'INSERT') session.tasks.push(taskData);
-    else if (eventType === 'UPDATE') {
-      const idx = session.tasks.findIndex(t => t.id === newRow.id);
-      if (idx >= 0) session.tasks[idx] = taskData;
-    } else if (eventType === 'DELETE') {
-      session.tasks = session.tasks.filter(t => t.id !== oldRow.id);
-    }
-  } else if (table === 'agent_sessions' && eventType === 'UPDATE' && session) {
-    session.currentStage = newRow.current_stage_idx || 0;
-    session.totalTasks = newRow.total_tasks || 0;
-    session.completedTasks = newRow.completed_tasks || 0;
-    session.totalCost = newRow.total_cost_cents || 0;
-    session.status = newRow.status || 'active';
-  } else if (table === 'approval_queue') {
-    if (eventType === 'INSERT' && newRow.status === 'pending') {
-      session.approvals.unshift({
-        id: newRow.id, agent: newRow.agent_key, desc: newRow.action_description,
-        risk: newRow.risk_level, files: newRow.files_affected || [],
-        status: newRow.status, details: newRow.details, created: new Date(newRow.created_at),
+
+    if (Array.isArray(d.stages)) {
+      out.stages = d.stages.slice(0, 8).map(function(s) {
+        return {
+          name: safeStr(s.name),
+          desc: safeStr(s.desc),
+          status: VALID_STATUSES.stage.includes(s.status) ? s.status : 'pending',
+          minTasks: (typeof s.minTasks === 'number' && s.minTasks > 0) ? s.minTasks : null,
+          minEvents: (typeof s.minEvents === 'number' && s.minEvents > 0) ? s.minEvents : null
+        };
       });
-    } else if (eventType === 'UPDATE') {
-      if (newRow.status !== 'pending') {
-        session.approvals = session.approvals.filter(a => a.id !== newRow.id);
+    }
+
+    if (Array.isArray(d.agents)) {
+      out.agents = d.agents.slice(0, 30).map(function(a) {
+        var m = (a.metrics && typeof a.metrics === 'object') ? a.metrics : {};
+        return {
+          id: safeStr(a.id),
+          name: safeStr(a.name, 'Agent'),
+          role: safeStr(a.role),
+          type: safeStr(a.type, 'backend'),
+          status: VALID_STATUSES.agent.includes(a.status) ? a.status : 'idle',
+          icon: safeStr(a.icon, '⚙️'),
+          task: safeStr(a.task),
+          taskId: a.taskId ? safeStr(a.taskId) : null,
+          metrics: {
+            ctx: safeStr(m.ctx, '0%'),
+            cost: safeStr(m.cost, '$0.00'),
+            msgs: safeInt(m.msgs, 0)
+          },
+          lastHeartbeat: (typeof a.lastHeartbeat === 'number') ? a.lastHeartbeat : null
+        };
+      });
+    }
+
+    if (Array.isArray(d.events)) {
+      out.events = d.events.slice(0, 300).map(function(e) {
+        return {
+          agent: safeStr(e.agent),
+          type: VALID_STATUSES.event.includes(e.type) ? e.type : 'message',
+          text: safeStr(e.text),
+          file: e.file ? safeStr(e.file) : null,
+          timestamp: safeStr(e.timestamp)
+        };
+      });
+    }
+
+    if (Array.isArray(d.tasks)) {
+      out.tasks = d.tasks.slice(0, 200).map(function(t) {
+        return {
+          id: safeStr(t.id),
+          title: safeStr(t.title),
+          status: VALID_STATUSES.task.includes(t.status) ? t.status : 'backlog',
+          assignee: safeStr(t.assignee),
+          priority: ['high','medium','low'].includes(t.priority) ? t.priority : 'medium',
+          deps: Array.isArray(t.deps) ? t.deps.map(function(x){ return safeStr(x); }) : [],
+          rec: !!t.rec,
+          recWhy: safeStr(t.recWhy),
+          depOf: t.depOf ? safeStr(t.depOf) : null,
+          _auto: false, _prevSt: null
+        };
+      });
+    }
+    return out;
+  },
+
+  startFileWatch: function(path) {
+    var self = this;
+    if (this._fwIv) { clearInterval(this._fwIv); }
+    this._fwRemoved = false;
+    this._fwErrCount = 0;
+    function scheduleNext() {
+      if (self._fwRemoved) return;
+      /* F-003: exponential backoff — 3s, 6s, 12s, 24s … max 60s */
+      var delay = Math.min(3000 * Math.pow(2, self._fwErrCount), 60000);
+      self._fwIv = setTimeout(poll, delay);
+    }
+    function poll() {
+      if (self._fwRemoved) return;
+      self.fetchState(path)
+        .then(function(data) {
+          self._fwErrCount = 0;
+          self.mergeState(data);
+          AMC.UI.dismissError();
+          scheduleNext();
+        })
+        .catch(function(err) {
+          self._fwErrCount++;
+          var delay = Math.min(3 * Math.pow(2, self._fwErrCount), 60);
+          AMC.UI.showError('File watch: ' + err.message + ' — retrying in ' + delay + 's\u2026');
+          scheduleNext();
+        });
+    }
+    poll();
+  },
+
+  stopFileWatch: function() {
+    this._fwRemoved = true;
+    if (this._fwIv) { clearTimeout(this._fwIv); this._fwIv = null; }
+    this._fwErrCount = 0;
+  },
+
+  /* F-034: URL polling mode — polls a remote URL returning agent_state.json */
+  startUrlWatch: function(url) {
+    var self = this;
+    this._urlActive = true;
+    this._urlErrCount = 0;
+    this._fwRemoved = false;
+    function scheduleNext() {
+      if (!self._urlActive) return;
+      var delay = Math.min(3000 * Math.pow(2, self._urlErrCount), 60000);
+      self._urlIv = setTimeout(poll, delay);
+    }
+    function poll() {
+      if (!self._urlActive) return;
+      fetch(url)
+        .then(function(r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+        .then(function(raw) {
+          self._urlErrCount = 0;
+          self.mergeState(AMC.Data.validateState(raw));
+          AMC.UI.dismissError();
+          scheduleNext();
+        })
+        .catch(function(err) {
+          self._urlErrCount++;
+          var delay = Math.min(3 * Math.pow(2, self._urlErrCount), 60);
+          AMC.UI.showError('URL watch: ' + err.message + ' \u2014 retrying in ' + delay + 's\u2026');
+          scheduleNext();
+        });
+    }
+    poll();
+  },
+
+  stopUrlWatch: function() {
+    this._urlActive = false;
+    if (this._urlIv) { clearTimeout(this._urlIv); this._urlIv = null; }
+    this._urlErrCount = 0;
+  },
+
+  fetchState: function(path) {
+    var url = path + (path.indexOf('?') < 0 ? '?' : '&') + '_t=' + Date.now();
+    return fetch(url).then(function(r) {
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      return r.json();
+    }).then(function(raw) {
+      return AMC.Data.validateState(raw);
+    });
+  },
+
+  _mergeSessionData: function(sid, d, ts) {
+    if (!AMC.State.sessions[sid]) {
+      AMC.State.sessions[sid] = {
+        id: sid, name: d.project || sid, project: d.project || sid,
+        stageIdx: 0, total: 0, done: 0, stages: [], agents: [], tasks: [], events: [],
+        feedFilter: 'all', _prev: {}, _approved: {}, _lastUpdate: ts
+      };
+      AMC.State.order.push(sid);
+      if (AMC.State.panes.length && !AMC.State.panes[0].sid) {
+        AMC.State.panes[0].sid = sid; AMC.State.active = sid;
       }
     }
-  }
-
-  renderAll();
-}
-
-async function approveItem(approvalId) {
-  if (state.dataSource === 'supabase' && supabaseClient) {
-    await supabaseClient.from('approval_queue').update({
-      status: 'approved', decided_at: new Date().toISOString(),
-    }).eq('id', approvalId);
-  }
-  state.sessions.forEach(s => { s.approvals = s.approvals.filter(a => a.id !== approvalId); });
-  renderAll();
-}
-
-async function rejectItem(approvalId) {
-  const reason = state.screenProfile === 'mobile' ? '' : (prompt('Rejection reason:') || '');
-  if (state.dataSource === 'supabase' && supabaseClient) {
-    await supabaseClient.from('approval_queue').update({
-      status: 'rejected', decided_at: new Date().toISOString(), rejection_reason: reason,
-    }).eq('id', approvalId);
-  }
-  state.sessions.forEach(s => { s.approvals = s.approvals.filter(a => a.id !== approvalId); });
-  renderAll();
-}
-
-async function approveTask(taskId) {
-  if (state.dataSource === 'supabase' && supabaseClient) {
-    await supabaseClient.from('kanban_tasks').update({
-      approved: true, column_name: 'todo', approved_at: new Date().toISOString(),
-    }).eq('id', taskId);
-  }
-  state.sessions.forEach(s => {
-    const t = s.tasks.find(t => t.id === taskId);
-    if (t) { t.approved = true; t.column = 'todo'; }
-  });
-  renderAll();
-}
-
-// === SIMULATION ===
-// === DATA (File Watch) ===
-async function pollFileState() {
-  try {
-    const res = await fetch('agent_state.json?t=' + Date.now());
-    if (!res.ok) throw new Error('Not found');
-    const data = await res.json();
-    applyFileState(data);
-    renderAll();
-  } catch(e) {
-    // Silent fail — file might not exist
-  }
-}
-
-function applyFileState(data) {
-  if (!data || !data.sessions) return;
-  state.sessions = data.sessions.map((s, i) => {
-    const color = SESSION_COLORS[i % SESSION_COLORS.length];
-    return {
-      id: s.id || crypto.randomUUID(),
-      name: s.name || 'Session',
-      color,
-      status: s.status || 'active',
-      currentStage: s.currentStage || 0,
-      stages: s.stages || STAGES.map(n => ({name:n})),
-      projectName: s.projectName || 'Unknown',
-      totalTasks: s.totalTasks || 0,
-      completedTasks: s.completedTasks || 0,
-      budgetLimit: s.budgetLimit || 5000,
-      totalCost: s.totalCost || 0,
-      agents: (s.agents || []).map(a => ({
-        id: a.id || crypto.randomUUID(), key: a.key || a.name?.toLowerCase() || 'agent',
-        name: a.name || 'Agent', role: a.role || 'worker', icon: a.icon || '🤖',
-        status: a.status || 'idle', task: a.task || '', ctx: a.ctx || 0,
-        cost: a.cost || 0, msgs: a.msgs || 0, files: a.files || [],
-        budgetLimit: a.budgetLimit,
-      })),
-      events: (s.events || []).map(e => ({
-        id: e.id || crypto.randomUUID(), type: e.type || 'message',
-        agent: e.agent || '', desc: e.desc || '', time: new Date(e.time || Date.now()),
-      })),
-      tasks: (s.tasks || []).map(t => ({
-        id: t.id || crypto.randomUUID(), title: t.title || 'Task',
-        desc: t.desc || '', tag: t.tag, priority: t.priority || 'medium',
-        column: t.column || 'backlog', agent: t.agent,
-        recommendation: t.recommendation, needsApproval: t.needsApproval || false,
-        approved: t.approved || false,
-      })),
-      approvals: (s.approvals || []).map(a => ({
-        id: a.id || crypto.randomUUID(), agent: a.agent || '',
-        desc: a.desc || '', risk: a.risk || 'yellow',
-        files: a.files || [], status: a.status || 'pending',
-        created: new Date(a.created || Date.now()),
-      })),
-    };
-  });
-  if (state.sessions.length && !state.activeSessionId) {
-    state.activeSessionId = state.sessions[0].id;
-  }
-}
-
-// === RENDERING ===
-function getActiveSession() {
-  return state.sessions.find(s => s.id === state.activeSessionId) || state.sessions[0];
-}
-
-function renderAll() {
-  renderSessionTabs();
-  renderPanes();
-  renderApprovalBadge();
-}
-
-function renderSessionTabs() {
-  const container = document.getElementById('session-tabs');
-  const mobileSelect = document.getElementById('mobileSessionSelect');
-  if (!container) return;
-
-  container.innerHTML = state.sessions.map(s => `
-    <button class="tab ${s.id === state.activeSessionId ? 'active' : ''}"
-            onclick="switchSession('${escapeJsString(s.id)}')">
-      <span class="dot" style="background:${s.color.dot}"></span>
-      ${escapeHtml(s.name)}
-      ${state.sessions.length > 1 ? `<span class="close-tab" onclick="event.stopPropagation();removeSession('${escapeJsString(s.id)}')">✕</span>` : ''}
-    </button>
-  `).join('');
-
-  if (mobileSelect) {
-    mobileSelect.innerHTML = state.sessions.map(s =>
-      `<option value="${s.id}" ${s.id === state.activeSessionId ? 'selected' : ''}>${escapeHtml(s.name)}</option>`
-    ).join('');
-  }
-}
-
-function renderPanes() {
-  const main = document.getElementById('workspace');
-  const isMobile = state.screenProfile === 'mobile';
-  const count = isMobile ? 1 : state.layoutCount;
-
-  // Ensure activePaneViews has enough entries
-  while (state.activePaneViews.length < count) state.activePaneViews.push('agents');
-
-  let html = '';
-  for (let i = 0; i < count; i++) {
-    const view = isMobile ? state.mobileTab : state.activePaneViews[i];
-    html += renderPane(i, view, isMobile);
-  }
-  main.innerHTML = html;
-
-  // Re-attach drag handlers
-  setupDragAndDrop();
-}
-
-function renderPane(index, view, isMobile) {
-  const session = getActiveSession();
-  if (!session) return '<div class="pane"><div class="pane-body"><p style="color:var(--text-3)">No session</p></div></div>';
-
-  const paneHeader = !isMobile ? `
-    <div class="pane-header">
-      <button class="pane-tab ${view==='agents'?'active':''}" onclick="setPaneView(${index},'agents')">◉ Agents</button>
-      <button class="pane-tab ${view==='kanban'?'active':''}" onclick="setPaneView(${index},'kanban')">▦ Kanban</button>
-      <select class="pane-session-select topbar-select" onchange="setPaneSession(${index},this.value)">
-        ${state.sessions.map(s => `<option value="${s.id}" ${s.id===state.activeSessionId?'selected':''}>${escapeHtml(s.name)}</option>`).join('')}
-      </select>
-    </div>` : '';
-
-  let body = '';
-  if (view === 'agents') body = renderAgentView(session);
-  else if (view === 'kanban') body = renderKanbanView(session);
-  else if (view === 'costs') body = renderCostView(session);
-  else if (view === 'approvals') body = renderApprovalView(session);
-
-  return `<div class="pane">${paneHeader}<div class="pane-body">${body}</div></div>`;
-}
-
-function renderAgentView(session) {
-  const progress = session.totalTasks > 0 ? Math.round((session.completedTasks / session.totalTasks) * 100) : 0;
-  const circumference = 2 * Math.PI * 18;
-  const offset = circumference - (progress / 100) * circumference;
-  const stageName = session.stages[session.currentStage]?.name || STAGES[session.currentStage] || 'Planning';
-
-  const banner = `
-    <div class="build-banner">
-      <div class="ring-wrap">
-        <svg class="progress-ring" viewBox="0 0 44 44">
-          <circle class="progress-ring-bg" cx="22" cy="22" r="18"/>
-          <circle class="progress-ring-fg" cx="22" cy="22" r="18"
-                  stroke-dasharray="${circumference}" stroke-dashoffset="${offset}"/>
-        </svg>
-        <div class="ring-pct">${progress}%</div>
-      </div>
-      <div>
-        <div class="stage-name">${escapeHtml(stageName)}</div>
-        <div class="project-name">${escapeHtml(session.projectName)}</div>
-      </div>
-      <div class="stats">
-        <div><span class="val">${session.agents.length}</span> agents</div>
-        <div><span class="val">${session.completedTasks}/${session.totalTasks}</span> tasks</div>
-        <div><span class="val">$${(session.totalCost/100).toFixed(2)}</span> cost</div>
-      </div>
-    </div>`;
-
-  const pipeline = `
-    <div class="pipeline-row">
-      ${STAGES.map((s, i) => {
-        let cls = 'pipeline-stage';
-        if (i < session.currentStage) cls += ' done';
-        else if (i === session.currentStage) cls += ' active';
-        return `<div class="${cls}">${s}</div>`;
-      }).join('')}
-    </div>`;
-
-  const agents = `
-    <div class="agent-grid">
-      ${session.agents.map(a => renderAgentCard(a, session)).join('')}
-    </div>`;
-
-  const filteredEvents = filterEvents(session.events);
-  const activity = `
-    <div class="activity-header">
-      <div class="activity-title">Activity Stream</div>
-      <div class="activity-filters">
-        ${['all','task','file','tool','message'].map(f =>
-          `<button class="activity-filter ${state.activityFilter===f?'active':''}"
-                   onclick="setActivityFilter('${f}')">${f.charAt(0).toUpperCase()+f.slice(1)}</button>`
-        ).join('')}
-      </div>
-    </div>
-    <div class="activity-feed">
-      ${filteredEvents.slice(0,50).map(e => renderEvent(e, session)).join('')}
-    </div>`;
-
-  return banner + pipeline + agents + activity;
-}
-
-function renderAgentCard(agent, session) {
-  const isMobile = state.screenProfile === 'mobile';
-  return `
-    <div class="agent-card" onclick="${isMobile ? 'this.classList.toggle(\"expanded\")' : ''}">
-      <div class="agent-avatar">${escapeHtml(agent.icon)}</div>
-      <div class="agent-info">
-        <div class="agent-name">
-          ${escapeHtml(agent.name)}
-          <span class="status-badge status-${escapeHtml(agent.status)}">${escapeHtml(agent.status)}</span>
-        </div>
-        <div class="agent-role">${escapeHtml(agent.role)}</div>
-        <div class="agent-details">
-          <div class="agent-task">${escapeHtml(agent.task)}</div>
-          <div class="agent-metrics">
-            <div class="metric">CTX <span class="val">${agent.ctx}%</span></div>
-            <div class="metric">COST <span class="val">$${(agent.cost/100).toFixed(2)}</span></div>
-            <div class="metric">MSGS <span class="val">${agent.msgs}</span></div>
-          </div>
-          ${agent.files.length ? `<div class="agent-files">Files: ${agent.files.map(f => `<span>${escapeHtml(f)}</span>`).join(', ')}</div>` : ''}
-        </div>
-      </div>
-    </div>`;
-}
-
-function renderEvent(event, session) {
-  const agent = session.agents.find(a => a.key === event.agent);
-  const agentColor = agent ? getAgentColor(agent, session) : 'var(--text-2)';
-  const time = event.time instanceof Date ? formatTime(event.time) : '';
-  return `
-    <div class="event-item event-type-${event.type}">
-      <span class="event-time">${time}</span>
-      <span class="event-icon"></span>
-      <span class="event-agent" style="color:${agentColor}">${escapeHtml(event.agent)}</span>
-      <span class="event-desc">${escapeHtml(event.desc)}</span>
-    </div>`;
-}
-
-function renderKanbanView(session) {
-  return `<div class="kanban-board">
-    ${COLUMNS.map(col => {
-      const tasks = session.tasks.filter(t => t.column === col);
-      return `
-        <div class="kanban-column">
-          <div class="kanban-col-header">
-            ${COLUMN_LABELS[col]}
-            <span class="kanban-col-count">${tasks.length}</span>
-          </div>
-          <div class="kanban-col-body" data-column="${col}"
-               ondragover="onDragOver(event)" ondragleave="onDragLeave(event)" ondrop="onDrop(event,'${col}')">
-            ${tasks.map(t => renderKanbanTask(t)).join('')}
-          </div>
-        </div>`;
-    }).join('')}
-  </div>`;
-}
-
-function renderKanbanTask(task) {
-  const priorityIcon = PRIORITIES[task.priority] || '';
-  return `
-    <div class="kanban-task" draggable="true" data-task-id="${task.id}"
-         ondragstart="onDragStart(event,'${task.id}')"
-         ontouchstart="onTouchDragStart(event,'${task.id}')"
-         ontouchmove="onTouchDragMove(event)" ontouchend="onTouchDragEnd(event,'${task.id}')">
-      <div class="kanban-task-title">${escapeHtml(task.title)}</div>
-      <div class="kanban-task-meta">
-        ${task.tag ? `<span class="kanban-tag kanban-tag-${task.tag}">${task.tag}</span>` : ''}
-        <span class="kanban-priority">${priorityIcon}</span>
-        ${task.agent ? `<span class="kanban-agent">${escapeHtml(task.agent)}</span>` : ''}
-        ${task.recommendation ? `<span class="kanban-recommend">🤖 rec</span>` : ''}
-      </div>
-      ${task.needsApproval && !task.approved ? `
-        <button class="kanban-approve-btn" onclick="event.stopPropagation();approveTask('${escapeJsString(task.id)}')">
-          ✓ Approve
-        </button>` : ''}
-    </div>`;
-}
-
-function renderCostView(session) {
-  const totalBudget = session.budgetLimit || 5000;
-  const totalUsed = session.totalCost;
-  const pct = Math.min(100, Math.round((totalUsed / totalBudget) * 100));
-  const barColor = pct > 80 ? 'var(--red)' : pct > 50 ? 'var(--amber)' : 'var(--green)';
-
-  let html = `
-    <div class="cost-card">
-      <h3>Session Budget</h3>
-      <div class="cost-row">
-        <span>Total Spent</span>
-        <span class="cost-val">$${(totalUsed/100).toFixed(2)}</span>
-      </div>
-      <div class="cost-row">
-        <span>Budget Limit</span>
-        <span class="cost-val">$${(totalBudget/100).toFixed(2)}</span>
-      </div>
-      <div class="cost-row">
-        <span>Remaining</span>
-        <span class="cost-val" style="color:${barColor}">$${((totalBudget - totalUsed)/100).toFixed(2)}</span>
-      </div>
-      <div class="cost-budget-bar">
-        <div class="cost-budget-fill" style="width:${pct}%;background:${barColor}"></div>
-      </div>
-    </div>
-    <div class="cost-card">
-      <h3>Per-Agent Costs</h3>
-      ${session.agents.map(a => {
-        const aBudget = a.budgetLimit || 1000;
-        const aPct = Math.min(100, Math.round((a.cost / aBudget) * 100));
-        const aColor = aPct > 80 ? 'var(--red)' : aPct > 50 ? 'var(--amber)' : 'var(--green)';
-        return `
-          <div class="cost-row">
-            <span>${escapeHtml(a.icon)} ${escapeHtml(a.name)}</span>
-            <span class="cost-val">$${(a.cost/100).toFixed(2)} / $${(aBudget/100).toFixed(2)}</span>
-          </div>
-          <div class="cost-budget-bar" style="margin-bottom:8px">
-            <div class="cost-budget-fill" style="width:${aPct}%;background:${aColor}"></div>
-          </div>`;
-      }).join('')}
-    </div>`;
-
-  // Burn rate
-  const sessionStart = session.agents.length > 0 ? Date.now() - 3600000 : Date.now(); // approximate
-  const hoursElapsed = Math.max(0.1, (Date.now() - sessionStart) / 3600000);
-  const burnRate = totalUsed / hoursElapsed / 100;
-
-  html += `
-    <div class="cost-card">
-      <h3>Burn Rate</h3>
-      <div class="cost-row">
-        <span>Current Rate</span>
-        <span class="cost-val">~$${burnRate.toFixed(2)}/hr</span>
-      </div>
-    </div>`;
-
-  return html;
-}
-
-function renderApprovalView(session) {
-  const pending = session.approvals.filter(a => a.status === 'pending');
-  if (pending.length === 0) {
-    return '<div class="approval-empty">No pending approvals</div>';
-  }
-  return pending.map(a => `
-    <div class="approval-card">
-      <span class="risk-badge risk-${a.risk}">${a.risk === 'red' ? '🔴' : a.risk === 'yellow' ? '🟡' : '🟢'} ${a.risk}</span>
-      <div class="approval-desc">${escapeHtml(a.desc)}</div>
-      <div class="approval-agent">Agent: <strong>${escapeHtml(a.agent)}</strong></div>
-      ${a.files.length ? `<div class="approval-files">${a.files.map(f => escapeHtml(f)).join(', ')}</div>` : ''}
-      <div class="approval-actions">
-        <button class="btn-approve" onclick="approveItem('${escapeJsString(a.id)}')">✓ Approve</button>
-        <button class="btn-reject" onclick="rejectItem('${escapeJsString(a.id)}')">✕ Reject</button>
-      </div>
-    </div>
-  `).join('');
-}
-
-function renderApprovalBadge() {
-  const session = getActiveSession();
-  const badge = document.getElementById('approvalBadge');
-  if (!badge || !session) return;
-  const count = session.approvals.filter(a => a.status === 'pending').length;
-  badge.textContent = count;
-  badge.classList.toggle('hidden', count === 0);
-}
-
-// === MOBILE ===
-function switchMobileTab(tab) {
-  state.mobileTab = tab;
-  document.querySelectorAll('.bottomnav-tab').forEach(el => {
-    el.classList.toggle('active', el.dataset.tab === tab);
-  });
-  renderPanes();
-}
-
-function toggleMobileMenu() {
-  state.mobileMenuOpen = !state.mobileMenuOpen;
-  document.getElementById('mobileMenu').classList.toggle('open', state.mobileMenuOpen);
-}
-
-// Pull-to-refresh
-let ptrStartY = 0;
-let ptrActive = false;
-let ptrListenersAttached = false;
-function setupPullToRefresh() {
-  if (state.screenProfile !== 'mobile') return;
-  if (ptrListenersAttached) return;
-  ptrListenersAttached = true;
-  const main = document.getElementById('workspace');
-  main.addEventListener('touchstart', e => {
-    if (state.screenProfile !== 'mobile') return;
-    if (main.scrollTop === 0) {
-      ptrStartY = e.touches[0].clientY;
-      ptrActive = true;
+    var s = AMC.State.sessions[sid];
+    s._lastUpdate = ts;
+    s.name = d.project || s.name;
+    s.project = d.project || s.project;
+    s.stageIdx = d.currentStageIdx || 0;
+    s.total = d.totalTasks || 0;
+    s.done = d.completedTasks || 0;
+    if (d.stages.length) s.stages = d.stages;
+    if (d.agents.length) {
+      s.agents = d.agents.map(function(a) {
+        return {id:a.id, name:a.name, role:a.role, type:a.type,
+          status:a.status, icon:a.icon, task:a.task, taskId:a.taskId,
+          m:a.metrics, lastHeartbeat:a.lastHeartbeat};
+      });
     }
-  }, { passive: true });
-  main.addEventListener('touchmove', e => {
-    if (!ptrActive) return;
-    const diff = e.touches[0].clientY - ptrStartY;
-    if (diff > 80) {
-      ptrActive = false;
-      refreshData();
+    if (d.tasks.length) {
+      var prev = s._prev || {}, approved = s._approved || {};
+      // Index incoming task IDs so we can detect which done tasks are absent from new payload
+      var newIds = {};
+      d.tasks.forEach(function(t){ newIds[t.id] = true; });
+      // Preserve done tasks from prior state that the new payload doesn't mention
+      var preserved = (s.tasks || []).filter(function(t){ return t.status === 'done' && !newIds[t.id]; });
+      s.tasks = d.tasks.map(function(t) {
+        var m = Object.assign({}, t);
+        if (!t.rec && prev[t.id] && prev[t.id] !== t.status && !approved[t.id+'_'+t.status]) {
+          if (t.status === 'done') { m.rec = true; m.recWhy = 'Auto-completed \u2192 confirm done'; m._auto = true; m._prevSt = prev[t.id]; }
+          else if (prev[t.id] === 'backlog' && t.status === 'in-progress') { m.rec = true; m.recWhy = 'Agent started task \u2192 approve?'; m._auto = true; m._prevSt = prev[t.id]; }
+        }
+        return m;
+      }).concat(preserved);
+      s._prev = {};
+      s.tasks.forEach(function(t){ s._prev[t.id] = t.status; });
+      s.done = s.tasks.filter(function(t){ return t.status === 'done'; }).length;
+      s.total = s.tasks.length;
     }
-  }, { passive: true });
-  main.addEventListener('touchend', () => { ptrActive = false; }, { passive: true });
-}
+    if (d.events.length) s.events = d.events;
+  },
 
-async function refreshData() {
-  if (state.dataSource === 'supabase') await loadFromSupabase();
-  else if (state.dataSource === 'file') await pollFileState();
-  renderAll();
-}
+  mergeState: function(d) {
+    if (this._fwRemoved) return;
+    this._mergeSessionData('filewatch', d, Date.now());
+    AMC.Render.render();
+  },
 
-// === DRAG & DROP ===
-let draggedTaskId = null;
+  autoDetect: function(path) {
+    var self = this;
+    fetch((path||'agent_state.json') + '?_t=' + Date.now())
+      .then(function(r){ if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+      .then(function(raw){
+        AMC.Data.validateState(raw); // schema check
+        self.startFileWatch(path || 'agent_state.json');
+        var btn = document.getElementById('fw-toggle');
+        var stEl = document.getElementById('fw-status');
+        if (btn) { btn.textContent = 'STOP'; btn.className = 'fw-btn fw-btn-stop'; }
+        if (stEl) stEl.textContent = 'Watching\u2026';
+      })
+      .catch(function(){ /* no file — stay empty */ });
+  },
 
-function onDragStart(e, taskId) {
-  draggedTaskId = taskId;
-  e.dataTransfer.effectAllowed = 'move';
-  e.target.classList.add('dragging');
-}
+  startSupabase: function(url, key) {
+    var self = this;
+    this._sbUrl = url.replace(/\/$/, '');
+    this._sbKey = key;
+    this._sbActive = true;
+    this._sbErrCount = 0;
+    function scheduleNext() {
+      if (!self._sbActive) return;
+      /* F-003: exponential backoff — 3s, 6s, 12s, 24s … max 60s */
+      var delay = Math.min(3000 * Math.pow(2, self._sbErrCount), 60000);
+      self._sbIv = setTimeout(function() { self._fetchSessions(scheduleNext); }, delay);
+    }
+    this._fetchSessions(scheduleNext);
+  },
 
-function onDragOver(e) {
-  e.preventDefault();
-  e.currentTarget.classList.add('drag-over');
-}
+  stopSupabase: function() {
+    this._sbActive = false;
+    if (this._sbIv) { clearTimeout(this._sbIv); this._sbIv = null; }
+    this._sbErrCount = 0;
+    AMC.State.order.slice().forEach(function(sid) {
+      if (sid.indexOf('sb-') === 0) AMC.State.removeSession(sid);
+    });
+  },
 
-function onDragLeave(e) {
-  e.currentTarget.classList.remove('drag-over');
-}
-
-function onDrop(e, column) {
-  e.preventDefault();
-  e.currentTarget.classList.remove('drag-over');
-  if (!draggedTaskId) return;
-  moveTask(draggedTaskId, column);
-  draggedTaskId = null;
-}
-
-// Touch drag for mobile
-let touchDragEl = null;
-let touchDragClone = null;
-
-function onTouchDragStart(e, taskId) {
-  draggedTaskId = taskId;
-  touchDragEl = e.target.closest('.kanban-task');
-  // Create visual clone
-  touchDragClone = touchDragEl.cloneNode(true);
-  touchDragClone.style.cssText = 'position:fixed;z-index:1000;opacity:0.8;pointer-events:none;width:'+touchDragEl.offsetWidth+'px;';
-  document.body.appendChild(touchDragClone);
-}
-
-function onTouchDragMove(e) {
-  if (!touchDragClone) return;
-  const touch = e.touches[0];
-  touchDragClone.style.left = (touch.clientX - 40) + 'px';
-  touchDragClone.style.top = (touch.clientY - 20) + 'px';
-}
-
-function onTouchDragEnd(e, taskId) {
-  if (touchDragClone) {
-    touchDragClone.remove();
-    touchDragClone = null;
+  _fetchSessions: function(scheduleNext) {
+    if (!this._sbActive) return;
+    var self = this;
+    var cutoff = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+    var stEl = document.getElementById('fw-status');
+    fetch(this._sbUrl + '/rest/v1/sessions?select=*&order=updated_at.desc&updated_at=gte.' + encodeURIComponent(cutoff), {
+      headers: { 'apikey': this._sbKey, 'Authorization': 'Bearer ' + this._sbKey }
+    })
+    .then(function(r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+    .then(function(rows) {
+      if (!Array.isArray(rows)) return;
+      self._sbErrCount = 0;
+      if (stEl) stEl.textContent = rows.length + ' session' + (rows.length !== 1 ? 's' : '') + ' live';
+      AMC.UI.dismissError();
+      rows.forEach(function(row) {
+        if (!row || !row.state) return;
+        var raw; try { raw = AMC.Data.validateState(row.state); } catch(e) { return; }
+        var ts = row.updated_at ? new Date(row.updated_at).getTime() : Date.now();
+        self._mergeSessionData('sb-' + row.id, raw, ts);
+      });
+      AMC.Render.render();
+      if (scheduleNext) scheduleNext();
+    })
+    .catch(function(err) {
+      self._sbErrCount++;
+      var delaySec = Math.min(3 * Math.pow(2, self._sbErrCount), 60);
+      AMC.UI.showError('Supabase: ' + err.message + ' \u2014 retrying in ' + delaySec + 's\u2026');
+      if (scheduleNext) scheduleNext();
+    });
   }
-  if (!draggedTaskId) return;
-  // Determine drop target by position
-  const touch = e.changedTouches[0];
-  const el = document.elementFromPoint(touch.clientX, touch.clientY);
-  const colBody = el?.closest('.kanban-col-body');
-  if (colBody) {
-    const column = colBody.dataset.column;
-    moveTask(draggedTaskId, column);
+};
+
+/* ════════════════════════════════════════════════════════
+   AMC.Render  —  All rendering
+   ════════════════════════════════════════════════════════ */
+AMC.Render = {
+  render: function() {
+    this.renderTabs();
+    this.renderScreenPicker();
+    this.renderTilePicker();
+    this.renderWorkspace();
+    this.renderCostWidget();
+  },
+
+  /* F-062: connection status helper */
+  _connStatus: function(sess) {
+    if (!sess._lastUpdate) return 'unknown';
+    var ms = Date.now() - sess._lastUpdate;
+    if (ms < 30000) return 'connected';
+    if (ms < 60000) return 'stale';
+    return 'disconnected';
+  },
+
+  /* F-064: cost widget */
+  renderCostWidget: function() {
+    var widget = document.getElementById('cost-widget');
+    if (!widget) return;
+    var total = 0;
+    AMC.State.order.forEach(function(sid) {
+      var sess = AMC.State.sessions[sid];
+      if (!sess || !sess.agents) return;
+      sess.agents.forEach(function(ag) {
+        var c = parseFloat(((ag.m || ag.metrics || {}).cost || '0').replace(/[^0-9.]/g,''));
+        if (!isNaN(c)) total += c;
+      });
+    });
+    if (total > 0) {
+      widget.style.display = 'flex';
+      clear(widget);
+      widget.appendChild(txt('$'));
+      widget.appendChild(h('span', {cls:'cost-val', text:total.toFixed(2)}));
+    } else {
+      widget.style.display = 'none';
+    }
+  },
+
+  renderTabs: function() {
+    var c = document.getElementById('session-tabs');
+    if (!c || _dropdownOpen) return;
+    clear(c);
+    var self = this;
+    AMC.State.order.forEach(function(sid, i) {
+      var sess = AMC.State.sessions[sid];
+      var status = self._connStatus(sess);
+      var tab = h('div', {cls:'session-tab'+(sid===AMC.State.active?' active':''),
+        onclick: function(){
+          AMC.State.active = sid;
+          if (AMC.State.panes.length > 0) AMC.State.panes[0].sid = sid;
+          AMC.State.fixPanes(); AMC.Render.render(); }});
+      /* F-062: colored status dot */
+      var dot = h('span', {cls:'conn-dot '+(status==='unknown'?'unknown':status),
+        title:'Data source: '+status+(sess._lastUpdate ? ' ('+timeSince(new Date(sess._lastUpdate))+')' : '')});
+      tab.appendChild(dot);
+      /* F-033: per-session source badge */
+      var srcLabel = sid.indexOf('sb-') === 0 ? 'SB' : sid === 'filewatch' ? (AMC.Data._urlActive ? 'URL' : 'FILE') : 'SIM';
+      tab.appendChild(h('span', {cls:'source-badge', text:srcLabel}));
+      tab.appendChild(h('span', {text:'\u25CF ', style:{color:ACCENT_CYCLE[i%ACCENT_CYCLE.length],fontSize:'0.65em'}}));
+      tab.appendChild(txt(sess.name));
+      if (AMC.State.order.length > 1 || sid === 'filewatch') {
+        var cl = h('span', {cls:'tab-close', text:'\u00D7',
+          onclick:function(e){ e.stopPropagation(); AMC.State.removeSession(sid); AMC.Render.render(); }});
+        tab.appendChild(cl);
+      }
+      c.appendChild(tab);
+    });
+    c.appendChild(h('div', {cls:'add-session-btn', text:'+ Add', onclick:openDropdown}));
+  },
+
+  renderScreenPicker: function() {
+    var c = document.getElementById('screen-picker'); clear(c);
+    [{k:'laptop',l:'14"'},{k:'desktop',l:'27"'},{k:'ultrawide',l:'49"'}].forEach(function(p){
+      c.appendChild(h('div', {cls:'picker-btn'+(AMC.State.screen===p.k?' active':''), text:p.l,
+        onclick:function(){ AMC.State.setScreen(p.k); AMC.Render.render(); }}));
+    });
+  },
+
+  renderTilePicker: function() {
+    var c = document.getElementById('tile-picker'); clear(c);
+    var mx = AMC.State.maxPanes[AMC.State.screen];
+    for (var i=1; i<=4; i++) {
+      (function(n){
+        var dis = n > mx;
+        c.appendChild(h('div', {cls:'picker-btn'+(AMC.State.tiles===n?' active':'')+(dis?' disabled':''),
+          text:'|'.repeat(n),
+          onclick: dis ? null : function(){ AMC.State.setTiles(n); AMC.Render.render(); }}));
+      })(i);
+    }
+  },
+
+  renderWorkspace: function() {
+    var ws = document.getElementById('workspace'); clear(ws);
+    if (!AMC.State.order.length) {
+      var empty = h('div', {cls:'empty-state',style:{flex:'1',display:'flex'}});
+      empty.appendChild(h('div', {cls:'empty-state-icon', text:'\u25C7'}));
+      empty.appendChild(h('div', {text:'No sessions. Click \u201C+ Add\u201D or start File Watch.'}));
+      ws.appendChild(empty);
+      return;
+    }
+    AMC.State.panes.forEach(function(pane, idx) {
+      var p = h('div', {cls:'pane'});
+      var hdr = h('div', {cls:'pane-header'});
+      var sSel = h('select', {onchange:function(e){ AMC.State.panes[idx].sid = e.target.value; AMC.Render.render(); }});
+      AMC.State.order.forEach(function(sid){
+        var o = h('option', {text:AMC.State.sessions[sid].name}); o.value = sid;
+        if (sid === pane.sid) o.selected = true;
+        sSel.appendChild(o);
+      });
+      var vSel = h('select', {onchange:function(e){ AMC.State.panes[idx].view = e.target.value; AMC.Render.render(); }});
+      [{v:'agents',l:'\u25CE Agents'},{v:'kanban',l:'\u25A6 Kanban'}].forEach(function(x){
+        var o = h('option', {text:x.l}); o.value = x.v;
+        if (x.v === pane.view) o.selected = true;
+        vSel.appendChild(o);
+      });
+      hdr.appendChild(sSel); hdr.appendChild(vSel);
+      p.appendChild(hdr);
+      var body = h('div', {cls:'pane-body'});
+      var sess = AMC.State.sessions[pane.sid];
+      if (sess) {
+        if (pane.view === 'agents') AMC.Render.renderAgentView(body, sess);
+        else AMC.Render.renderKanban(body, sess);
+      }
+      p.appendChild(body);
+      ws.appendChild(p);
+    });
+  },
+
+  renderAgentView: function(container, sess) {
+    /* Build Banner */
+    var pct = sess.total > 0 ? Math.round((sess.done / sess.total) * 100) : 0;
+    var banner = h('div', {cls:'build-banner'});
+    var ring = h('div', {cls:'progress-ring'});
+    var r = 22, circ = 2*Math.PI*r, off = circ*(1 - pct/100);
+    var sv = svgNS('svg', {viewBox:'0 0 56 56'});
+    sv.appendChild(svgNS('circle', {cx:'28',cy:'28',r:String(r),'class':'ring-bg'}));
+    sv.appendChild(svgNS('circle', {cx:'28',cy:'28',r:String(r),'class':'ring-fg',
+      'stroke-dasharray':circ.toFixed(2),'stroke-dashoffset':off.toFixed(2)}));
+    ring.appendChild(sv);
+    ring.appendChild(h('div', {cls:'progress-pct', text:pct+'%'}));
+    banner.appendChild(ring);
+    var stats = h('div', {cls:'build-stats'});
+    var activeSt = (sess.stages && sess.stages[sess.stageIdx]) ? sess.stages[sess.stageIdx] : null;
+    stats.appendChild(h('div', {cls:'build-project', text:sess.project || sess.name}));
+    if (activeSt) stats.appendChild(h('div', {cls:'build-stage', text:activeSt.name}));
+    stats.appendChild(h('div', {cls:'build-detail', text:'Stage '+(sess.stageIdx+1)+'/8 \u00B7 '+sess.done+'/'+sess.total+' tasks'}));
+    var mRow = h('div', {cls:'build-metrics'});
+    var activeCount = (sess.agents||[]).filter(function(a){ return a.status==='working'||a.status==='leader'; }).length;
+    var inProg = (sess.tasks||[]).filter(function(t){ return t.status==='in-progress'; }).length;
+    var remaining = (sess.tasks||[]).filter(function(t){ return t.status!=='done'; }).length;
+    [[String(activeCount),'Active'],[String(inProg),'In Progress'],[String(remaining),'Remaining']].forEach(function(p){
+      var m = h('div', {cls:'build-metric'});
+      m.appendChild(h('div', {cls:'build-metric-val', text:p[0]}));
+      m.appendChild(h('div', {cls:'build-metric-lbl', text:p[1]}));
+      mRow.appendChild(m);
+    });
+    stats.appendChild(mRow);
+    banner.appendChild(stats);
+    container.appendChild(banner);
+
+    /* Pipeline */
+    var activeStageDef = (sess.stages || [])[sess.stageIdx] || null;
+    var doneTaskCount = (sess.tasks || []).filter(function(t){ return t.status === 'done'; }).length;
+    var eventCount = (sess.events || []).length;
+    var gateTasksOk  = !activeStageDef || !activeStageDef.minTasks  || doneTaskCount  >= activeStageDef.minTasks;
+    var gateEventsOk = !activeStageDef || !activeStageDef.minEvents || eventCount >= activeStageDef.minEvents;
+    var gateBlocked = activeStageDef && (activeStageDef.minTasks || activeStageDef.minEvents) && !(gateTasksOk && gateEventsOk);
+    var gateClear   = activeStageDef && (activeStageDef.minTasks || activeStageDef.minEvents) && gateTasksOk && gateEventsOk;
+
+    var pipe = h('div', {cls:'pipeline'});
+    (sess.stages || []).forEach(function(st, idx){
+      var isActive = st.status === 'active';
+      var pillCls = 'stage-pill '+(st.status||'pending')+(isActive && gateBlocked ? ' gate-blocked' : '');
+      var pill = h('div', {cls:pillCls});
+      pill.appendChild(h('span', {cls:'stage-dot'}));
+      pill.appendChild(txt(' '+st.name));
+      if (isActive && gateBlocked)  pill.appendChild(h('span', {cls:'stage-gate-lock', text:'\uD83D\uDD12'}));
+      if (isActive && gateClear)    pill.appendChild(h('span', {cls:'stage-gate-lock', text:'\u2713'}));
+      pipe.appendChild(pill);
+    });
+    container.appendChild(pipe);
+
+    /* Evidence gate status bar — shown only when active stage has gates defined */
+    if (activeStageDef && (activeStageDef.minTasks || activeStageDef.minEvents)) {
+      var parts = [];
+      if (activeStageDef.minTasks)  parts.push((gateTasksOk  ? '\u2713' : '\uD83D\uDD12')+' Tasks done: '+doneTaskCount+'/'+activeStageDef.minTasks);
+      if (activeStageDef.minEvents) parts.push((gateEventsOk ? '\u2713' : '\uD83D\uDD12')+' Events: '+eventCount+'/'+activeStageDef.minEvents);
+      var gateBarCls = 'evidence-gate-bar'+(gateClear ? ' gate-clear' : '');
+      var gateBar = h('div', {cls:gateBarCls});
+      gateBar.appendChild(h('span', {text:(gateBlocked ? 'Stage gate: ' : 'Stage gate cleared: ')+parts.join('  \u00B7  ')}));
+      container.appendChild(gateBar);
+    }
+
+    /* Agent Cards */
+    var grid = h('div', {cls:'agents-grid'});
+    (sess.agents || []).forEach(function(ag){
+      var m = ag.m || ag.metrics || {};
+      var card = h('div', {cls:'agent-card status-'+ag.status});
+      var top = h('div', {cls:'agent-top'});
+      top.appendChild(h('span', {cls:'agent-icon', text:ag.icon||'⚙️'}));
+      var info = h('div', {cls:'agent-info'});
+      info.appendChild(h('div', {cls:'agent-name', text:ag.name}));
+      info.appendChild(h('div', {cls:'agent-role', text:ag.role}));
+      top.appendChild(info);
+      var stEl = h('span', {cls:'agent-status '+ag.status, text:ag.status});
+      if (ag.status==='working'||ag.status==='thinking') {
+        var dots = h('span', {cls:'typing-dots'});
+        ['.','.','.'].forEach(function(d){ dots.appendChild(h('span',{text:d})); });
+        stEl.appendChild(dots);
+      }
+      top.appendChild(stEl);
+      card.appendChild(top);
+      var taskText = ag.task || '';
+      if (ag.taskId && sess.tasks) {
+        for (var ti=0; ti<sess.tasks.length; ti++) {
+          if (sess.tasks[ti].id === ag.taskId) { taskText = sess.tasks[ti].title; break; }
+        }
+      }
+      card.appendChild(h('div', {cls:'agent-task', text:taskText}));
+      var met = h('div', {cls:'agent-metrics'});
+      met.appendChild(h('span', {text:'CTX '+m.ctx}));
+      met.appendChild(h('span', {cls:'agent-metric-cost', text:m.cost}));
+      met.appendChild(h('span', {text:(m.msgs||0)+' msgs'}));
+      card.appendChild(met);
+      /* F-063: heartbeat indicator */
+      var hbTs = ag.lastHeartbeat || (sess._lastUpdate || null);
+      if (hbTs) {
+        var elapsed = Date.now() - hbTs;
+        var hbCls = elapsed < 30000 ? 'fresh' : elapsed < 60000 ? 'stale' : 'dead';
+        var hbLabel = elapsed < 30000 ? 'Live' : elapsed < 60000 ? Math.round(elapsed/1000)+'s ago' : 'Offline';
+        var hbRow = h('div', {cls:'agent-heartbeat'});
+        hbRow.appendChild(h('span', {cls:'hb-dot '+hbCls}));
+        hbRow.appendChild(txt(hbLabel));
+        card.appendChild(hbRow);
+      }
+      grid.appendChild(card);
+    });
+    container.appendChild(grid);
+
+    AMC.Render.renderFeed(container, sess);
+  },
+
+  renderFeed: function(container, sess) {
+    var sec = h('div', {cls:'feed-section'});
+    var hdr = h('div', {cls:'feed-header'});
+    hdr.appendChild(h('span', {text:'ACTIVITY'}));
+    var flt = h('div', {cls:'feed-filters'});
+    ['all','tool','file','task','message','error'].forEach(function(f){
+      flt.appendChild(h('div', {cls:'feed-filter-btn'+(sess.feedFilter===f?' active':''),
+        text:f.toUpperCase(),
+        onclick:function(){ sess.feedFilter = f; AMC.Render.render(); }}));
+    });
+    hdr.appendChild(flt);
+    sec.appendChild(hdr);
+    var list = h('div', {cls:'feed-list'});
+    var evts = sess.feedFilter === 'all'
+      ? sess.events
+      : sess.events.filter(function(e){ return e.type === sess.feedFilter; });
+    evts.slice(-100).reverse().forEach(function(ev){
+      var item = h('div', {cls:'feed-item feed-type-'+ev.type});
+      item.appendChild(h('span', {cls:'feed-time', text:ev.timestamp||''}));
+      item.appendChild(h('span', {cls:'feed-icon', text:FEED_ICONS[ev.type]||'·'}));
+      item.appendChild(h('span', {cls:'feed-agent', text:ev.agent}));
+      item.appendChild(h('span', {cls:'feed-text', text:ev.text}));
+      list.appendChild(item);
+    });
+    sec.appendChild(list);
+    container.appendChild(sec);
+  },
+
+  renderKanban: function(container, sess) {
+    var kb = h('div', {cls:'kanban'});
+    var cyclicIds = detectCycles(sess.tasks);
+    COLS.forEach(function(col){
+      var colEl = h('div', {cls:'kanban-col'});
+      var tasks = (sess.tasks||[]).filter(function(t){ return t.status===col; });
+      var colHdr = h('div', {cls:'kanban-col-header'});
+      colHdr.appendChild(h('span', {text:COL_LABELS[col]}));
+      colHdr.appendChild(h('span', {cls:'kanban-count', text:String(tasks.length)}));
+      colEl.appendChild(colHdr);
+      var area = h('div', {cls:'kanban-cards', data:{status:col, sid:sess.id}});
+      area.addEventListener('dragover', function(e){ e.preventDefault(); this.classList.add('drag-over'); });
+      area.addEventListener('dragleave', function(){ this.classList.remove('drag-over'); });
+      area.addEventListener('drop', function(e){
+        e.preventDefault(); this.classList.remove('drag-over');
+        var tid = e.dataTransfer.getData('text/plain');
+        var srcSid = e.dataTransfer.getData('session');
+        if (srcSid !== sess.id) return;
+        var task = null;
+        for (var i=0; i<sess.tasks.length; i++) { if (sess.tasks[i].id===tid) { task=sess.tasks[i]; break; } }
+        if (!task) return;
+        var old = task.status; task.status = col;
+        if (col==='done'&&old!=='done') sess.done++;
+        if (old==='done'&&col!=='done') sess.done--;
+        if (col==='in-progress'&&old==='backlog') pullDependencies(sess, task);
+        syncAgentStatus(sess);
+        AMC.State.logEvent(sess.id, {agent:'You', type:'task', text:'Moved "'+task.title+'" \u2192 '+COL_LABELS[col], timestamp:ts()});
+        AMC.Render.render();
+      });
+      tasks.forEach(function(task){
+        var activeAg = null;
+        for (var ai=0; ai<(sess.agents||[]).length; ai++) { if (sess.agents[ai].taskId===task.id) { activeAg=sess.agents[ai]; break; } }
+        var isAuto = task._auto, isDep = task.depOf;
+        var cls = 'kanban-card'
+          +(task.rec&&!isAuto?' recommended':'')+(task.rec&&isAuto?' transition':'')
+          +(isDep&&!task.rec?' dependency':'')+(activeAg?' agent-active':'')
+          +(cyclicIds.has(task.id)?' has-cycle':'');
+        var card = h('div', {cls:cls, draggable:true, data:{taskId:task.id}});
+        card.addEventListener('dragstart', function(e){
+          e.dataTransfer.setData('text/plain', task.id);
+          e.dataTransfer.setData('session', sess.id);
+          card.classList.add('dragging');
+        });
+        card.addEventListener('dragend', function(){ card.classList.remove('dragging'); });
+        card.appendChild(h('div', {cls:'kanban-card-title', text:task.title}));
+        var meta = h('div', {cls:'kanban-card-meta'});
+        meta.appendChild(h('span', {cls:'kanban-card-assignee', text:task.assignee}));
+        var pc = task.priority==='high'?'priority-high':task.priority==='medium'?'priority-medium':'priority-low';
+        meta.appendChild(h('span', {cls:'kanban-card-priority '+pc, text:task.priority.toUpperCase()}));
+        card.appendChild(meta);
+        if (activeAg) {
+          var agInd = h('div', {cls:'active-agent-ind'});
+          agInd.appendChild(h('span', {cls:'ag-dot status-'+activeAg.status}));
+          agInd.appendChild(h('span', {text:activeAg.icon+' '+activeAg.name}));
+          card.appendChild(agInd);
+        }
+        if (task.deps && task.deps.length) {
+          var allTasks = sess.tasks || [];
+          var blockerCount = task.deps.filter(function(depId){
+            var dep = allTasks.filter(function(t2){ return t2.id===depId; })[0];
+            return dep && dep.status !== 'done';
+          }).length;
+          if (blockerCount > 0) {
+            card.appendChild(h('div', {cls:'kanban-card-deps-header',
+              text:'\uD83D\uDD12 Blocked by '+blockerCount+' dep'+(blockerCount>1?'s':'')}));
+          }
+          var depTags = h('div', {cls:'kanban-card-deps'});
+          task.deps.forEach(function(depId){
+            var dep = allTasks.filter(function(t2){ return t2.id===depId; })[0];
+            if (dep) {
+              var tagCls = 'dep-tag'+(dep.status!=='done'?' dep-blocking':'');
+              depTags.appendChild(h('span', {cls:tagCls, text:'\u2190 '+dep.title}));
+            }
+          });
+          card.appendChild(depTags);
+        }
+        if (cyclicIds.has(task.id)) {
+          card.appendChild(h('div', {cls:'dep-cycle-badge', text:'\u26A0 Circular dependency detected'}));
+        }
+        if (isDep && !task.rec) {
+          card.appendChild(h('div', {cls:'dep-badge', text:'\uD83D\uDD17 Required for: '+isDep}));
+          var btns = h('div', {cls:'approval-btns'});
+          (function(t, s){
+            btns.appendChild(h('button', {cls:'btn-approve', text:'\u2713 Allow', onclick:function(e){
+              e.stopPropagation(); t.depOf=null; t.status='in-progress';
+              if (s._prev) s._prev[t.id]=t.status;
+              if (s._approved) s._approved[t.id+'_'+t.status]=true;
+              syncAgentStatus(s);
+              AMC.State.logEvent(s.id, {agent:'You', type:'task', text:'Allowed: '+t.title+' \u2192 In Progress (dep)', timestamp:ts()});
+              AMC.Render.render();
+            }}));
+            btns.appendChild(h('button', {cls:'btn-reject', text:'\u2717 Deny', onclick:function(e){
+              e.stopPropagation(); t.depOf=null;
+              AMC.State.logEvent(s.id, {agent:'You', type:'task', text:'Denied dependency pull: '+t.title, timestamp:ts()});
+              AMC.Render.render();
+            }}));
+          })(task, sess);
+          card.appendChild(btns);
+        }
+        if (task.rec) {
+          var badge = task._auto
+            ? h('div', {cls:'transition-badge', text:'\uD83D\uDD04 Transition: '+task.recWhy})
+            : h('div', {cls:'recommend-badge', text:'\u26A1 Permission: '+task.recWhy});
+          card.appendChild(badge);
+          var btns2 = h('div', {cls:'approval-btns'});
+          (function(t, s){
+            btns2.appendChild(h('button', {cls:'btn-approve', text:'\u2713 '+(t._auto?'Confirm':'Allow'), onclick:function(e){
+              e.stopPropagation();
+              if (t._auto) {
+                t.rec=false; t._auto=false;
+                if (s._approved) s._approved[t.id+'_'+t.status]=true;
+                if (s._prev) s._prev[t.id]=t.status;
+                syncAgentStatus(s);
+                AMC.State.logEvent(s.id, {agent:'You', type:'task', text:'Confirmed: '+t.title+' \u2192 '+COL_LABELS[t.status], timestamp:ts()});
+              } else {
+                t.rec=false;
+                if (s._approved) s._approved[t.id+'_'+t.status]=true;
+                var ci=COLS.indexOf(t.status);
+                if (ci<COLS.length-1) { if(t.status==='done')s.done--; t.status=COLS[ci+1]; if(t.status==='done')s.done++; }
+                if (s._prev) s._prev[t.id]=t.status;
+                if (s._approved) s._approved[t.id+'_'+t.status]=true;
+                syncAgentStatus(s);
+                AMC.State.logEvent(s.id, {agent:'You', type:'task', text:'Allowed: '+t.title+' \u2192 '+COL_LABELS[t.status], timestamp:ts()});
+              }
+              AMC.Render.render();
+            }}));
+            btns2.appendChild(h('button', {cls:'btn-reject', text:'\u2717 '+(t._auto?'Revert':'Deny'), onclick:function(e){
+              e.stopPropagation();
+              if (t._auto&&t._prevSt) {
+                if(t.status==='done')s.done--; t.status=t._prevSt; if(t.status==='done')s.done++;
+                t.rec=false; t._auto=false;
+                if(s._prev) s._prev[t.id]=t.status;
+                syncAgentStatus(s);
+                AMC.State.logEvent(s.id, {agent:'You', type:'task', text:'Reverted: '+t.title+' \u2192 '+COL_LABELS[t.status], timestamp:ts()});
+              } else {
+                t.rec=false;
+                AMC.State.logEvent(s.id, {agent:'You', type:'task', text:'Denied: '+t.title, timestamp:ts()});
+              }
+              AMC.Render.render();
+            }}));
+          })(task, sess);
+          card.appendChild(btns2);
+        }
+        area.appendChild(card);
+      });
+      colEl.appendChild(area);
+      kb.appendChild(colEl);
+    });
+    container.appendChild(kb);
   }
-  draggedTaskId = null;
-}
+};
 
-async function moveTask(taskId, newColumn) {
-  const session = getActiveSession();
-  if (!session) return;
-  const task = session.tasks.find(t => t.id === taskId);
-  if (!task || task.column === newColumn) return;
+/* ════════════════════════════════════════════════════════
+   AMC.UI  —  Clock, keyboard, modals, error, help
+   ════════════════════════════════════════════════════════ */
+AMC.UI = {
+  _clockIv: null,
+  _statusIv: null,
+  _helpOpen: false,
+  _pickedScreen: 'desktop',
+  _errTimer: null,
 
-  task.column = newColumn;
+  pickScreen: function(el, screen) {
+    this._pickedScreen = screen;
+    document.querySelectorAll('.screen-card').forEach(function(c){ c.classList.remove('selected'); });
+    el.classList.add('selected');
+  },
 
-  if (state.dataSource === 'supabase' && supabaseClient) {
-    await supabaseClient.from('kanban_tasks').update({
-      column_name: newColumn, updated_at: new Date().toISOString(),
-    }).eq('id', taskId);
-  }
+  confirmScreen: function() {
+    AMC.State.setScreen(this._pickedScreen);
+    document.getElementById('first-run-modal').style.display = 'none';
+    AMC.Render.render();
+  },
 
-  renderAll();
-}
+  showError: function(msg) {
+    var banner = document.getElementById('error-banner');
+    var msgEl = document.getElementById('error-banner-msg');
+    if (!banner || !msgEl) return;
+    msgEl.textContent = '\u26A0 ' + msg;
+    banner.style.display = 'flex';
+    var self = this;
+    if (this._errTimer) clearTimeout(this._errTimer);
+    this._errTimer = setTimeout(function(){ self.dismissError(); }, 10000);
+  },
 
-function setupDragAndDrop() {
-  // Touch drag is handled via inline event handlers
-}
+  dismissError: function() {
+    var banner = document.getElementById('error-banner');
+    if (banner) banner.style.display = 'none';
+    if (this._errTimer) { clearTimeout(this._errTimer); this._errTimer = null; }
+  },
 
-// === EVENTS ===
-function filterEvents(events) {
-  if (state.activityFilter === 'all') return events;
-  return events.filter(e => e.type === state.activityFilter);
-}
+  toggleHelp: function() {
+    this._helpOpen = !this._helpOpen;
+    var panel = document.getElementById('help-panel');
+    if (panel) panel.classList.toggle('open', this._helpOpen);
+  },
 
-function setActivityFilter(filter) {
-  state.activityFilter = filter;
-  renderAll();
-}
+  initClock: function() {
+    function update() {
+      var el = document.getElementById('clock');
+      if (el) el.textContent = new Date().toLocaleTimeString('en-GB',{hour12:false})
+        +' \u00B7 '+new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
+    }
+    update();
+    this._clockIv = setInterval(update, 1000);
+  },
 
-// === HELPERS ===
-function formatTime(date) {
-  if (!(date instanceof Date) || isNaN(date)) return '';
-  return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
-}
+  /* F-062: refresh connection dots every 15s */
+  initConnectionStatusTimer: function() {
+    this._statusIv = setInterval(function(){
+      if (AMC.State.order.length) AMC.Render.renderTabs();
+    }, 15000);
+  },
 
-function escapeHtml(str) {
-  if (!str) return '';
-  const div = document.createElement('div');
-  div.textContent = str;
-  return div.innerHTML;
-}
-function escapeJsString(str) {
-  if (!str) return '';
-  return str.replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '\\"').replace(/</g, '\\x3c');
-}
+  initKeyboard: function() {
+    document.addEventListener('keydown', function(e) {
+      var tag = document.activeElement ? document.activeElement.tagName : '';
+      if (tag==='INPUT'||tag==='SELECT'||tag==='TEXTAREA') return;
+      var modal = document.getElementById('first-run-modal');
+      if (modal && modal.style.display !== 'none') return;
+      switch (e.key) {
+        case '1':case '2':case '3':case '4':
+          var n = parseInt(e.key), mx = AMC.State.maxPanes[AMC.State.screen];
+          if (n <= mx) { AMC.State.setTiles(n); AMC.Render.render(); }
+          break;
+        case 'l':case 'L': AMC.State.setScreen('laptop');    AMC.Render.render(); break;
+        case 'd':case 'D': AMC.State.setScreen('desktop');   AMC.Render.render(); break;
+        case 'u':case 'U': AMC.State.setScreen('ultrawide'); AMC.Render.render(); break;
+        case 'f':case 'F': document.getElementById('filewatch-bar').classList.toggle('visible'); break;
+        case '?': AMC.UI.toggleHelp(); break;
+      }
+    });
+  },
 
-function getAgentColor(agent, session) {
-  const colors = ['var(--cyan)','var(--green)','var(--violet)','var(--amber)','var(--rose)','var(--blue)'];
-  const idx = session.agents.indexOf(agent);
-  return colors[idx % colors.length];
-}
+  initFileWatchBar: function() {
+    // Restore saved Supabase credentials
+    var savedUrl = localStorage.getItem('amc_sb_url') || '';
+    var savedKey = localStorage.getItem('amc_sb_key') || '';
+    if (savedUrl) document.getElementById('fw-sb-url').value = savedUrl;
+    if (savedKey) document.getElementById('fw-sb-key').value = savedKey;
 
-// === UI ACTIONS ===
-function setScreen(profile) {
-  state.screenProfile = profile;
-  document.documentElement.className = 'screen-' + profile;
-  document.body.className = 'screen-' + profile;
-
-  // Constrain layout
-  const maxPanes = { mobile: 1, laptop: 2, desktop: 3, ultrawide: 4 }[profile] || 2;
-  if (state.layoutCount > maxPanes) state.layoutCount = maxPanes;
-
-  // Update active buttons
-  document.querySelectorAll('[data-screen]').forEach(b => b.classList.toggle('active', b.dataset.screen === profile));
-  updateLayoutButtons();
-
-  if (profile === 'mobile') setupPullToRefresh();
-  renderAll();
-}
-
-function setLayout(count) {
-  const maxPanes = { mobile: 1, laptop: 2, desktop: 3, ultrawide: 4 }[state.screenProfile] || 2;
-  state.layoutCount = Math.min(count, maxPanes);
-  updateLayoutButtons();
-  renderAll();
-}
-
-function updateLayoutButtons() {
-  document.querySelectorAll('[data-layout]').forEach(b => {
-    b.classList.toggle('active', parseInt(b.dataset.layout) === state.layoutCount);
-  });
-}
-
-function setPaneView(index, view) {
-  state.activePaneViews[index] = view;
-  renderAll();
-}
-
-function setPaneSession(index, sessionId) {
-  // For multi-pane independent sessions — simplified to switch active session
-  switchSession(sessionId);
-}
-
-function switchSession(sessionId) {
-  state.activeSessionId = sessionId;
-  state.mobileMenuOpen = false;
-  document.getElementById('mobileMenu')?.classList.remove('open');
-  renderAll();
-}
-
-function addSession() {
-  // Sessions are created via Supabase or file state — no client-side creation
-  renderAll();
-}
-
-function removeSession(sessionId) {
-  if (state.sessions.length <= 1) return;
-  state.sessions = state.sessions.filter(s => s.id !== sessionId);
-  if (state.activeSessionId === sessionId) {
-    state.activeSessionId = state.sessions[0]?.id;
-  }
-  renderAll();
-}
-
-let switchingSource = false;
-async function switchDataSource(source) {
-  if (switchingSource) return;
-  switchingSource = true;
-  try {
-    // Stop existing timers
-    if (filePollTimer) { clearInterval(filePollTimer); filePollTimer = null; }
-    supabaseSubscriptions.forEach(s => s.unsubscribe());
-    supabaseSubscriptions = [];
-
-    state.dataSource = source;
-    document.getElementById('dataSourceSelect').value = source;
-
-    if (source === 'supabase') {
-      const ok = await loadFromSupabase();
-      if (ok) {
-        subscribeRealtime();
+    var _mode = 'file';
+    function setMode(m) {
+      _mode = m;
+      document.getElementById('fw-mode-file').className = 'fw-mode' + (m === 'file' ? ' fw-mode-active' : '');
+      document.getElementById('fw-mode-url').className  = 'fw-mode' + (m === 'url'  ? ' fw-mode-active' : '');
+      document.getElementById('fw-mode-sb').className   = 'fw-mode' + (m === 'supabase' ? ' fw-mode-active' : '');
+      document.getElementById('fw-file-grp').style.display = m === 'file' ? '' : 'none';
+      document.getElementById('fw-url-grp').style.display  = m === 'url'  ? '' : 'none';
+      document.getElementById('fw-sb-grp').style.display   = m === 'supabase' ? '' : 'none';
+    }
+    function stopAll() {
+      AMC.Data.stopFileWatch(); AMC.Data.stopSupabase(); AMC.Data.stopUrlWatch();
+      AMC.State.removeSession('filewatch');
+      var btn = document.getElementById('fw-toggle');
+      var stEl = document.getElementById('fw-status');
+      btn.textContent = 'START'; btn.className = 'fw-btn fw-btn-start';
+      stEl.textContent = 'Idle';
+      AMC.Render.render();
+    }
+    document.getElementById('fw-mode-file').addEventListener('click', function() {
+      if (AMC.Data._sbActive || AMC.Data._urlActive) stopAll();
+      setMode('file');
+    });
+    document.getElementById('fw-mode-url').addEventListener('click', function() {
+      if (AMC.Data._fwIv || AMC.Data._sbActive) stopAll();
+      setMode('url');
+    });
+    document.getElementById('fw-mode-sb').addEventListener('click', function() {
+      if (AMC.Data._fwIv || AMC.Data._urlActive) stopAll();
+      setMode('supabase');
+    });
+    document.getElementById('fw-toggle').addEventListener('click', function(){
+      var stEl = document.getElementById('fw-status');
+      var btn = document.getElementById('fw-toggle');
+      var isRunning = _mode === 'file' ? !!AMC.Data._fwIv : _mode === 'url' ? AMC.Data._urlActive : AMC.Data._sbActive;
+      if (isRunning) {
+        stopAll();
+      } else if (_mode === 'file') {
+        var path = document.getElementById('fw-path').value;
+        btn.textContent = 'STOP'; btn.className = 'fw-btn fw-btn-stop';
+        stEl.textContent = 'Watching\u2026';
+        AMC.Data.startFileWatch(path);
+      } else if (_mode === 'url') {
+        var urlVal = document.getElementById('fw-url').value.trim();
+        if (!urlVal) { AMC.UI.showError('Enter a URL to poll'); return; }
+        btn.textContent = 'STOP'; btn.className = 'fw-btn fw-btn-stop';
+        stEl.textContent = 'Polling\u2026';
+        AMC.Data.startUrlWatch(urlVal);
       } else {
-        alert('Supabase connection failed. Switching to File Watch.');
-        state.dataSource = 'file';
-        document.getElementById('dataSourceSelect').value = 'file';
-        await pollFileState();
-        filePollTimer = setInterval(pollFileState, FILE_POLL_INTERVAL);
+        var url = document.getElementById('fw-sb-url').value.trim();
+        var key = document.getElementById('fw-sb-key').value.trim();
+        if (!url || !key) { AMC.UI.showError('Enter Supabase URL and anon key'); return; }
+        localStorage.setItem('amc_sb_url', url);
+        localStorage.setItem('amc_sb_key', key);
+        btn.textContent = 'STOP'; btn.className = 'fw-btn fw-btn-stop';
+        stEl.textContent = 'Connecting\u2026';
+        AMC.Data.startSupabase(url, key);
       }
-    } else if (source === 'file') {
-      await pollFileState();
-      filePollTimer = setInterval(pollFileState, FILE_POLL_INTERVAL);
-    }
-
-    renderAll();
-  } finally {
-    switchingSource = false;
+    });
+    document.getElementById('error-dismiss').addEventListener('click', function(){ AMC.UI.dismissError(); });
+    document.getElementById('help-btn').addEventListener('click', function(){ AMC.UI.toggleHelp(); });
+    document.addEventListener('click', function(e){
+      if (!AMC.UI._helpOpen) return;
+      var panel = document.getElementById('help-panel');
+      var btn = document.getElementById('help-btn');
+      if (panel && !panel.contains(e.target) && btn && !btn.contains(e.target)) {
+        AMC.UI._helpOpen = false; panel.classList.remove('open');
+      }
+    });
   }
-}
+};
 
-// === KEYBOARD SHORTCUTS ===
-document.addEventListener('keydown', e => {
-  if (state.screenProfile === 'mobile') return;
-  if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') return;
-
-  const key = e.key.toUpperCase();
-  if (key === 'L') setScreen('laptop');
-  else if (key === 'D') setScreen('desktop');
-  else if (key === 'U') setScreen('ultrawide');
-  else if (key >= '1' && key <= '4') setLayout(parseInt(key));
-  else if (key === 'A') { state.activePaneViews[0] = 'agents'; renderAll(); }
-  else if (key === 'K') { state.activePaneViews[0] = 'kanban'; renderAll(); }
-  else if (key === 'F') { document.getElementById('filewatch-bar')?.classList.toggle('visible'); }
-  else if (e.key === '?') { document.getElementById('help-panel')?.classList.toggle('open'); }
-});
-
-// === FIRST RUN MODAL ===
-let _selectedScreen = 'desktop';
-function selectScreenCard(profile) {
-  _selectedScreen = profile;
-  document.querySelectorAll('.screen-card').forEach(c => c.classList.toggle('selected', c.dataset.screen === profile));
-}
-function confirmFirstRun() {
-  localStorage.setItem('amc_screen', _selectedScreen);
-  document.getElementById('first-run-modal').classList.add('hidden');
-  setScreen(_selectedScreen);
-}
-
-// === INIT ===
-(async function init() {
-  // First-run modal: show if no screen profile saved
-  const savedScreen = localStorage.getItem('amc_screen');
-  if (savedScreen) {
-    document.getElementById('first-run-modal').classList.add('hidden');
-    setScreen(savedScreen);
-  } else {
-    // Detect default and apply screen profile; user confirms via modal
-    const w = window.innerWidth;
-    _selectedScreen = w < 768 ? 'mobile' : w <= 1440 ? 'laptop' : w <= 2560 ? 'desktop' : 'ultrawide';
-    selectScreenCard(_selectedScreen);
-    setScreen(_selectedScreen);
-  }
-
-  // Set default layout
-  setLayout(1);
-
-  // Init Supabase client and load data
-  initSupabase();
-  const ok = await loadFromSupabase();
-  if (ok) {
-    subscribeRealtime();
-  } else {
-    // Fall back to file watch
-    state.dataSource = 'file';
-    document.getElementById('dataSourceSelect').value = 'file';
-    await pollFileState();
-    filePollTimer = setInterval(pollFileState, FILE_POLL_INTERVAL);
-  }
-
-  renderAll();
-
-  // Close help panel when clicking outside it (on workspace)
-  document.getElementById('workspace').addEventListener('click', () => {
-    document.getElementById('help-panel').classList.remove('open');
-  });
-
-  // Listen for resize
-  window.addEventListener('resize', () => {
-    if (window.matchMedia('(max-width: 767px)').matches && state.screenProfile !== 'mobile') {
-      setScreen('mobile');
+/* ════════════════════════════════════════════════════════
+   SHARED HELPERS
+   ════════════════════════════════════════════════════════ */
+function pullDependencies(sess, movedTask) {
+  if (!movedTask.deps || !movedTask.deps.length) return;
+  var pulled = [];
+  movedTask.deps.forEach(function(depId){
+    for (var i=0; i<sess.tasks.length; i++) {
+      var dep = sess.tasks[i];
+      if (dep.id===depId && dep.status==='backlog') { dep.depOf=movedTask.title; pulled.push(dep); break; }
     }
   });
+  if (pulled.length) {
+    var names = pulled.map(function(p){ return '"'+p.title+'"'; }).join(', ');
+    AMC.State.logEvent(sess.id, {agent:'Orchestrator', type:'thinking',
+      text:'Dependency analysis: '+names+' needed for "'+movedTask.title+'"', timestamp:ts()});
+  }
+}
+
+/* Returns a Set of task IDs that participate in a dependency cycle */
+function detectCycles(tasks) {
+  var taskMap = {};
+  (tasks||[]).forEach(function(t){ taskMap[t.id] = t; });
+  var cycleIds = new Set();
+  // DFS with three-colour marking: 0=unvisited, 1=in-stack, 2=done
+  var colour = {};
+  function dfs(id, stack) {
+    if (colour[id] === 2) return;
+    if (colour[id] === 1) {
+      // cycle detected — mark the current stack path
+      var cycleStart = stack.indexOf(id);
+      for (var i = cycleStart; i < stack.length; i++) cycleIds.add(stack[i]);
+      cycleIds.add(id);
+      return;
+    }
+    colour[id] = 1;
+    stack.push(id);
+    var task = taskMap[id];
+    if (task && Array.isArray(task.deps)) {
+      task.deps.forEach(function(depId){ dfs(depId, stack.slice()); });
+    }
+    colour[id] = 2;
+  }
+  (tasks||[]).forEach(function(t){ if (!colour[t.id]) dfs(t.id, []); });
+  return cycleIds;
+}
+
+function syncAgentStatus(sess) {
+  (sess.agents||[]).forEach(function(ag){
+    if (ag.type==='leader') return;
+    var myTasks = (sess.tasks||[]).filter(function(t){ return t.assignee===ag.name; });
+    if (!myTasks.length) { ag.status='idle'; return; }
+    var inProg = myTasks.filter(function(t){ return t.status==='in-progress'; });
+    var inRev  = myTasks.filter(function(t){ return t.status==='review'; });
+    var allDone = myTasks.every(function(t){ return t.status==='done'; });
+    if (inProg.length) { ag.status='working'; ag.task=inProg[0].title; }
+    else if (inRev.length) { ag.status='thinking'; ag.task='Reviewing: '+inRev[0].title; }
+    else if (allDone) { ag.status='idle'; ag.task='All tasks completed'; }
+    else { ag.status='idle'; ag.task='Waiting for tasks'; }
+  });
+}
+
+/* ════════════════════════════════════════════════════════
+   SESSION DROPDOWN  (+ Add button)
+   ════════════════════════════════════════════════════════ */
+var _dropdownOpen = false;
+
+function openDropdown(e) {
+  if (e) { e.stopPropagation(); e.preventDefault(); }
+  if (_dropdownOpen) { closeDropdown(); return; }
+  _dropdownOpen = true;
+  var dd = h('div', {cls:'session-dropdown', id:'session-dropdown'});
+  dd.appendChild(h('div', {cls:'session-dropdown-header', text:'Claude Code Sessions'}));
+  dd.appendChild(h('div', {cls:'session-dropdown-loading', text:'Scanning projects\u2026'}));
+  var addBtn = document.querySelector('.add-session-btn');
+  if (addBtn) {
+    var rect = addBtn.getBoundingClientRect();
+    dd.style.top  = (rect.bottom + 6) + 'px';
+    dd.style.right = (window.innerWidth - rect.right) + 'px';
+  }
+  document.body.appendChild(dd);
+  setTimeout(function(){ document.addEventListener('click', _closeOnDocClick, true); }, 0);
+  fetch('available_sessions.json')
+    .then(function(r){ if (!r.ok) throw new Error('Run discover_sessions.sh'); return r.json(); })
+    .then(function(list){
+      clear(dd);
+      dd.appendChild(h('div', {cls:'session-dropdown-header', text:'Claude Code Sessions'}));
+      var available = list.filter(function(s){ return s.name !== 'Development Projects'; });
+      available.sort(function(a,b){ return (b.lastActive||'').localeCompare(a.lastActive||''); });
+      if (!available.length) {
+        dd.appendChild(h('div', {cls:'session-dropdown-empty', text:'No sessions found. Run discover_sessions.sh'}));
+        return;
+      }
+      available.forEach(function(s){
+        var alreadyAdded = AMC.State.order.some(function(sid){ return AMC.State.sessions[sid] && AMC.State.sessions[sid].name===s.name; });
+        var item = h('div', {cls:'session-dropdown-item'+(alreadyAdded?' disabled':'')});
+        item.appendChild(h('span', {cls:'sdi-icon', text:'\uD83D\uDCC2'}));
+        var info = h('div', {cls:'sdi-info'});
+        info.appendChild(h('div', {cls:'sdi-name', text:s.name}));
+        var meta = h('div', {cls:'sdi-meta'});
+        meta.appendChild(h('span', {text:(s.conversations||0)+' conversations'}));
+        if (s.lastActive) meta.appendChild(h('span', {text:timeSince(new Date(s.lastActive))}));
+        if (alreadyAdded) meta.appendChild(h('span', {text:'\u2713 added', style:{color:'var(--green)'}}));
+        info.appendChild(meta);
+        item.appendChild(info);
+        if (!alreadyAdded) item.addEventListener('click', function(){ selectSession(s); });
+        dd.appendChild(item);
+      });
+    })
+    .catch(function(){
+      clear(dd);
+      dd.appendChild(h('div', {cls:'session-dropdown-header', text:'Claude Code Sessions'}));
+      dd.appendChild(h('div', {cls:'session-dropdown-empty', text:'Could not load sessions. Run ./discover_sessions.sh'}));
+    });
+}
+
+function _closeOnDocClick(ev) {
+  var dd = document.getElementById('session-dropdown');
+  if (dd && dd.contains(ev.target)) return;
+  closeDropdown();
+}
+
+function closeDropdown() {
+  _dropdownOpen = false;
+  document.removeEventListener('click', _closeOnDocClick, true);
+  var dd = document.getElementById('session-dropdown');
+  if (dd && dd.parentNode) dd.parentNode.removeChild(dd);
+}
+
+function selectSession(s) {
+  closeDropdown();
+  var id = 'custom-' + Date.now();
+  var sess = {
+    id:id, name:s.name, project:s.name,
+    stageIdx:0, total:0, done:0,
+    stages:STAGES.map(function(st){ return {name:st, status:'pending'}; }),
+    agents:[{id:id+'-lead', name:'Lead Agent', role:'Project Lead', type:'leader',
+      status:'leader', icon:'\uD83D\uDC51', task:'Monitoring project progress',
+      taskId:null, m:{ctx:'0%',cost:'$0.00',msgs:0}}],
+    tasks:[], events:[{agent:'Lead Agent', type:'message', text:'Session added to Mission Control', timestamp:ts()}],
+    feedFilter:'all', _prev:{}, _approved:{}, _lastUpdate:null
+  };
+  AMC.State.addSession(sess);
+  AMC.State.panes[0].sid = id;
+  AMC.Render.render();
+}
+
+function timeSince(date) {
+  var secs = Math.floor((new Date()-date)/1000);
+  if (secs < 60) return 'just now';
+  var mins = Math.floor(secs/60); if (mins < 60) return mins+'m ago';
+  var hrs = Math.floor(mins/60); if (hrs < 24) return hrs+'h ago';
+  var days = Math.floor(hrs/24); if (days < 30) return days+'d ago';
+  return Math.floor(days/30)+'mo ago';
+}
+
+/* ════════════════════════════════════════════════════════
+   INIT
+   ════════════════════════════════════════════════════════ */
+(function init() {
+  var savedScreen = null;
+  try { savedScreen = localStorage.getItem('amc_screen'); } catch(e) {}
+  var validScreens = ['laptop','desktop','ultrawide'];
+  var initScreen = (savedScreen && validScreens.indexOf(savedScreen) !== -1) ? savedScreen : null;
+
+  AMC.State.screen = initScreen || 'desktop';
+  document.body.className = 'screen-' + AMC.State.screen;
+  AMC.State.tiles = 1;
+  AMC.State.panes = [{sid:'', view:'agents'}];
+
+  AMC.UI.initClock();
+  AMC.UI.initKeyboard();
+  AMC.UI.initFileWatchBar();
+  AMC.UI.initConnectionStatusTimer();
+
+  document.getElementById('filewatch-bar').classList.add('visible');
+  AMC.Render.render();
+
+  if (!initScreen) {
+    // First visit — show profile picker; pre-select desktop card
+    document.getElementById('first-run-modal').style.display = 'flex';
+  }
 })();
 </script>
 </body>
