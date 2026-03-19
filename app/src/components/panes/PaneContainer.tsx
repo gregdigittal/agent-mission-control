@@ -95,7 +95,7 @@ export function PaneContainer({ paneId }: Props) {
         overflow: 'hidden', minWidth: 'var(--pane-min)',
       }}
     >
-      {(pane?.sessionId && session) || pane?.activeTab === 'vps' ? <PaneTabBar paneId={paneId} /> : null}
+      <PaneTabBar paneId={paneId} />
       <div style={{ flex: 1, overflow: 'auto' }}>
         {renderContent()}
       </div>
