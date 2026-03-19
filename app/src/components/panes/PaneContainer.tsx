@@ -7,6 +7,7 @@ import { DagView } from '../dag/DagView';
 import { SessionReplay } from '../replay/SessionReplay';
 import { CostDashboard } from '../cost/CostDashboard';
 import { ApprovalQueue } from '../permissions/ApprovalQueue';
+import { VPSManager } from '../vps/VPSManager';
 import { useSessionStore } from '../../stores/sessionStore';
 import { useKanbanStore } from '../../stores/kanbanStore';
 import { useAgentStore } from '../../stores/agentStore';
@@ -49,6 +50,11 @@ export function PaneContainer({ paneId }: Props) {
   );
 
   function renderContent() {
+    // VPS/Infrastructure tab is always accessible regardless of session state
+    if (pane?.activeTab === 'vps') {
+      return <VPSManager />;
+    }
+
     if (!pane?.sessionId || !session) {
       return <PaneProjectSelector paneId={paneId} />;
     }
@@ -89,7 +95,7 @@ export function PaneContainer({ paneId }: Props) {
         overflow: 'hidden', minWidth: 'var(--pane-min)',
       }}
     >
-      {pane?.sessionId && session && <PaneTabBar paneId={paneId} />}
+      {(pane?.sessionId && session) || pane?.activeTab === 'vps' ? <PaneTabBar paneId={paneId} /> : null}
       <div style={{ flex: 1, overflow: 'auto' }}>
         {renderContent()}
       </div>

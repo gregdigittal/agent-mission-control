@@ -46,7 +46,7 @@ export interface Project {
   last_scanned_at: string;
 }
 
-export type PaneTab = 'agents' | 'kanban' | 'costs' | 'approvals' | 'dag' | 'replay';
+export type PaneTab = 'agents' | 'kanban' | 'costs' | 'approvals' | 'dag' | 'replay' | 'vps';
 
 // === Agents =================================================
 

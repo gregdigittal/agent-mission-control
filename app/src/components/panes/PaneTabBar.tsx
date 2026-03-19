@@ -10,6 +10,7 @@ const TABS: { id: PaneTab; label: string; icon: string }[] = [
   { id: 'replay',    label: 'Session Replay', icon: '⏵' },
   { id: 'costs',     label: 'Costs',          icon: '◎' },
   { id: 'approvals', label: 'Approvals',      icon: '◉' },
+  { id: 'vps',       label: 'Infrastructure', icon: '⬡' },
 ];
 
 interface Props {
