@@ -20,7 +20,7 @@ export function useScreenProfile(): ScreenProfile {
     const handler = () => setScreenProfile(detectProfile());
     window.addEventListener('resize', handler);
     return () => window.removeEventListener('resize', handler);
-  }, [setScreenProfile]);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   return screenProfile;
 }

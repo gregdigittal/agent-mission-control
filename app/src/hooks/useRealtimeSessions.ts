@@ -36,5 +36,5 @@ export function useRealtimeSessions(): void {
     });
 
     return unsub;
-  }, [setSessions, addSession, updateSession, removeSession]);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 }

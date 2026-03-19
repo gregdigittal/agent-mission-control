@@ -34,5 +34,5 @@ export function useRealtimeProjects(): void {
     });
 
     return unsub;
-  }, [setProjects, addProject, updateProject]);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 }
