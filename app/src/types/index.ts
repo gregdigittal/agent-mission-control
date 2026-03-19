@@ -208,20 +208,26 @@ export interface ApprovalRequest {
 
 // === VPS ====================================================
 
-export type VpsHealth = 'healthy' | 'degraded' | 'offline';
+export type VpsHealth = 'online' | 'degraded' | 'offline';
 
 export interface VpsNode {
   id: string;
+  user_id: string;
   name: string;
-  host: string;
-  region: string;
-  health: VpsHealth;
-  agentCount: number;
-  agentCapacity: number;
-  cpuPercent?: number;
-  memPercent?: number;
-  diskPercent?: number;
-  lastHeartbeat: string;
+  hostname: string;
+  status: VpsHealth;
+  current_agent_count: number;
+  max_concurrent_agents: number;
+  last_heartbeat: string | null;
+  agent_bridge_version: string | null;
+  system_info: {
+    region?: string;
+    cpu_percent?: number;
+    mem_percent?: number;
+    disk_percent?: number;
+  } | null;
+  created_at: string;
+  updated_at: string;
 }
 
 // === Dashboard State (local JSON fallback) ==================

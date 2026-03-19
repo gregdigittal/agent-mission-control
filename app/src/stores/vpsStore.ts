@@ -9,7 +9,7 @@ interface VpsState {
   setNodes: (nodes: VpsNode[]) => void;
   updateNode: (id: string, update: Partial<VpsNode>) => void;
   fetchNodes: () => Promise<void>;
-  addNode: (node: Omit<VpsNode, 'id' | 'health' | 'agentCount' | 'lastHeartbeat'>) => Promise<void>;
+  addNode: (node: { name: string; hostname: string; region: string; maxAgents: number }) => Promise<void>;
   removeNode: (id: string) => Promise<void>;
   healthyNodes: () => VpsNode[];
 }
@@ -40,15 +40,32 @@ export const useVpsStore = create<VpsState>((set, get) => ({
     }
   },
 
-  addNode: async (node) => {
-    if (!isSupabaseConfigured() || !supabase) return;
+  addNode: async ({ name, hostname, region, maxAgents }) => {
+    if (!isSupabaseConfigured() || !supabase) {
+      set({ error: 'Supabase is not configured — cannot register node' });
+      return;
+    }
     set({ error: null });
-    const newNode: Omit<VpsNode, 'id'> = {
-      ...node,
-      health: 'offline' as VpsHealth,
-      agentCount: 0,
-      lastHeartbeat: new Date().toISOString(),
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      set({ error: 'Not authenticated' });
+      return;
+    }
+
+    const newNode = {
+      user_id: user.id,
+      name,
+      hostname,
+      status: 'offline' as VpsHealth,
+      current_agent_count: 0,
+      max_concurrent_agents: maxAgents,
+      last_heartbeat: null,
+      agent_bridge_version: null,
+      system_info: { region },
+      updated_at: new Date().toISOString(),
     };
+
     try {
       const { data, error } = await supabase
         .from('vps_nodes')
@@ -77,5 +94,5 @@ export const useVpsStore = create<VpsState>((set, get) => ({
     }
   },
 
-  healthyNodes: () => get().nodes.filter((n) => n.health === 'healthy'),
+  healthyNodes: () => get().nodes.filter((n) => n.status === 'online'),
 }));
