@@ -10,6 +10,8 @@ export function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [signupSent, setSignupSent] = useState(false);
+  const [githubError, setGithubError] = useState('');
 
   const noSupabase = !isSupabaseConfigured();
 
@@ -17,10 +19,23 @@ export function LoginPage() {
     e.preventDefault();
     setError('');
     try {
-      if (mode === 'login') await signInWithEmail(email, password);
-      else await signUp(email, password);
+      if (mode === 'login') {
+        await signInWithEmail(email, password);
+      } else {
+        await signUp(email, password);
+        setSignupSent(true);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Authentication failed');
+    }
+  }
+
+  async function handleGitHub() {
+    setGithubError('');
+    try {
+      await signInWithGitHub();
+    } catch (err) {
+      setGithubError(err instanceof Error ? err.message : 'GitHub sign-in failed');
     }
   }
 
@@ -72,52 +87,83 @@ export function LoginPage() {
           ))}
         </div>
 
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          <input
-            type="email" placeholder="Email" value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required disabled={noSupabase}
-            style={{ width: '100%', padding: '8px 10px', fontSize: 13 }}
-          />
-          <input
-            type="password" placeholder="Password" value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required disabled={noSupabase}
-            style={{ width: '100%', padding: '8px 10px', fontSize: 13 }}
-          />
+        {signupSent ? (
+          <div style={{
+            textAlign: 'center', padding: '16px 0',
+          }}>
+            <div style={{ fontSize: 24, marginBottom: 12 }}>📧</div>
+            <div style={{ color: 'var(--text-0)', fontSize: 14, fontWeight: 600, marginBottom: 8 }}>
+              Check your email
+            </div>
+            <div style={{ color: 'var(--text-2)', fontSize: 12, lineHeight: 1.5 }}>
+              We sent a confirmation link to <strong style={{ color: 'var(--text-1)' }}>{email}</strong>.
+              Click it to activate your account, then come back and sign in.
+            </div>
+            <button
+              onClick={() => { setSignupSent(false); setMode('login'); }}
+              style={{
+                marginTop: 16, padding: '7px 16px', borderRadius: 4, fontSize: 12,
+                background: 'var(--bg-4)', border: '1px solid var(--border-2)',
+                color: 'var(--text-1)',
+              }}
+            >
+              Back to Sign In
+            </button>
+          </div>
+        ) : (
+          <>
+            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              <input
+                type="email" placeholder="Email" value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required disabled={noSupabase}
+                style={{ width: '100%', padding: '8px 10px', fontSize: 13 }}
+              />
+              <input
+                type="password" placeholder="Password" value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required disabled={noSupabase}
+                style={{ width: '100%', padding: '8px 10px', fontSize: 13 }}
+              />
 
-          {error && (
-            <div style={{ color: 'var(--red)', fontSize: 12 }}>{error}</div>
-          )}
+              {error && (
+                <div style={{ color: 'var(--red)', fontSize: 12 }}>{error}</div>
+              )}
 
-          <button
-            type="submit"
-            disabled={loading || noSupabase}
-            style={{
-              padding: '9px 0', borderRadius: 4, fontSize: 13, fontWeight: 600,
-              background: 'var(--cyan)', color: '#06080c',
-              opacity: (loading || noSupabase) ? 0.5 : 1,
-            }}
-          >
-            {loading ? 'Loading…' : mode === 'login' ? 'Sign In' : 'Create Account'}
-          </button>
-        </form>
+              <button
+                type="submit"
+                disabled={loading || noSupabase}
+                style={{
+                  padding: '9px 0', borderRadius: 4, fontSize: 13, fontWeight: 600,
+                  background: 'var(--cyan)', color: '#06080c',
+                  opacity: (loading || noSupabase) ? 0.5 : 1,
+                }}
+              >
+                {loading ? 'Loading…' : mode === 'login' ? 'Sign In' : 'Create Account'}
+              </button>
+            </form>
 
-        <div style={{ margin: '16px 0', textAlign: 'center', color: 'var(--text-3)', fontSize: 11 }}>
-          OR
-        </div>
+            <div style={{ margin: '16px 0', textAlign: 'center', color: 'var(--text-3)', fontSize: 11 }}>
+              OR
+            </div>
 
-        <button
-          onClick={signInWithGitHub}
-          disabled={noSupabase}
-          style={{
-            width: '100%', padding: '9px 0', borderRadius: 4, fontSize: 13,
-            background: 'var(--bg-4)', border: '1px solid var(--border-2)',
-            color: 'var(--text-1)', opacity: noSupabase ? 0.5 : 1,
-          }}
-        >
-          Continue with GitHub
-        </button>
+            <button
+              onClick={handleGitHub}
+              disabled={noSupabase}
+              style={{
+                width: '100%', padding: '9px 0', borderRadius: 4, fontSize: 13,
+                background: 'var(--bg-4)', border: '1px solid var(--border-2)',
+                color: 'var(--text-1)', opacity: noSupabase ? 0.5 : 1,
+              }}
+            >
+              Continue with GitHub
+            </button>
+
+            {githubError && (
+              <div style={{ color: 'var(--red)', fontSize: 12, marginTop: 8 }}>{githubError}</div>
+            )}
+          </>
+        )}
 
         <SsoButton />
       </div>
