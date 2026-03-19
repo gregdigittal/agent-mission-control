@@ -25,6 +25,8 @@ export default {
       // Environment
       env: {
         NODE_ENV: 'production',
+        VPS_NODE_ID: 'vps-main',
+        VPS_REGION: 'eu-west-1',
       },
     },
   ],

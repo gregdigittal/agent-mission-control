@@ -21,3 +21,9 @@ infra/*.key
 infra/*.p12
 infra/.caddy/
 infra/caddy_autosave.json
+
+# Temp files
+bridge/tmp_schema_check.mjs
+
+# Playwright test output
+test-results/
