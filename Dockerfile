@@ -1,7 +1,7 @@
 FROM nginx:1.27-alpine
 
 # Copy the single-file dashboard
-COPY index.html /usr/share/nginx/html/index.html
+COPY dashboard/index.html /usr/share/nginx/html/index.html
 
 # Copy supporting files
 COPY agent_state_example.json /usr/share/nginx/html/agent_state_example.json
