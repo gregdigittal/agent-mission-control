@@ -11,7 +11,7 @@ interface Props {
 }
 
 export function Topbar({ isOnline }: Props) {
-  const { screenProfile } = useSessionStore();
+  const screenProfile = useSessionStore((s) => s.screenProfile);
   const isMobile = screenProfile === 'mobile';
   const { t } = useTranslation();
 

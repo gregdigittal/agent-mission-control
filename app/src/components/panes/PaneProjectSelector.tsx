@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useSessionStore } from '../../stores/sessionStore';
 import { useProjectStore } from '../../stores/projectStore';
 import { supabase, isSupabaseConfigured } from '../../lib/supabase';
@@ -13,7 +13,12 @@ interface Props {
 }
 
 export function PaneProjectSelector({ paneId }: Props) {
-  const { panes, sessions, setPaneProject, setPaneSession, nextSessionColor, screenProfile } = useSessionStore();
+  const panes = useSessionStore((s) => s.panes);
+  const sessions = useSessionStore((s) => s.sessions);
+  const screenProfile = useSessionStore((s) => s.screenProfile);
+  const setPaneProject = useSessionStore((s) => s.setPaneProject);
+  const setPaneSession = useSessionStore((s) => s.setPaneSession);
+  const nextSessionColor = useSessionStore((s) => s.nextSessionColor);
   const { projects, addProject } = useProjectStore();
   const [isCreating, setIsCreating] = useState(false);
   const [newSessionName, setNewSessionName] = useState('');
@@ -21,16 +26,19 @@ export function PaneProjectSelector({ paneId }: Props) {
   const [newProjectName, setNewProjectName] = useState('');
   const [newProjectPath, setNewProjectPath] = useState('');
 
+  const pane = useMemo(() => panes.find((p) => p.id === paneId), [panes, paneId]);
+  const selectedProject = useMemo(
+    () => (pane ? (projects.find((p) => p.id === pane.projectId) ?? null) : null),
+    [projects, pane],
+  );
+  const projectSessions = useMemo(
+    () => (pane ? sessions.filter((s) => s.projectId === pane.projectId) : []),
+    [sessions, pane],
+  );
+
   // Desktop only
   if (screenProfile === 'mobile') return null;
-
-  const pane = panes.find((p) => p.id === paneId);
   if (!pane) return null;
-
-  const selectedProject = projects.find((p) => p.id === pane.projectId) ?? null;
-
-  // Sessions filtered to this project
-  const projectSessions = sessions.filter((s) => s.projectId === pane.projectId);
 
   function handleSelectProject(project: Project) {
     setPaneProject(paneId, project.id);

@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSessionStore } from '../../stores/sessionStore';
 import type { PaneTab } from '../../types';
@@ -15,10 +16,13 @@ interface Props {
 
 export function BottomNav({ pendingApprovals = 0 }: Props) {
   const { t } = useTranslation();
-  const { panes, activePane, setPaneTab, screenProfile } = useSessionStore();
-  if (screenProfile !== 'mobile') return null;
+  const panes = useSessionStore((s) => s.panes);
+  const activePane = useSessionStore((s) => s.activePane);
+  const setPaneTab = useSessionStore((s) => s.setPaneTab);
+  const screenProfile = useSessionStore((s) => s.screenProfile);
+  const pane = useMemo(() => panes.find((p) => p.id === activePane) ?? panes[0], [panes, activePane]);
 
-  const pane = panes.find((p) => p.id === activePane) ?? panes[0];
+  if (screenProfile !== 'mobile') return null;
 
   return (
     <nav style={{

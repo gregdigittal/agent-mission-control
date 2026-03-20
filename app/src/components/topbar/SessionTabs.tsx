@@ -11,7 +11,11 @@ interface Props {
 }
 
 export function SessionTabs({ onAddSession }: Props) {
-  const { sessions, panes, activePane, setPaneSession, screenProfile } = useSessionStore();
+  const sessions = useSessionStore((s) => s.sessions);
+  const panes = useSessionStore((s) => s.panes);
+  const activePane = useSessionStore((s) => s.activePane);
+  const setPaneSession = useSessionStore((s) => s.setPaneSession);
+  const screenProfile = useSessionStore((s) => s.screenProfile);
 
   if (screenProfile === 'mobile') return null;
 

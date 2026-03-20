@@ -1,4 +1,4 @@
-import { useCallback, useEffect } from 'react';
+import { useCallback, useEffect, useMemo } from 'react';
 import { AuthGuard } from './components/auth/AuthGuard';
 import { Topbar } from './components/topbar/Topbar';
 import { PaneContainer } from './components/panes/PaneContainer';
@@ -18,7 +18,11 @@ import type { PaneTab } from './types';
 const MOBILE_TABS: PaneTab[] = ['agents', 'kanban', 'costs', 'approvals'];
 
 export default function App() {
-  const { panes, paneCount, activePane, setPaneTab, triggerRefresh } = useSessionStore();
+  const panes = useSessionStore((s) => s.panes);
+  const paneCount = useSessionStore((s) => s.paneCount);
+  const activePane = useSessionStore((s) => s.activePane);
+  const setPaneTab = useSessionStore((s) => s.setPaneTab);
+  const triggerRefresh = useSessionStore((s) => s.triggerRefresh);
   const screenProfile = useScreenProfile();
   useKeyboardShortcuts();
   useOfflineFallback();
@@ -31,11 +35,17 @@ export default function App() {
   }, []);
 
   const isMobile = screenProfile === 'mobile';
-  const visiblePanes = isMobile ? panes.slice(0, 1) : panes.slice(0, paneCount);
+  const visiblePanes = useMemo(
+    () => isMobile ? panes.slice(0, 1) : panes.slice(0, paneCount),
+    [isMobile, panes, paneCount],
+  );
   const isOnline = isSupabaseConfigured();
 
   // Mobile: swipe left/right cycles through tabs in the active pane
-  const activePaneObj = panes.find((p) => p.id === activePane) ?? panes[0];
+  const activePaneObj = useMemo(
+    () => panes.find((p) => p.id === activePane) ?? panes[0],
+    [panes, activePane],
+  );
   const cycleTab = useCallback((direction: 1 | -1) => {
     if (!activePaneObj) return;
     const idx = MOBILE_TABS.indexOf(activePaneObj.activeTab as PaneTab);

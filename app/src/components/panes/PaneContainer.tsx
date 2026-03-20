@@ -19,9 +19,12 @@ interface Props {
 }
 
 export function PaneContainer({ paneId }: Props) {
-  const { panes, sessions, setActivePane, setPaneTab } = useSessionStore();
-  const pane = panes.find((p) => p.id === paneId);
-  const session = sessions.find((s) => s.id === pane?.sessionId);
+  const panes = useSessionStore((s) => s.panes);
+  const sessions = useSessionStore((s) => s.sessions);
+  const setActivePane = useSessionStore((s) => s.setActivePane);
+  const setPaneTab = useSessionStore((s) => s.setPaneTab);
+  const pane = useMemo(() => panes.find((p) => p.id === paneId), [panes, paneId]);
+  const session = useMemo(() => sessions.find((s) => s.id === pane?.sessionId), [sessions, pane?.sessionId]);
   const tasks = useKanbanStore((s) => s.tasks);
 
   // Subscribe to raw primitives only — selectors that return computed arrays (filter/map)

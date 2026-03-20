@@ -15,7 +15,7 @@ export function BuildBanner({ sessionId }: Props) {
     () => Object.values(rawAgents).filter((a) => a.sessionId === sessionId),
     [rawAgents, sessionId],
   );
-  const running = agents.filter((a) => a.status === 'running');
+  const running = useMemo(() => agents.filter((a) => a.status === 'running'), [agents]);
 
   if (running.length === 0) return null;
 

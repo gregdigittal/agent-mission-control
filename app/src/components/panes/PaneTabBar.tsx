@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import { useSessionStore } from '../../stores/sessionStore';
 import { useProjectStore } from '../../stores/projectStore';
 import type { PaneTab } from '../../types';
@@ -19,7 +19,11 @@ interface Props {
 }
 
 export function PaneTabBar({ paneId, pendingApprovals = 0 }: Props) {
-  const { panes, sessions, setPaneTab, setPaneSession, setPaneProject } = useSessionStore();
+  const panes = useSessionStore((s) => s.panes);
+  const sessions = useSessionStore((s) => s.sessions);
+  const setPaneTab = useSessionStore((s) => s.setPaneTab);
+  const setPaneSession = useSessionStore((s) => s.setPaneSession);
+  const setPaneProject = useSessionStore((s) => s.setPaneProject);
   const { projects } = useProjectStore();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -37,14 +41,15 @@ export function PaneTabBar({ paneId, pendingApprovals = 0 }: Props) {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [dropdownOpen]);
 
-  const pane = panes.find((p) => p.id === paneId);
+  const pane = useMemo(() => panes.find((p) => p.id === paneId), [panes, paneId]);
+  const activeSession = useMemo(() => sessions.find((s) => s.id === pane?.sessionId), [sessions, pane?.sessionId]);
+  const activeProject = useMemo(() => projects.find((p) => p.id === pane?.projectId), [projects, pane?.projectId]);
+  const projectSessions = useMemo(
+    () => (pane ? sessions.filter((s) => s.projectId === pane.projectId) : []),
+    [sessions, pane],
+  );
+
   if (!pane) return null;
-
-  const activeSession = sessions.find((s) => s.id === pane.sessionId);
-  const activeProject = projects.find((p) => p.id === pane.projectId);
-
-  // Sessions for the current project (for the switcher dropdown)
-  const projectSessions = sessions.filter((s) => s.projectId === pane.projectId);
 
   return (
     <div style={{
