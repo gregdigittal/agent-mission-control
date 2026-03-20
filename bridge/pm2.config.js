@@ -8,6 +8,7 @@ export default {
       name: 'agent-bridge',
       script: 'dist/index.js',
       cwd: '/home/gregmorris/agent-mission-control/bridge',
+      env_file: '/home/gregmorris/agent-mission-control/bridge/.env',
 
       // Restart policy
       autorestart: true,
