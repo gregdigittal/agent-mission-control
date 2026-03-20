@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { DndContext, PointerSensor, TouchSensor, useSensor, useSensors } from '@dnd-kit/core';
 import type { DragEndEvent } from '@dnd-kit/core';
 import { KanbanColumn } from './KanbanColumn';
@@ -14,12 +15,30 @@ interface Props {
 export function KanbanBoard({ sessionId }: Props) {
   useRealtimeKanban(sessionId);
 
-  const { tasksByStatus, moveTask, setDragging } = useKanbanStore();
+  const tasks = useKanbanStore((s) => s.tasks);
+  const moveTask = useKanbanStore((s) => s.moveTask);
+  const setDragging = useKanbanStore((s) => s.setDragging);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
     useSensor(TouchSensor, { activationConstraint: { delay: 250, tolerance: 5 } }),
   );
+
+  // Pre-compute per-column task lists — tasksByStatus() returns a new array reference
+  // every call, which breaks useSyncExternalStore snapshot stability → React error #185.
+  const columnTasks = useMemo(
+    () => Object.fromEntries(
+      COLUMNS.map((col) => [col, tasks.filter((t) => t.sessionId === sessionId && t.status === col)]),
+    ) as Record<KanbanStatus, typeof tasks>,
+    [tasks, sessionId],
+  );
+
+  function resolveColumn(taskId: string): KanbanStatus | null {
+    for (const col of COLUMNS) {
+      if (columnTasks[col].some((t) => t.id === taskId)) return col;
+    }
+    return null;
+  }
 
   function handleDragEnd(e: DragEndEvent) {
     setDragging(null);
@@ -28,15 +47,8 @@ export function KanbanBoard({ sessionId }: Props) {
     // over.id could be a column status or a task id — resolve to column
     const targetStatus = COLUMNS.includes(over.id as KanbanStatus)
       ? (over.id as KanbanStatus)
-      : resolveColumn(String(over.id), sessionId);
+      : resolveColumn(String(over.id));
     if (targetStatus) moveTask(String(active.id), targetStatus);
-  }
-
-  function resolveColumn(taskId: string, sid: string): KanbanStatus | null {
-    for (const col of COLUMNS) {
-      if (tasksByStatus(sid, col).some((t) => t.id === taskId)) return col;
-    }
-    return null;
   }
 
   return (
@@ -52,7 +64,7 @@ export function KanbanBoard({ sessionId }: Props) {
             <KanbanColumn
               key={status}
               status={status}
-              tasks={tasksByStatus(sessionId, status)}
+              tasks={columnTasks[status]}
             />
           ))}
         </div>

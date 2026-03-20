@@ -52,6 +52,13 @@ export function PaneContainer({ paneId }: Props) {
     [rawRecords, session],
   );
 
+  // Pre-compute filtered tasks outside renderContent — creating a new array inside a render
+  // function on every call produces unstable references that break snapshot stability.
+  const sessionTasks = useMemo(
+    () => !session ? [] : tasks.filter((t) => t.sessionId === session.id),
+    [tasks, session],
+  );
+
   function renderContent() {
     // VPS/Infrastructure tab is always accessible regardless of session state
     if (pane?.activeTab === 'vps') {
@@ -61,8 +68,6 @@ export function PaneContainer({ paneId }: Props) {
     if (!pane?.sessionId || !session) {
       return <PaneProjectSelector paneId={paneId} />;
     }
-
-    const sessionTasks = tasks.filter((t) => t.sessionId === session.id);
 
     switch (pane.activeTab) {
       case 'agents':    return <AgentView sessionId={session.id} />;
