@@ -17,16 +17,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Check index.html exists
-        run: test -s index.html
+        run: test -s dashboard/index.html
       - name: No innerHTML (security gate)
         run: |
-          if grep -n "\.innerHTML" index.html; then
+          if grep -n "\.innerHTML" dashboard/index.html; then
             echo "ERROR: innerHTML found" && exit 1
           fi
           echo "PASS: no innerHTML"
       - name: No hardcoded secrets
         run: |
-          if grep -Ei "(api_key|secret|password)\s*=\s*['\"][^'\"]{8,}" index.html; then
+          if grep -Ei "(api_key|secret|password)\s*=\s*['\"][^'\"]{8,}" dashboard/index.html; then
             echo "ERROR: Possible hardcoded secret" && exit 1
           fi
           echo "PASS: secret scan clean"
