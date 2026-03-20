@@ -74,13 +74,21 @@ export function initAuth(): () => void {
     return () => {};
   }
 
-  // onAuthStateChange fires INITIAL_SESSION (or SIGNED_IN after OAuth redirect)
-  // on setup — getSession() is redundant and causes a double setSession() call
+  // Skip INITIAL_SESSION: it fires null during OAuth redirect (before the token
+  // exchange completes), which would cause AuthGuard to flash LoginPage.
+  // All other events (SIGNED_IN, SIGNED_OUT, TOKEN_REFRESHED, etc.) are handled.
   const { data: { subscription } } = supabase.auth.onAuthStateChange(
-    (_event, session) => {
+    (event, session) => {
+      if (event === 'INITIAL_SESSION') return;
       useAuthStore.getState().setSession(session);
     },
   );
+
+  // getSession() correctly processes the OAuth hash and resolves with the real
+  // session, making it the right initializer for both fresh loads and redirects.
+  supabase.auth.getSession().then(({ data: { session } }) => {
+    useAuthStore.getState().setSession(session);
+  });
 
   return () => subscription.unsubscribe();
 }
