@@ -9,10 +9,12 @@ import type { Session } from '../types';
  * Handles INSERT, UPDATE, and DELETE events.
  */
 export function useRealtimeSessions(): void {
-  const { setSessions, addSession, updateSession, removeSession } = useSessionStore();
-
   useEffect(() => {
     if (!isSupabaseConfigured() || !supabase) return;
+
+    // Access store actions at call time to avoid subscribing the parent component
+    // to the entire sessionStore on every render
+    const { setSessions, addSession, updateSession, removeSession } = useSessionStore.getState();
 
     // Initial load — RLS filters to sessions visible to the current user
     supabase
@@ -36,5 +38,5 @@ export function useRealtimeSessions(): void {
     });
 
     return unsub;
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, []);
 }

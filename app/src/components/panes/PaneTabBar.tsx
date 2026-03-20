@@ -24,17 +24,7 @@ export function PaneTabBar({ paneId, pendingApprovals = 0 }: Props) {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  const pane = panes.find((p) => p.id === paneId);
-  if (!pane) return null;
-
-  const activeSession = sessions.find((s) => s.id === pane.sessionId);
-  const activeProject = projects.find((p) => p.id === pane.projectId);
-
-  // Sessions for the current project (for the switcher dropdown)
-  const projectSessions = sessions.filter((s) => s.projectId === pane.projectId);
-
-  // Close dropdown when clicking outside
-  // eslint-disable-next-line react-hooks/rules-of-hooks -- pane guard returns early above
+  // Close dropdown when clicking outside — must be before any conditional return
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
@@ -46,6 +36,15 @@ export function PaneTabBar({ paneId, pendingApprovals = 0 }: Props) {
     }
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [dropdownOpen]);
+
+  const pane = panes.find((p) => p.id === paneId);
+  if (!pane) return null;
+
+  const activeSession = sessions.find((s) => s.id === pane.sessionId);
+  const activeProject = projects.find((p) => p.id === pane.projectId);
+
+  // Sessions for the current project (for the switcher dropdown)
+  const projectSessions = sessions.filter((s) => s.projectId === pane.projectId);
 
   return (
     <div style={{

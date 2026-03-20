@@ -9,10 +9,12 @@ import type { Project } from '../types';
  * Handles INSERT and UPDATE events.
  */
 export function useRealtimeProjects(): void {
-  const { setProjects, addProject, updateProject } = useProjectStore();
-
   useEffect(() => {
     if (!isSupabaseConfigured() || !supabase) return;
+
+    // Access store actions at call time to avoid subscribing the parent component
+    // to the entire projectStore on every render
+    const { setProjects, addProject, updateProject } = useProjectStore.getState();
 
     // Initial load — fetch all projects ordered by name
     supabase
@@ -34,5 +36,5 @@ export function useRealtimeProjects(): void {
     });
 
     return unsub;
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, []);
 }

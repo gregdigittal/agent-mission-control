@@ -74,16 +74,13 @@ export function initAuth(): () => void {
     return () => {};
   }
 
+  // onAuthStateChange fires INITIAL_SESSION (or SIGNED_IN after OAuth redirect)
+  // on setup — getSession() is redundant and causes a double setSession() call
   const { data: { subscription } } = supabase.auth.onAuthStateChange(
     (_event, session) => {
       useAuthStore.getState().setSession(session);
     },
   );
-
-  // Load initial session
-  supabase.auth.getSession().then(({ data: { session } }) => {
-    useAuthStore.getState().setSession(session);
-  });
 
   return () => subscription.unsubscribe();
 }

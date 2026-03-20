@@ -18,7 +18,8 @@ export function AgentView({ sessionId }: Props) {
   );
   const eventFilter = useAgentStore((s) => s.eventFilter);
   const setEventFilter = useAgentStore((s) => s.setEventFilter);
-  const session = useSessionStore((s) => s.sessions.find((sess) => sess.id === sessionId));
+  const sessions = useSessionStore((s) => s.sessions);
+  const session = useMemo(() => sessions.find((s) => s.id === sessionId), [sessions, sessionId]);
 
   const conflictFiles = session?.conflictFiles ?? [];
 
